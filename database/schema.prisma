@@ -1,0 +1,60 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "rhel-openssl-1.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ServerSetup {
+  guild  String   @id
+  prefix String   @default(".")
+  admins String[]
+}
+
+model Glossary {
+  term       String   @unique
+  search     String   @unique
+  definition String
+  usage      String
+  links      String[]
+  category   String
+  aliases    String[]
+}
+
+model Meditations {
+  id    Int    @id @default(autoincrement())
+  session_user  String
+  occurred_at  DateTime  @default(now())
+  session_time  Int
+  session_guild String
+}
+
+model Current {
+  id         Int    @id @default(autoincrement())
+  session_user       String @unique
+  time       Int
+  whenToStop String
+  started    String
+  guild      String
+  channel    String
+}
+
+model PickMessages {
+  message String @unique
+  guild   String
+}
+
+model Stars {
+  id               Int    @id @default(autoincrement())
+  messageID        String @unique
+  embedID          String @unique
+  messageChannelID String
+}
+
+model SteamKeys {
+  text  String  @unique
+  valid Boolean
+}

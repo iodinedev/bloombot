@@ -1,0 +1,38 @@
+- [x] Fun
+  - [x] Coffee
+- [x] Utility
+  - [x] glossary
+  - [x] hello
+  - [x] help
+  - [x] ping
+  - [x] whatis
+- [ ] Meditation
+  - [x] add
+  - [x] getstreak
+  - [x] rank
+  - [x] remove
+  - [ ] serverstats
+- [ ] Staff
+  - [x] erase
+  - [ ] insert
+  - [ ] leave
+  - [ ] removeterm
+  - [ ] resetstats
+- [ ] Admin
+  - [x] addkey
+  - [x] addterm
+  - [ ] listkeys
+  - [ ] removekey
+  - [ ] pick
+  - [ ] usekey
+
+- [ ] Verify streaks work
+- [ ] Update roles on streaks and meditation time
+
+Deferred
+- [ ] Suggest
+- [ ] addstaff
+- [ ] delstaff
+- [ ] liststaff
+- [ ] meditate
+- [ ] timeleft

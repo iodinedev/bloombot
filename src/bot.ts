@@ -1,0 +1,21 @@
+// Require the necessary discord.js classes
+import Discord from 'discord.js';
+import * as fs from 'fs';
+import path from 'path';
+import * as dotenv from 'dotenv';
+import * as deploy from './helpers/deploy';
+
+dotenv.config();
+
+const client = new Discord.Client({ intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.MessageContent] });
+
+fs.readdirSync(path.join(__dirname, "events")).filter(file => file.endsWith(".js")).forEach(file => {
+	const event = require(path.join(__dirname, `events/${file}`));
+	const eventName = file.split('.')[0];
+	client.on(eventName, event.bind(null, client));
+});
+
+// Deploys slash commands and adds them to the client.commands collection
+deploy.deployAppCommands(client);
+
+client.login(process.env.DISCORD_TOKEN);
