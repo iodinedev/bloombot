@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { makeSearchable } from "../helpers/glossary";
 import { database } from "../helpers/database";
-import { adminCommand } from "../helpers/commandPermissions";
+import { modCommand } from "../helpers/commandPermissions";
 
 export = {
 	data: new SlashCommandBuilder()
@@ -27,7 +27,7 @@ export = {
       option.setName('links')
         .setDescription('Links to resources that explain the term. (Must be separated by commas.)')
         .setRequired(false))
-    .setDefaultMemberPermissions(adminCommand())
+    .setDefaultMemberPermissions(modCommand())
     .setDMPermission(false),
 	async execute(interaction) {
     const term: string = interaction.options.getString('term');
@@ -88,5 +88,7 @@ export = {
         links: [],
       }
     });
+
+    return interaction.reply({ content: 'Term added!', ephemeral: true });
   },
 };

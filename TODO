@@ -6,28 +6,27 @@
   - [x] help
   - [x] ping
   - [x] whatis
-- [ ] Meditation
+- [x] Meditation
   - [x] add
   - [x] getstreak
   - [x] rank
   - [x] remove
-  - [ ] serverstats
-- [ ] Staff
+  - [x] serverstats
+- [x] Staff
   - [x] erase
-  - [ ] insert
-  - [ ] leave
-  - [ ] removeterm
-  - [ ] resetstats
-- [ ] Admin
-  - [x] addkey
+  - [x] insert
   - [x] addterm
-  - [ ] listkeys
-  - [ ] removekey
-  - [ ] pick
-  - [ ] usekey
+  - [x] removeterm
+- [x] Admin
+  - [x] resetstats
+  - [x] addkey
+  - [x] listkeys
+  - [x] removekey
+  - [x] pick
+  - [x] usekey
 
-- [ ] Verify streaks work
-- [ ] Update roles on streaks and meditation time
+- [x] Verify streaks work
+- [x] Update roles on streaks and meditation time
 
 Deferred
 - [ ] Suggest
@@ -36,3 +35,4 @@ Deferred
 - [ ] liststaff
 - [ ] meditate
 - [ ] timeleft
+- [ ] leave

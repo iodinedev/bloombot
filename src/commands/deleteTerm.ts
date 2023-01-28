@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, ButtonStyle, ButtonBuilder, ActionRowBuilder } from "discord.js";
 import { makeSearchable } from "../helpers/glossary";
 import { database } from "../helpers/database";
-import { adminCommand } from "../helpers/commandPermissions";
+import { modCommand } from "../helpers/commandPermissions";
 
 export = {
 	data: new SlashCommandBuilder()
@@ -12,7 +12,7 @@ export = {
         .setDescription('The term you want to update.')
         .setAutocomplete(true)
         .setRequired(true))
-    .setDefaultMemberPermissions(adminCommand())
+    .setDefaultMemberPermissions(modCommand())
     .setDMPermission(false),
   async autocomplete(interaction) {
     const term: string = interaction.options.getString('term');

@@ -28,6 +28,11 @@ export const config = {
   },
   "channels": {
     "meditation": "440556997364940801",
-    "commands": "837344434676564078"
+    "commands": "837344434676564078",
+    "announcement": "244917519477899264",
+    "logs": "441207765357035541"
+  },
+  "roles": {
+    "meditation_challenger": "481597332249640960",
   }
 }

@@ -55,6 +55,7 @@ model Stars {
 }
 
 model SteamKeys {
-  text  String  @unique
-  valid Boolean
+  key  String  @unique
+  reservation String @default("")
+  used Boolean
 }

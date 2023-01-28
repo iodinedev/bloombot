@@ -1,20 +1,20 @@
-import Discord, { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { database } from "../helpers/database";
+import Chart from "chart.js/auto"
+import { createCanvas } from "canvas";
 import { config } from "../config";
-import { getStreak } from "../helpers/streaks";
-import { Chart } from "chart.js";
 
 const get_data = async (timeframe) => {
   if (timeframe === 'daily') {
-    // Sums meditation times that have the same "days_ago" value
+    // Sums meditation times that have the same "times_ago" value
     const data = await database.$queryRaw`
     WITH "daily_data" AS (
-      SELECT date_part('day', NOW() - DATE_TRUNC('day', "occurred_at")) AS "days_ago", "session_time"
+      SELECT date_part('day', NOW() - DATE_TRUNC('day', "occurred_at")) AS "times_ago", "session_time"
       FROM "Meditations"
-    ) SELECT "days_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
+    ) SELECT "times_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
     FROM "daily_data"
-    GROUP BY "days_ago"
-    ORDER BY "days_ago" ASC
+    GROUP BY "times_ago"
+    ORDER BY "times_ago" ASC
     LIMIT 12;
     `;
 
@@ -22,15 +22,15 @@ const get_data = async (timeframe) => {
   }
 
   if (timeframe === 'weekly') {
-    // Sums meditation times that have the same "weeks_ago" value, remembering that PostgreSQL's date_part function returns the week number of the year, not the week number of the month
+    // Sums meditation times that have the same "times_ago" value, remembering that PostgreSQL's date_part function returns the week number of the year, not the week number of the month
     const data = await database.$queryRaw`
     WITH "weekly_data" AS (
-    SELECT floor(extract(epoch from NOW() - "occurred_at")/(60*60*24*7)) AS "weeks_ago", "session_time"
+    SELECT floor(extract(epoch from NOW() - "occurred_at")/(60*60*24*7)) AS "times_ago", "session_time"
     FROM "Meditations"
-) SELECT "weeks_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
+) SELECT "times_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
 FROM "weekly_data"
-GROUP BY "weeks_ago"
-ORDER BY "weeks_ago" ASC
+GROUP BY "times_ago"
+ORDER BY "times_ago" ASC
 LIMIT 12;
     `;
 
@@ -38,15 +38,15 @@ LIMIT 12;
   }
 
   if (timeframe === 'monthly') {
-    // Sums meditation times that have the same "months_ago" value
+    // Sums meditation times that have the same "times_ago" value
     const data = await database.$queryRaw`
     WITH "monthly_data" AS (
-      SELECT date_part('month', NOW() - DATE_TRUNC('month', "occurred_at")) AS "months_ago", "session_time"
+      SELECT (EXTRACT(YEAR FROM NOW()) - EXTRACT(YEAR FROM "occurred_at"))*12 + (EXTRACT(MONTH FROM NOW()) - EXTRACT(MONTH FROM "occurred_at")) AS "times_ago", "session_time"
       FROM "Meditations"
-    ) SELECT "months_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
+    ) SELECT "times_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
     FROM "monthly_data"
-    GROUP BY "months_ago"
-    ORDER BY "months_ago" ASC
+    GROUP BY "times_ago"
+    ORDER BY "times_ago" ASC
     LIMIT 12;
     `;
 
@@ -54,15 +54,15 @@ LIMIT 12;
   }
 
   if (timeframe === 'yearly') {
-    // Sums meditation times that have the same "years_ago" value
+    // Sums meditation times that have the same "times_ago" value
     const data = await database.$queryRaw`
     WITH "yearly_data" AS (
-      SELECT date_part('year', NOW() - DATE_TRUNC('year', "occurred_at")) AS "years_ago", "session_time"
+      SELECT extract(year from NOW()) - extract(year from "occurred_at") AS "times_ago", "session_time"
       FROM "Meditations"
-    ) SELECT "years_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
+    ) SELECT "times_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
     FROM "yearly_data"
-    GROUP BY "years_ago"
-    ORDER BY "years_ago" ASC
+    GROUP BY "times_ago"
+    ORDER BY "times_ago" ASC
     LIMIT 12;
     `;
 
@@ -72,7 +72,7 @@ LIMIT 12;
 
 export = {
 	data: new SlashCommandBuilder()
-		.setName('stats')
+		.setName('serverstats')
 		.setDescription('Gets the stats of the current guild.')
     .addStringOption(option =>
       option.setName('type')
@@ -91,16 +91,21 @@ export = {
         { name: 'Weekly', value: 'weekly' },
         { name: 'Daily', value: 'daily' },
       )
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option =>
+      option.setName('shareable')
+      .setDescription('Whether or not to generate a shareable chart.')
+      .setRequired(false)),
 	async execute(interaction) {
-    const user = interaction.options.getUser('user') || interaction.user;
     const type = interaction.options.getString('type');
     const timeframe = interaction.options.getString('timeframe');
 
     // Gets the data for the chart
     const raw_data: any = await get_data(timeframe);
-
-    console.log(raw_data)
+    const parsed_data = raw_data.reduce((acc, data) => {
+      acc[data.times_ago] = data;
+      return acc;
+    }, {})
 
     // Makes the chart. Gets the last 12 days, weeks, months, or years of data. dd/mm/yyyy
     const data: {date, value}[] = [];
@@ -111,24 +116,35 @@ export = {
         date.setDate(date.getDate() - i);
         const day = date.getDate();
         const month = date.getMonth() + 1;
-        const year = date.getFullYear();
+
+        var to_push = 0;
+
+        if (parsed_data[i]) {
+          to_push = type === "meditation_minutes" ? parsed_data[i].total_time : parsed_data[i].count;
+        }
 
         data.push({
-          date: `${day}/${month}/${year}`,
-          value: type === "meditation_minutes" ? raw_data.total_time : raw_data.count
+          date: `${day}/${month}`,
+          value: to_push
         });
       }
     } else if (timeframe === 'weekly') {
       for (let i = 0; i < 12; i++) {
+        // Date has an offset of -7 days to show the start of the week
         const date = new Date();
-        date.setDate(date.getDate() - (i * 7));
+        date.setDate(date.getDate() - ((i * 7) + 7));
         const day = date.getDate();
         const month = date.getMonth() + 1;
-        const year = date.getFullYear();
+
+        var to_push = 0;
+
+        if (parsed_data[i]) {
+          to_push = type === "meditation_minutes" ? parsed_data[i].total_time : parsed_data[i].count;
+        }
 
         data.push({
-          date: `${day}/${month}/${year}`,
-          value: type === "meditation_minutes" ? raw_data.total_time : raw_data.count
+          date: `${day}/${month}`,
+          value: to_push
         });
       }
     } else if (timeframe === 'monthly') {
@@ -138,9 +154,15 @@ export = {
         const month = date.getMonth() + 1;
         const year = date.getFullYear();
 
+        var to_push = 0;
+
+        if (parsed_data[i]) {
+          to_push = type === "meditation_minutes" ? parsed_data[i].total_time : parsed_data[i].count;
+        }
+
         data.push({
           date: `${month}/${year}`,
-          value: type === "meditation_minutes" ? raw_data.total_time : raw_data.count
+          value: to_push
         });
       }
     } else if (timeframe === 'yearly') {
@@ -149,11 +171,84 @@ export = {
         date.setFullYear(date.getFullYear() - i);
         const year = date.getFullYear();
 
+        var to_push = 0;
+
+        if (parsed_data[i]) {
+          to_push = type === "meditation_minutes" ? parsed_data[i].total_time : parsed_data[i].count;
+        }
+
         data.push({
           date: `${year}`,
-          value: type === "meditation_minutes" ? raw_data.total_time : raw_data.count
+          value: to_push
         });
       }
     }
+
+    // Inverts the data so that it's in the right order
+    data.reverse();
+
+    const labels = data.map(d => d.date);
+    const values = data.map(d => Number(d.value));
+    const header = type === "meditation_minutes" ? "# of Minutes" : "# of Sessions";
+
+    // Makes the chart
+    const canvas = createCanvas(400, 250);
+    const canvas_ctx: any = canvas.getContext("2d");
+
+    Chart.defaults.color = '#ffffff';
+
+    new Chart(canvas_ctx, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: header,
+            data: values,
+            backgroundColor: "#ffffff",
+            borderColor: "#ffffff",
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        }
+      },
+    });
+
+    const all_time = await get_all_time(interaction);
+    const guild_name = interaction.guild.name;
+
+    const attachment = new AttachmentBuilder(canvas.toBuffer(), {name: "chart.png"});
+    const embed = new EmbedBuilder()
+      .setTitle("Stats")
+      .setColor(config.embedColor)
+      .setDescription(`Here are the stats for **${guild_name}**.`)
+      .addFields(
+        { name: "All-Time Meditation Minutes", value: `\`\`\`${all_time._sum.session_time}\`\`\``, inline: true },
+        { name: "All-Time Meditation Count", value: `\`\`\`${all_time._count.id}\`\`\``, inline: true },
+      )
+      .setImage("attachment://chart.png");
+    return interaction.reply({ embeds: [embed], files: [attachment] });
 	},
 };
+
+const get_all_time = async (interaction) => {
+  const data = await database.meditations.aggregate({
+    where: {
+      session_guild: interaction.guildId,
+    },
+    _sum: {
+      session_time: true,
+    },
+    _count: {
+      id: true,
+    }
+  });
+
+  return data;
+}
