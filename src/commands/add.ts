@@ -14,7 +14,7 @@ export = {
     .setDMPermission(false),
 	async execute(interaction) {
 		const minutes: number = interaction.options.getInteger('minutes');
-    const now = `${Date.now()}`;
+
     const user = interaction.user.id;
     const guild = interaction.guild.id;
 
@@ -28,8 +28,18 @@ export = {
       }
     })
 
+    const total = await database.meditations.aggregate({
+      where: {
+        session_user: user,
+        session_guild: guild
+      },
+      _sum: {
+        session_time: true
+      }
+    });
+
     const motivation = config.motivational_messages[Math.floor(Math.random() * config.motivational_messages.length)];
 
-    await interaction.reply({ content: `Added ${minutes} minutes to your meditation time!\n*${motivation}*` });
+    await interaction.reply({ content: `Added ${minutes} minutes to your meditation time! Your total meditation time is ${total._sum.session_time} minutes :tada:\n*${motivation}*` });
 	},
 };
