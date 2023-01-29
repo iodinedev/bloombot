@@ -47,6 +47,7 @@ export = {
 
     // This is to escape the ` character.
     const sanitized = message.content.replace(/`/g, '\\`');
+    const images = message.attachments.map(attachment => attachment.url);
 
     const embed = new EmbedBuilder()
       .setTitle('A message you sent was deleted.')
@@ -54,7 +55,7 @@ export = {
       .setDescription(`**Reason:** ${reason}`)
       .addFields({ name: 'Message Content', value: `\`\`\`${sanitized}\`\`\`` });
     try {
-      await message.author.send({ embeds: [embed] });
+      await message.author.send({ embeds: [embed], files: images });
       await interaction.reply({ content: 'Message deleted and user notified.', ephemeral: true });
     } catch (error) {
       await interaction.reply({ content: 'Message deleted but user could not be notified.', ephemeral: true });
@@ -63,15 +64,15 @@ export = {
       const logEmbed = new EmbedBuilder()
         .setTitle('Message Deleted')
         .setColor(config.embedColor)
-        .setDescription(`**Message ID:** ${messageID}\n**Reason:** ${reason}`)
-        .addFields({ name: 'Message Content', value: sanitized })
+        .setDescription(`**Message ID:** \`${messageID}\`\n**Reason:** \`${reason}\`\n**Channel:** <#${message.channel.id}>\n**Author:** ${message.author.tag} (\`${message.author.id}\`)`)
+        .addFields({ name: 'Message Content', value: `\`\`\`${sanitized}\`\`\`` })
         .setTimestamp(new Date())
         .setFooter({ text: `Deleted by ${interaction.user.tag}`, iconURL: interaction.user.avatarURL() });
 
       const logChannel = interaction.guild.channels.cache.get(config.channels.logs);
 
       try {
-        return logChannel.send({ embeds: [logEmbed] });
+        return logChannel.send({ embeds: [logEmbed], files: images });
       } catch {
         return interaction.followUp({ content: 'Message not logged.', ephemeral: true });
       }
