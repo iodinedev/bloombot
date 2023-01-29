@@ -1,6 +1,7 @@
 // Static, non-sensitive configuration
 export const config = {
   "embedColor": 0xFDAC2E,
+  "min_stars": 3,
   "time_roles": {
     "I_Star": "504641899890475018",
     "II_Star": "504641945596067851",
@@ -27,12 +28,22 @@ export const config = {
     "alien": "857242155784863754",
   },
   "channels": {
+    "welcome": "493402917001494539",
     "meditation": "440556997364940801",
     "commands": "837344434676564078",
     "announcement": "244917519477899264",
-    "logs": "441207765357035541"
+    "logs": "441207765357035541",
+    "starchannel": "856865368098078720",
+    "reportchannel": "855894610001395743",
+    "patreon": "551895169532952578",
   },
   "roles": {
     "meditation_challenger": "481597332249640960",
+    "patreon": "543900027928444935"
+  },
+  "emotes": {
+    "star": "⭐",
+    "report": "852463521894629376",
+    "wave": "👋",
   }
 }
