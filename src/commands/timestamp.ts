@@ -1,4 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
+import { modCommand } from "../helpers/commandPermissions";
 
 export = {
 	data: new SlashCommandBuilder()
@@ -28,6 +29,7 @@ export = {
       option.setName('second')
         .setDescription('The second of the timestamp.')
         .setRequired(false))
+    .setDefaultMemberPermissions(modCommand())
     .setDMPermission(false),
 	async execute(interaction) {
     const year = interaction.options.getInteger('year');

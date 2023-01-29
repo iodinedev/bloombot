@@ -9,7 +9,7 @@ export = {
 		.setDescription('Deletes a term from the glossary.')
     .addStringOption(option =>
       option.setName('term')
-        .setDescription('The term you want to update.')
+        .setDescription('The term you want to delete.')
         .setAutocomplete(true)
         .setRequired(true))
     .setDefaultMemberPermissions(modCommand())

@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, APIEmbedField, PermissionsBitField } from "discord.js";
+import { modCommand, adminCommand } from "../helpers/commandPermissions";
 
 export = {
   // Ephemeral to not clutter the chat
@@ -21,10 +22,29 @@ export = {
         .addFields({ name: 'Usage', value: `\`${cmd.data.name}\`` });
       return interaction.reply({ embeds: [embed], ephemeral: true });
     } else {
+      // Only get commands the user can use cmd.data.default_member_permissions
+      const admin_commands = interaction.client.commands.filter(cmd => new PermissionsBitField(cmd.data.default_member_permissions).has(new PermissionsBitField(adminCommand())) && interaction.member.permissions.has(cmd.data.default_member_permissions));
+      const mod_commands = interaction.client.commands.filter(cmd => new PermissionsBitField(cmd.data.default_member_permissions).has(new PermissionsBitField(modCommand())) && interaction.member.permissions.has(cmd.data.default_member_permissions));
+      const commands = interaction.client.commands.filter(cmd => cmd.data.default_member_permissions === undefined);
+
+      const fields: APIEmbedField[] = [];
+
+      if (admin_commands.size > 0) {
+        fields.push({ name: 'Admin Commands', value: admin_commands.map(cmd => `\`${cmd.data.name}\``).join(', ') });
+      }
+
+      if (mod_commands.size > 0) {
+        fields.push({ name: 'Mod Commands', value: mod_commands.map(cmd => `\`${cmd.data.name}\``).join(', ') });
+      }
+
+      if (commands.size > 0) {
+        fields.push({ name: 'Commands', value: commands.map(cmd => `\`${cmd.data.name}\``).join(', ') });
+      }
+
       const embed = new EmbedBuilder()
         .setTitle('Commands')
         .setDescription('Here\'s a list of all my commands:')
-        .addFields({ name: 'Commands', value: interaction.client.commands.map(cmd => `\`${cmd.data.name}\``).join(', ') });
+        .addFields(fields);
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 	},

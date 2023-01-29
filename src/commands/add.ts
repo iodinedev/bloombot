@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { database } from "../helpers/database";
 import { updateRoles } from "../helpers/streaks";
+import { config } from "../config";
 
 export = {
 	data: new SlashCommandBuilder()
@@ -27,6 +28,8 @@ export = {
       }
     })
 
-    await interaction.reply({ content: `Added ${minutes} minutes to your meditation time!` });
+    const motivation = config.motivational_messages[Math.floor(Math.random() * config.motivational_messages.length)];
+
+    await interaction.reply({ content: `Added ${minutes} minutes to your meditation time!\n*${motivation}*` });
 	},
 };

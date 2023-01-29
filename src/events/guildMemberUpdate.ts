@@ -2,6 +2,7 @@ import { config } from '../config';
 import { EmbedBuilder } from 'discord.js';
 
 export = async (client, oldMember, newMember) => {
+  console.log(oldMember)
   if (
     newMember.roles.cache.some((role) => role.id === config.roles.patreon) &&
     !oldMember.roles.cache.some((role) => role.id === config.roles.patreon)

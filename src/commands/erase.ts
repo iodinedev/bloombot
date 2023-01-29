@@ -1,5 +1,6 @@
-import { SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { modCommand } from "../helpers/commandPermissions";
+import { config } from "../config";
 
 export = {
 	data: new SlashCommandBuilder()
@@ -17,22 +18,24 @@ export = {
     .setDMPermission(false),
 	async execute(interaction) {
 		const messageID: string = interaction.options.getString('message');
-    const reason: string = interaction.options.getString('reason');
+    const reason: string = interaction.options.getString('reason') || "No reason provided.";
 
-    const message = await interaction.channel.messages.fetch(messageID);
-    var sent = false;
+    var message;
+
+    try {
+      message = await interaction.channel.messages.fetch(messageID);
+    } catch (error: any) {
+      if (error.code === 10008) {
+        return interaction.reply({ content: 'That message does not exist!', ephemeral: true });
+      } else if (error.code === 50035) {
+        return interaction.reply({ content: 'Please provide a message ID.', ephemeral: true });
+      } else {
+        return interaction.reply({ content: 'An unknown error occurred.', ephemeral: true });
+      }
+    }
 
     if (!message) {
       return interaction.reply({ content: 'That message does not exist!', ephemeral: true });
-    }
-
-    if (reason) {
-      try {
-        await message.author.send(`Your message in ${interaction.channel} was deleted for the following reason: ${reason}`);
-        sent = true;
-      } catch (error) {
-        console.error(error);
-      }
     }
 
     try {
@@ -42,14 +45,36 @@ export = {
       return interaction.reply({ content: 'Message could not be deleted.', ephemeral: true });
     }
 
-    if (reason) {
-      if (sent) {
-        return interaction.reply({ content: 'Message deleted and user notified.', ephemeral: true });
+    // This is to escape the ` character.
+    const sanitized = message.content.replace(/`/g, '\\`');
+
+    const embed = new EmbedBuilder()
+      .setTitle('A message you sent was deleted.')
+      .setColor(config.embedColor)
+      .setDescription(`**Reason:** ${reason}`)
+      .addFields({ name: 'Message Content', value: `\`\`\`${sanitized}\`\`\`` });
+    try {
+      await message.author.send({ embeds: [embed] });
+      await interaction.reply({ content: 'Message deleted and user notified.', ephemeral: true });
+    } catch (error) {
+      await interaction.reply({ content: 'Message deleted but user could not be notified.', ephemeral: true });
+    } finally {
+      // Logs the message
+      const logEmbed = new EmbedBuilder()
+        .setTitle('Message Deleted')
+        .setColor(config.embedColor)
+        .setDescription(`**Message ID:** ${messageID}\n**Reason:** ${reason}`)
+        .addFields({ name: 'Message Content', value: sanitized })
+        .setTimestamp(new Date())
+        .setFooter({ text: `Deleted by ${interaction.user.tag}`, iconURL: interaction.user.avatarURL() });
+
+      const logChannel = interaction.guild.channels.cache.get(config.channels.logs);
+
+      try {
+        return logChannel.send({ embeds: [logEmbed] });
+      } catch {
+        return interaction.followUp({ content: 'Message not logged.', ephemeral: true });
       }
-
-      return interaction.reply({ content: 'Message deleted, but user could not be notified.', ephemeral: true });
     }
-
-    return interaction.reply({ content: 'Message deleted.', ephemeral: true });
 	},
 };
