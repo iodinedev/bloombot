@@ -10,7 +10,8 @@ export = {
       option.setName('term')
         .setDescription('The term you want info about.')
         .setAutocomplete(true)
-        .setRequired(false)),
+        .setRequired(false))
+    .setDMPermission(false),
   async autocomplete(interaction) {
     const term: string = interaction.options.getString('term');
     const search: string = makeSearchable(term);

@@ -9,7 +9,8 @@ export = {
     .addIntegerOption(option =>
       option.setName('minutes')
         .setDescription('The number of minutes you want to add.')
-        .setRequired(true)),
+        .setRequired(true))
+    .setDMPermission(false),
 	async execute(interaction) {
 		const minutes: number = interaction.options.getInteger('minutes');
     const now = `${Date.now()}`;

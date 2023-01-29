@@ -9,7 +9,8 @@ export = {
     .addIntegerOption(option =>
       option.setName('id')
         .setDescription('The ID of the meditation session you want to remove. Use `/rank` to find them.')
-        .setRequired(true)),
+        .setRequired(true))
+    .setDMPermission(false),
 	async execute(interaction) {
 		const meditation_id: number = interaction.options.getInteger('id');
 

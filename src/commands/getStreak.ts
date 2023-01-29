@@ -8,7 +8,8 @@ export = {
     .addUserOption(
       option => option.setName('user')
       .setDescription('The user to get the streak of.')
-      .setRequired(false)),
+      .setRequired(false))
+    .setDMPermission(false),
 	async execute(interaction) {
     const user = interaction.options.getUser('user') || interaction.user;
     const streak = await getStreak(interaction.client, interaction.guild, user);

@@ -9,7 +9,8 @@ export = {
 		.setDescription('Gets your rank or the rank of a specified user.')
     .addUserOption(option =>
       option.setName('user')
-      .setDescription('The user to get the rank of.')),
+      .setDescription('The user to get the rank of.'))
+    .setDMPermission(false),
 	async execute(interaction) {
     const user = interaction.options.getUser('user') || interaction.user;
 

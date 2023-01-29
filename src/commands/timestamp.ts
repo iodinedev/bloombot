@@ -27,7 +27,8 @@ export = {
     .addIntegerOption(option =>
       option.setName('second')
         .setDescription('The second of the timestamp.')
-        .setRequired(false)),
+        .setRequired(false))
+    .setDMPermission(false),
 	async execute(interaction) {
     const year = interaction.options.getInteger('year');
     const month = interaction.options.getInteger('month') - 1;

@@ -95,7 +95,8 @@ export = {
     .addBooleanOption(option =>
       option.setName('shareable')
       .setDescription('Whether or not to generate a shareable chart.')
-      .setRequired(false)),
+      .setRequired(false))
+    .setDMPermission(false),
 	async execute(interaction) {
     const type = interaction.options.getString('type');
     const timeframe = interaction.options.getString('timeframe');

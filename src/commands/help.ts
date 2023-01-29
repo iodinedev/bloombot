@@ -8,7 +8,8 @@ export = {
     .addStringOption(option =>
       option.setName('command')
         .setDescription('The command you want info about.')
-        .setRequired(false)),
+        .setRequired(false))
+    .setDMPermission(false),
 	async execute(interaction) {
     const command = interaction.options.getString('command');
     if (command) {
