@@ -71,14 +71,16 @@ export const updateRoles = async (client: Client, guild: Guild, user: User) => {
   const relevant_role_ids = Object.values(config.time_roles).concat(Object.values(config.streak_roles));
 
   for (const role of member_roles) {
-    if (role !== lvl_role_id && role !== streak_role_id && !relevant_role_ids.includes(role)) {
+    if (role !== lvl_role_id && role !== streak_role_id && relevant_role_ids.includes(role)) {
       remove_roles.push(role);
     }
   }
 
+  console.log(remove_roles)
+
   // Add and remove roles
   if (add_roles.length > 0) await member.roles.add(add_roles);
-  if (remove_roles.length > 0) await member.roles.remove(remove_roles);
+  // if (remove_roles.length > 0) await member.roles.remove(remove_roles);
 }
 
 export const getStreak = async (client: Client, guild: Guild, user: User) => {
