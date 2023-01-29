@@ -15,7 +15,7 @@ ENV CLIENT_ID="712698434670297108"
 
 # Install package dependencies
 RUN yarn install
-RUN yarn prisma db push
+RUN yarn prisma db pull
 RUN yarn prisma generate
 
 RUN rm -rf dist
