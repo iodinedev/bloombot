@@ -42,6 +42,6 @@ export = {
     const date = new Date(year, month, day, hour, minute, second);
     const timestamp = date.getTime();
     
-		return interaction.reply(`${timestamp}`);
+		return interaction.reply({ content: `${timestamp}`, ephemeral: true });
 	},
 };

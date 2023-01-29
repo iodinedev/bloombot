@@ -15,6 +15,11 @@ export = {
         .setTitle('Playne Keys')
         .setDescription('Here\'s a list of all the keys:');
 
+      if (keys.length === 0) {
+        embed.setDescription('There are no keys yet!');
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+
       for (let i = 0; i < keys.length; i++) {
         const fields = embed.toJSON().fields;
         if (fields && fields.length === 10) {

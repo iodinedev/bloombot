@@ -29,35 +29,29 @@ export const updateRoles = async (client: Client, guild: Guild, user: User) => {
   var streak_role = '';
 
   // Level tests
-  if (user_time >= 50) {
-    lvl_role = 'I_Star';
-
-    if (user_time >= 100) lvl_role = 'II_Star';
-    if (user_time >= 150) lvl_role = 'III_Star';
-    if (user_time >= 250) lvl_role = 'I_S_Star';
-    if (user_time >= 500) lvl_role = 'II_S_Star';
-    if (user_time >= 1000) lvl_role = 'III_S_Star';
-    if (user_time >= 2000) lvl_role = 'I_M_Star';
-    if (user_time >= 5000) lvl_role = 'II_M_Star';
-    if (user_time >= 10000) lvl_role = 'III_M_Star';
-    if (user_time >= 20000) lvl_role = 'I_Star_S';
-    if (user_time >= 50000) lvl_role = 'II_Star_S';
-    if (user_time >= 100000) lvl_role = 'III_Star_S';
-  }
+  if (user_time >= 100000) lvl_role = 'III_Star_S';
+  else if (user_time >= 50000) lvl_role = 'II_Star_S';
+  else if (user_time >= 20000) lvl_role = 'I_Star_S';
+  else if (user_time >= 10000) lvl_role = 'III_M_Star';
+  else if (user_time >= 5000) lvl_role = 'II_M_Star';
+  else if (user_time >= 2000) lvl_role = 'I_M_Star';
+  else if (user_time >= 1000) lvl_role = 'III_S_Star';
+  else if (user_time >= 500) lvl_role = 'II_S_Star';
+  else if (user_time >= 250) lvl_role = 'I_S_Star';
+  else if (user_time >= 150) lvl_role = 'III_Star';
+  else if (user_time >= 100) lvl_role = 'II_Star';
+  else if (user_time >= 50) lvl_role = 'I_Star';
 
   // Streak tests
-  if (streak >= 7) {
-    streak_role = 'egg';
-
-    if (streak >= 14) streak_role = 'hatching_chick';
-    if (streak >= 28) streak_role = 'baby_chick';
-    if (streak >= 35) streak_role = 'chicken';
-    if (streak >= 56) streak_role = 'dove';
-    if (streak >= 70) streak_role = 'owl';
-    if (streak >= 140) streak_role = 'eagle';
-    if (streak >= 365) streak_role = 'dragon';
-    if (streak >= 730) streak_role = 'alien';
-  }
+  if (streak >= 730) streak_role = 'alien';
+  else if (streak >= 365) streak_role = 'dragon';
+  else if (streak >= 140) streak_role = 'eagle';
+  else if (streak >= 70) streak_role = 'owl';
+  else if (streak >= 56) streak_role = 'dove';
+  else if (streak >= 35) streak_role = 'chicken';
+  else if (streak >= 28) streak_role = 'baby_chick';
+  else if (streak >= 14) streak_role = 'hatching_chick';
+  else if (streak >= 7) streak_role = 'egg';
 
   // Get role IDs
   const lvl_role_id = config.time_roles[lvl_role];
@@ -76,9 +70,26 @@ export const updateRoles = async (client: Client, guild: Guild, user: User) => {
     }
   }
 
+  // Removes roles that exist in both add_roles and remove_roles
+  const duplicates: string[] = [];
+  add_roles = add_roles.filter(role => {
+    if (remove_roles.includes(role)) {
+      duplicates.push(role);
+    } else {
+      return role;
+    }
+  });
+  remove_roles = remove_roles.filter(role => !duplicates.includes(role));
+
   // Add and remove roles
   if (add_roles.length > 0) await member.roles.add(add_roles);
   if (remove_roles.length > 0) await member.roles.remove(remove_roles);
+
+  // new_streak returns the streak role if it was added, otherwise it returns an empty array
+  return {
+    new_streak: add_roles.filter(role => Object.values(config.streak_roles).includes(role)),
+    new_level: add_roles.filter(role => Object.values(config.time_roles).includes(role))
+  }
 }
 
 export const getStreak = async (client: Client, guild: Guild, user: User) => {

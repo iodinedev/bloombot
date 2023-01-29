@@ -14,8 +14,6 @@ export = {
 	async execute(interaction) {
 		const meditation_id: number = interaction.options.getInteger('id');
 
-    await updateRoles(interaction.client, interaction.guild, interaction.user);
-
     const meditation = await database.meditations.findUnique({
       where: {
         id: meditation_id,
@@ -56,6 +54,8 @@ export = {
             id: meditation_id
           }
         });
+        
+        await updateRoles(interaction.client, interaction.guild, interaction.user);
 
         interaction.editReply({ content: 'Session deleted!', ephemeral: true, components: [] });
       } else if (i.customId === 'no') {

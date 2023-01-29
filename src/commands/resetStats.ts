@@ -38,7 +38,7 @@ export = {
         .setStyle(ButtonStyle.Primary)
     );
 
-    interaction.reply({ content: `Are you sure you want to delete this user's stats? They have ${data._sum.session_time} minutes and ${data._count} sessions.`, components: [row] });
+    interaction.reply({ content: `Are you sure you want to delete this user's stats? They have ${data._sum.session_time} minutes and ${data._count} sessions.`, components: [row], ephemeral: true });
 
     const filter = i => i.user.id === interaction.user.id;
     const collector = interaction.channel.createMessageComponentCollector({ filter, time: 15000 });

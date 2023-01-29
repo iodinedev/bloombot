@@ -8,12 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model ServerSetup {
-  guild  String   @id
-  prefix String   @default(".")
-  admins String[]
-}
-
 model Glossary {
   term       String   @unique
   search     String   @unique
@@ -32,21 +26,6 @@ model Meditations {
   session_guild String
 }
 
-model Current {
-  id         Int    @id @default(autoincrement())
-  session_user       String @unique
-  time       Int
-  whenToStop String
-  started    String
-  guild      String
-  channel    String
-}
-
-model PickMessages {
-  message String @unique
-  guild   String
-}
-
 model Stars {
   id               Int    @id @default(autoincrement())
   messageID        String @unique
@@ -58,4 +37,11 @@ model SteamKeys {
   key  String  @unique
   reservation String @default("")
   used Boolean
+}
+
+model QuoteBook {
+  id    Int    @id @default(autoincrement())
+  quote String
+  author String @default("Anonymous")
+  date  DateTime  @default(now())
 }

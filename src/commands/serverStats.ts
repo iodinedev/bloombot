@@ -1,19 +1,17 @@
-import Discord, { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
+import { SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { database } from "../helpers/database";
-import { config } from "../config";
 import Chart from "chart.js/auto"
 import { createCanvas } from "canvas";
-import { getStreak } from "../helpers/streaks";
+import { config } from "../config";
 
-
-const get_data = async (timeframe, guild, user) => {
+const get_data = async (timeframe, guild) => {
   if (timeframe === 'daily') {
     // Sums meditation times that have the same "times_ago" value
     const data = await database.$queryRaw`
     WITH "daily_data" AS (
       SELECT date_part('day', NOW() - DATE_TRUNC('day', "occurred_at")) AS "times_ago", "session_time"
       FROM "Meditations"
-      WHERE "session_user" = ${user} AND "session_guild" = ${guild}
+      WHERE "session_guild" = ${guild}
     ) SELECT "times_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
     FROM "daily_data"
     GROUP BY "times_ago"
@@ -30,7 +28,7 @@ const get_data = async (timeframe, guild, user) => {
     WITH "weekly_data" AS (
     SELECT floor(extract(epoch from NOW() - "occurred_at")/(60*60*24*7)) AS "times_ago", "session_time"
     FROM "Meditations"
-      WHERE "session_user" = ${user} AND "session_guild" = ${guild}
+    WHERE "session_guild" = ${guild}
 ) SELECT "times_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
 FROM "weekly_data"
 GROUP BY "times_ago"
@@ -47,7 +45,7 @@ LIMIT 12;
     WITH "monthly_data" AS (
       SELECT (EXTRACT(YEAR FROM NOW()) - EXTRACT(YEAR FROM "occurred_at"))*12 + (EXTRACT(MONTH FROM NOW()) - EXTRACT(MONTH FROM "occurred_at")) AS "times_ago", "session_time"
       FROM "Meditations"
-      WHERE "session_user" = ${user} AND "session_guild" = ${guild}
+      WHERE "session_guild" = ${guild}
     ) SELECT "times_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
     FROM "monthly_data"
     GROUP BY "times_ago"
@@ -64,7 +62,7 @@ LIMIT 12;
     WITH "yearly_data" AS (
       SELECT extract(year from NOW()) - extract(year from "occurred_at") AS "times_ago", "session_time"
       FROM "Meditations"
-      WHERE "session_user" = ${user} AND "session_guild" = ${guild}
+      WHERE "session_guild" = ${guild}
     ) SELECT "times_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
     FROM "yearly_data"
     GROUP BY "times_ago"
@@ -78,69 +76,37 @@ LIMIT 12;
 
 export = {
 	data: new SlashCommandBuilder()
-		.setName('stats')
-		.setDescription('Gets your stats or the stats of a specified user.')
-    .addUserOption(option =>
-      option.setName('user')
-      .setDescription('The user to get the stats of.'))
+		.setName('serverstats')
+		.setDescription('Gets the stats of the current guild.')
+    .addStringOption(option =>
+      option.setName('type')
+      .setDescription('The type of stats to get.')
+      .addChoices(
+        { name: 'Meditation Minutes', value: 'meditation_minutes' },
+        { name: 'Meditation Count', value: 'meditation_count' },
+      )
+      .setRequired(false))
+    .addStringOption(option =>
+      option.setName('timeframe')
+      .setDescription('The timeframe to get the stats for.')
+      .addChoices(
+        { name: 'Yearly', value: 'yearly' },
+        { name: 'Monthly', value: 'monthly' },
+        { name: 'Weekly', value: 'weekly' },
+        { name: 'Daily', value: 'daily' },
+      )
+      .setRequired(false))
+    .addBooleanOption(option =>
+      option.setName('shareable')
+      .setDescription('Whether or not to generate a shareable chart.')
+      .setRequired(false))
     .setDMPermission(false),
 	async execute(interaction) {
-    const user = interaction.options.getUser('user') || interaction.user;
-
-		const recent_meditations = await database.meditations.findMany({
-      where: {
-        session_user: user.id,
-        session_guild: interaction.guild.id
-      },
-      orderBy: [
-        {
-          id: 'desc'
-        }
-      ],
-      take: 3
-    });
-
-    if (!recent_meditations) {
-      return interaction.reply({
-        content: ":x: Looks like you don't have any meditation times! Use `.add` to add some time."
-      });
-    }
-  
-    const meditation_aggregation = await database.meditations.aggregate({
-      where: {
-        session_user:  user.id,
-        session_guild: interaction.guild.id,
-      },
-      _count: {
-        id: true
-      },
-      _sum: {
-        session_time: true
-      }
-    });
-
-    const user_count = meditation_aggregation._count.id || 0;
-    const user_time = meditation_aggregation._sum.session_time || 0;
-    const streak = await getStreak(interaction.client, interaction.guild, user);
-
-    var meditations: string[] = [];
-
-    recent_meditations.forEach((meditation) => {
-      var date = new Date(meditation.occurred_at);
-      var month = date.getUTCMonth() + 1;
-      var day = date.getUTCDate();
-      var year = date.getUTCFullYear();
-
-      meditations.push(
-        `**${meditation.session_time}m** on ${day}/${month}/${year}\nID: \`${meditation.id}\``
-      );
-    });
-
     const type = interaction.options.getString('type') || 'meditation_count';
     const timeframe = interaction.options.getString('timeframe') || 'daily';
 
     // Gets the data for the chart
-    const raw_data: any = await get_data(timeframe, interaction.guild.id, interaction.user.id);
+    const raw_data: any = await get_data(timeframe, interaction.guild.id);
     const parsed_data = raw_data.reduce((acc, data) => {
       acc[data.times_ago] = data;
       return acc;
@@ -244,8 +210,8 @@ export = {
           {
             label: header,
             data: values,
-            backgroundColor: interaction.member.displayHexColor === "#000000" ? "#ffffff" : interaction.member.displayHexColor,
-            borderColor: `#fff`,
+            backgroundColor: `#${config.embedColor.toString(16)}`,
+            borderColor: `#${config.embedColor.toString(16)}`,
             borderWidth: 1,
           },
         ],
@@ -259,6 +225,9 @@ export = {
       },
     });
 
+    const all_time = await get_all_time(interaction);
+    const guild_name = interaction.guild.name;
+
     const timeframeWords = {
       'daily': 'Days',
       'weekly': 'Weeks',
@@ -266,37 +235,34 @@ export = {
       'yearly': 'Years'
     }
 
-    const fields = [
-      {
-        name: 'All-Time Meditation Minutes',
-        value: `\`\`\`${user_time}\`\`\``,
-        inline: false,
-      },
-      {
-        name: 'All-Time Session Count',
-        value: `\`\`\`${user_count}\`\`\``,
-        inline: false,
-      },
-      { name: `Minutes The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${values.reduce((a, b) => a + b, 0)}\`\`\``, inline: true },
-      { name: `Sessions The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${values.length}\`\`\``, inline: true },
-      {
-        name: 'Current Streak',
-        value: `\`\`\`${streak} days\`\`\``,
-        inline: false,
-      },
-    ];
-
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {name: "chart.png"});
-
-    let statsEmbed = new Discord.EmbedBuilder()
+    const embed = new EmbedBuilder()
+      .setTitle("Stats")
       .setColor(config.embedColor)
-      .setAuthor({ name: `${user.username}'s Stats`, iconURL: user.avatarURL() })
-      .addFields(...fields)
-      .setImage('attachment://chart.png');
-
-    return interaction.reply({
-      embeds: [statsEmbed],
-      files: [attachment],
-    });
+      .setDescription(`Here are the stats for **${guild_name}**.`)
+      .addFields(
+        { name: "All-Time Meditation Minutes", value: `\`\`\`${all_time._sum.session_time}\`\`\`` },
+        { name: "All-Time Session Count", value: `\`\`\`${all_time._count.id}\`\`\`` },
+        { name: `Minutes The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${values.reduce((a, b) => a + b, 0)}\`\`\``, inline: true },
+        { name: `Sessions The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${values.length}\`\`\``, inline: true },
+      )
+      .setImage("attachment://chart.png");
+    return interaction.reply({ embeds: [embed], files: [attachment] });
 	},
 };
+
+const get_all_time = async (interaction) => {
+  const data = await database.meditations.aggregate({
+    where: {
+      session_guild: interaction.guildId,
+    },
+    _sum: {
+      session_time: true,
+    },
+    _count: {
+      id: true,
+    }
+  });
+
+  return data;
+}
