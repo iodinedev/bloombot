@@ -7,7 +7,7 @@ export const adminCommand = () => {
 }
 
 export const modCommand = () => {
-  const permissions = Discord.PermissionFlagsBits.ManageMessages;
+  const permissions = Discord.PermissionFlagsBits.ManageRoles;
 
   return permissions;
 }
