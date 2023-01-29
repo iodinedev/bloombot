@@ -76,6 +76,7 @@ export const updateRoles = async (client: Client, guild: Guild, user: User) => {
     }
   }
 
+  console.log(add_roles)
   console.log(remove_roles)
 
   // Add and remove roles
