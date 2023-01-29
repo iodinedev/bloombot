@@ -54,8 +54,16 @@ export = {
       .setColor(config.embedColor)
       .setDescription(`**Reason:** ${reason}`)
       .addFields({ name: 'Message Content', value: `\`\`\`${sanitized}\`\`\`` });
+
+    const imageEmbeds = images.map(image => {
+      return new EmbedBuilder()
+        .setTitle('An image you sent was deleted.')
+        .setColor(config.embedColor)
+        .setImage(image);
+    });
+
     try {
-      await message.author.send({ embeds: [embed], files: images });
+      await message.author.send({ embeds: [embed, ...imageEmbeds] });
       await interaction.reply({ content: 'Message deleted and user notified.', ephemeral: true });
     } catch (error) {
       await interaction.reply({ content: 'Message deleted but user could not be notified.', ephemeral: true });
@@ -69,10 +77,19 @@ export = {
         .setTimestamp(new Date())
         .setFooter({ text: `Deleted by ${interaction.user.tag}`, iconURL: interaction.user.avatarURL() });
 
+      const imageLogEmbeds = images.map(image => {
+        return new EmbedBuilder()
+          .setTitle('Image Deleted')
+          .setColor(config.embedColor)
+          .setImage(image)
+          .setTimestamp(new Date())
+          .setFooter({ text: `Deleted by ${interaction.user.tag}`, iconURL: interaction.user.avatarURL() });
+      });
+
       const logChannel = interaction.guild.channels.cache.get(config.channels.logs);
 
       try {
-        return logChannel.send({ embeds: [logEmbed], files: images });
+        return logChannel.send({ embeds: [logEmbed, ...imageLogEmbeds] });
       } catch {
         return interaction.followUp({ content: 'Message not logged.', ephemeral: true });
       }
