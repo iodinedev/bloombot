@@ -7,7 +7,10 @@ import * as deploy from './helpers/deploy';
 
 dotenv.config();
 
-const client = new Discord.Client({ intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.MessageContent] });
+const client = new Discord.Client({
+	intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildMessageReactions ],
+	partials: [Discord.Partials.Message, Discord.Partials.Channel, Discord.Partials.Reaction],
+});
 
 fs.readdirSync(path.join(__dirname, "events")).filter(file => file.endsWith(".js")).forEach(file => {
 	const event = require(path.join(__dirname, `events/${file}`));
