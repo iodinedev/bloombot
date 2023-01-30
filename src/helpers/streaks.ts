@@ -103,10 +103,11 @@ export const getStreak = async (client: Client, guild: Guild, user: User) => {
       FROM "Meditations" 
       WHERE "session_user" = ${user_id} AND "session_guild" = ${guild_id} 
       AND "occurred_at"::date <= NOW()::date
-      GROUP BY "days_ago", "session_user", "session_guild", "occurred_at"
     )
     SELECT * FROM cte
-    ORDER BY "days_ago" ASC;`;
+    GROUP BY "days_ago"
+    ORDER BY "days_ago" ASC;
+    `;
 
   var streak = 0;
 
