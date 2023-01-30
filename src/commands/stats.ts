@@ -16,9 +16,9 @@ const get_data = async (timeframe, guild, user) => {
       WHERE "session_user" = ${user} AND "session_guild" = ${guild}
     ) SELECT "times_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
     FROM "daily_data"
+    WHERE "times_ago" <= 12
     GROUP BY "times_ago"
-    ORDER BY "times_ago" ASC
-    WHERE "times_ago" <= 12;
+    ORDER BY "times_ago" ASC;
     `;
 
     return data;
@@ -33,9 +33,9 @@ const get_data = async (timeframe, guild, user) => {
       WHERE "session_user" = ${user} AND "session_guild" = ${guild}
 ) SELECT "times_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
 FROM "weekly_data"
+    WHERE "times_ago" <= 12
 GROUP BY "times_ago"
-ORDER BY "times_ago" ASC
-    WHERE "times_ago" <= 12;
+ORDER BY "times_ago" ASC;
     `;
 
     return data;
@@ -50,9 +50,9 @@ ORDER BY "times_ago" ASC
       WHERE "session_user" = ${user} AND "session_guild" = ${guild}
     ) SELECT "times_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
     FROM "monthly_data"
+    WHERE "times_ago" <= 12
     GROUP BY "times_ago"
-    ORDER BY "times_ago" ASC
-    WHERE "times_ago" <= 12;
+    ORDER BY "times_ago" ASC;
     `;
 
     return data;
@@ -67,9 +67,9 @@ ORDER BY "times_ago" ASC
       WHERE "session_user" = ${user} AND "session_guild" = ${guild}
     ) SELECT "times_ago", SUM("session_time") AS "total_time", COUNT(*) AS "count"
     FROM "yearly_data"
+    WHERE "times_ago" <= 12
     GROUP BY "times_ago"
-    ORDER BY "times_ago" ASC
-    WHERE "times_ago" <= 12;
+    ORDER BY "times_ago" ASC;
     `;
 
     return data;

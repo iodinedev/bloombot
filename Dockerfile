@@ -1,4 +1,3 @@
-ARG PRODUCTION=false
 FROM node:18
 
 # Create app directory
