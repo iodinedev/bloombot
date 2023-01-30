@@ -27,11 +27,7 @@ export = async (client, message) => {
     if (commandfile) {
       message.channel.sendTyping();
 
-      const reply = await message.channel.send("Message commands have been sunsetted. Please use slash commands instead.");
-
-      setTimeout(() => {
-        reply.delete();
-      }, 10000);
+      return await message.channel.send("Message commands have been sunsetted. Please use slash commands instead.");
     }
   }
 };
