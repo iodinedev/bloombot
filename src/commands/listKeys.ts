@@ -30,6 +30,7 @@ export = {
         }
 
         embed.addFields({ name: `\`\`\`${keys[i].key}\`\`\``, value: keys[i].used ? 'Used' : 'Unused', inline: true });
+        embed.setFooter({ text: `Page ${embeds.length + 1} of ${Math.ceil(keys.length / 10)}` });
       }
 
       embeds.push(embed);

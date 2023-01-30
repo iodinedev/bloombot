@@ -5,8 +5,9 @@ import Chart from "chart.js/auto"
 import { createCanvas } from "canvas";
 import { getStreak } from "../helpers/streaks";
 
-
 const get_data = async (timeframe, guild, user) => {
+  console.log(timeframe)
+  
   if (timeframe === 'daily') {
     // Sums meditation times that have the same "times_ago" value
     const data = await database.$queryRaw`

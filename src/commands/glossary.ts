@@ -71,6 +71,7 @@ export = {
         }
 
         embed.addFields({ name: terms[i].term, value: terms[i].definition });
+        embed.setFooter({ text: `Page ${embeds.length + 1} of ${Math.ceil(terms.length / 10)}` });
       }
 
       embeds.push(embed);

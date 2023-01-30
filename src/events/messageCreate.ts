@@ -19,7 +19,7 @@ export = async (client, message) => {
   }
 
   const command =
-    message.content.startsWith(prefix) && args.shift().slice(prefix.length);
+    message.content.startsWith(prefix) && args.shift().slice(prefix.length).split(' ')[0].toLowerCase();
 
   if (command) {
     const commandfile = fs.readdirSync(path.join(__dirname, '../commands/')).filter(file => file.endsWith('.js')).find(file => file === `${command}.js`);

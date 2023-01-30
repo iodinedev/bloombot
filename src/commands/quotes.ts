@@ -17,7 +17,6 @@ export = {
     const quoteAuthor = quote[random].author;
 
     const quoteEmbed = new EmbedBuilder()
-      .setTitle('Quote')
       .setColor(config.embedColor)
       .setDescription(`*${quoteText}*`)
       .setFooter({ text: `- ${quoteAuthor}` });

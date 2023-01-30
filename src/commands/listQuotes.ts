@@ -59,6 +59,7 @@ export = {
         const value = terms[i].quote.length > 150 ? `${cut}...` : terms[i].quote;
 
         embed.addFields({ name: `ID: ${terms[i].id}`, value: value });
+        embed.setFooter({ text: `Page ${embeds.length + 1} of ${Math.ceil(terms.length / 10)}` });
       }
 
       embeds.push(embed);
