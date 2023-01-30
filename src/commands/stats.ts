@@ -296,7 +296,7 @@ export = {
         inline: false,
       },
       { name: `Minutes The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${raw_data.reduce((a, b) => a + Number(b.total_time), 0)}\`\`\``, inline: true },
-      { name: `Sessions The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${raw_data.reduce((a, b) => a + Number(b.count), 0)}}\`\`\``, inline: true },
+      { name: `Sessions The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${raw_data.reduce((a, b) => a + Number(b.count), 0)}\`\`\``, inline: true },
       {
         name: 'Current Streak',
         value: `\`\`\`${streak} days\`\`\``,
