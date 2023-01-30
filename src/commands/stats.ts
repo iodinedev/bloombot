@@ -22,6 +22,8 @@ const get_data = async (timeframe, guild, user) => {
     LIMIT 12;
     `;
 
+    console.log(data)
+
     return data;
   }
 

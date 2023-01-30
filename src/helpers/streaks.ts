@@ -105,9 +105,12 @@ export const getStreak = async (client: Client, guild: Guild, user: User) => {
       AND "occurred_at"::date <= NOW()::date
       GROUP BY "days_ago", "session_user", "session_guild", "date"
     )
-    SELECT * FROM cte;`
+    SELECT * FROM cte
+    ORDER BY "days_ago" DESC;`;
 
   var streak = 0;
+
+
 
   if (streak_entries.length > 0 && (streak_entries[0].days_ago === 0 || streak_entries[0].days_ago === 1)) {
     var curr = streak_entries[0].days_ago;
