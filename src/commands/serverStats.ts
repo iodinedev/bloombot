@@ -96,10 +96,6 @@ export = {
         { name: 'Daily', value: 'daily' },
       )
       .setRequired(false))
-    .addBooleanOption(option =>
-      option.setName('shareable')
-      .setDescription('Whether or not to generate a shareable chart.')
-      .setRequired(false))
     .setDMPermission(false),
 	async execute(interaction) {
     const type = interaction.options.getString('type') || 'meditation_count';

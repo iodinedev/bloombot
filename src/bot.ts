@@ -8,7 +8,7 @@ import * as deploy from './helpers/deploy';
 dotenv.config();
 
 const client = new Discord.Client({
-	intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildMessageReactions ],
+	intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildMessageReactions ],
 	partials: [Discord.Partials.Message, Discord.Partials.Channel, Discord.Partials.Reaction],
 });
 

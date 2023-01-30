@@ -83,9 +83,31 @@ export = {
     .addUserOption(option =>
       option.setName('user')
       .setDescription('The user to get the stats of.'))
+    .addStringOption(option =>
+      option.setName('type')
+      .setDescription('The type of stats to get.')
+      .addChoices(
+        { name: 'Meditation Minutes', value: 'meditation_minutes' },
+        { name: 'Meditation Count', value: 'meditation_count' },
+      )
+      .setRequired(false))
+    .addStringOption(option =>
+      option.setName('timeframe')
+      .setDescription('The timeframe to get the stats for.')
+      .addChoices(
+        { name: 'Yearly', value: 'yearly' },
+        { name: 'Monthly', value: 'monthly' },
+        { name: 'Weekly', value: 'weekly' },
+        { name: 'Daily', value: 'daily' },
+      )
+      .setRequired(false))
     .setDMPermission(false),
 	async execute(interaction) {
     const user = interaction.options.getUser('user') || interaction.user;
+    const type = interaction.options.getString('type') || 'meditation_minutes';
+    const timeframe = interaction.options.getString('timeframe') || 'daily';
+
+    const member = interaction.guild.members.cache.get(user.id);
 
 		const recent_meditations = await database.meditations.findMany({
       where: {
@@ -136,11 +158,8 @@ export = {
       );
     });
 
-    const type = interaction.options.getString('type') || 'meditation_count';
-    const timeframe = interaction.options.getString('timeframe') || 'daily';
-
     // Gets the data for the chart
-    const raw_data: any = await get_data(timeframe, interaction.guild.id, interaction.user.id);
+    const raw_data: any = await get_data(timeframe, interaction.guild.id, user.id);
     const parsed_data = raw_data.reduce((acc, data) => {
       acc[data.times_ago] = data;
       return acc;
@@ -244,7 +263,7 @@ export = {
           {
             label: header,
             data: values,
-            backgroundColor: interaction.member.displayHexColor === "#000000" ? "#ffffff" : interaction.member.displayHexColor,
+            backgroundColor: member.displayHexColor === "#000000" ? "#ffffff" : member.displayHexColor,
             borderColor: `#fff`,
             borderWidth: 1,
           },
