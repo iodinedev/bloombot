@@ -99,8 +99,7 @@ export const getStreak = async (client: Client, guild: Guild, user: User) => {
 
   const streak_entries: any = await database.$queryRaw`
     WITH cte AS (
-      SELECT "session_user", "session_guild", "occurred_at"::date AS "date", 
-      date_part('day', NOW() - DATE_TRUNC('day', "occurred_at")) AS "days_ago"
+      SELECT date_part('day', NOW() - DATE_TRUNC('day', "occurred_at")) AS "days_ago"
       FROM "Meditations" 
       WHERE "session_user" = ${user_id} AND "session_guild" = ${guild_id} 
       AND "occurred_at"::date <= NOW()::date
