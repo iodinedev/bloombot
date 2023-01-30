@@ -111,8 +111,6 @@ export const getStreak = async (client: Client, guild: Guild, user: User) => {
 
   var streak = 0;
 
-  console.log(streak_entries)
-
   if (streak_entries.length > 0 && (streak_entries[0].days_ago === 0 || streak_entries[0].days_ago === 1)) {
     var curr = streak_entries[0].days_ago;
 

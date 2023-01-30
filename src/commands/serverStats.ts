@@ -231,6 +231,8 @@ export = {
       'yearly': 'Years'
     }
 
+    console.log(raw_data)
+
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {name: "chart.png"});
     const embed = new EmbedBuilder()
       .setTitle("Stats")
@@ -240,7 +242,7 @@ export = {
         { name: "All-Time Meditation Minutes", value: `\`\`\`${all_time._sum.session_time}\`\`\`` },
         { name: "All-Time Session Count", value: `\`\`\`${all_time._count.id}\`\`\`` },
         { name: `Minutes The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${values.reduce((a, b) => a + b, 0)}\`\`\``, inline: true },
-        { name: `Sessions The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${values.length}\`\`\``, inline: true },
+        { name: `Sessions The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${raw_data.reduce((a, b) => a + Number(b.count), 0)}\`\`\``, inline: true },
       )
       .setImage("attachment://chart.png");
     return interaction.reply({ embeds: [embed], files: [attachment] });

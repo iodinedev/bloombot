@@ -5,9 +5,7 @@ import Chart from "chart.js/auto"
 import { createCanvas } from "canvas";
 import { getStreak } from "../helpers/streaks";
 
-const get_data = async (timeframe, guild, user) => {
-  console.log(timeframe)
-  
+const get_data = async (timeframe, guild, user) => {  
   if (timeframe === 'daily') {
     // Sums meditation times that have the same "times_ago" value
     const data = await database.$queryRaw`
@@ -21,8 +19,6 @@ const get_data = async (timeframe, guild, user) => {
     ORDER BY "times_ago" ASC
     LIMIT 12;
     `;
-
-    console.log(data)
 
     return data;
   }
@@ -300,7 +296,7 @@ export = {
         inline: false,
       },
       { name: `Minutes The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${values.reduce((a, b) => a + b, 0)}\`\`\``, inline: true },
-      { name: `Sessions The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${values.length}\`\`\``, inline: true },
+      { name: `Sessions The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${raw_data.reduce((a, b) => a + Number(b.count), 0)}}\`\`\``, inline: true },
       {
         name: 'Current Streak',
         value: `\`\`\`${streak} days\`\`\``,
