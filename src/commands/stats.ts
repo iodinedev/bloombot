@@ -18,7 +18,7 @@ const get_data = async (timeframe, guild, user) => {
     FROM "daily_data"
     GROUP BY "times_ago"
     ORDER BY "times_ago" ASC
-    LIMIT 12;
+    WHERE "times_ago" <= 12;
     `;
 
     return data;
@@ -35,7 +35,7 @@ const get_data = async (timeframe, guild, user) => {
 FROM "weekly_data"
 GROUP BY "times_ago"
 ORDER BY "times_ago" ASC
-LIMIT 12;
+    WHERE "times_ago" <= 12;
     `;
 
     return data;
@@ -52,7 +52,7 @@ LIMIT 12;
     FROM "monthly_data"
     GROUP BY "times_ago"
     ORDER BY "times_ago" ASC
-    LIMIT 12;
+    WHERE "times_ago" <= 12;
     `;
 
     return data;
@@ -69,7 +69,7 @@ LIMIT 12;
     FROM "yearly_data"
     GROUP BY "times_ago"
     ORDER BY "times_ago" ASC
-    LIMIT 12;
+    WHERE "times_ago" <= 12;
     `;
 
     return data;
