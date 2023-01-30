@@ -1,5 +1,7 @@
 import Discord, { SlashCommandBuilder } from "discord.js";
 import { database } from "../helpers/database";
+import { config } from "../config";
+import { channelGuard } from "../helpers/guards";
 
 export = {
 	data: new SlashCommandBuilder()
@@ -7,6 +9,8 @@ export = {
 		.setDescription('Gets your recent meditation entries.')
     .setDMPermission(false),
 	async execute(interaction) {
+    if (!(await channelGuard)(interaction, [config.channels.meditation, config.channels.commands], interaction.channelId)) return;
+
 		const sessions = await database.meditations.findMany({
       where: {
         session_user: interaction.user.id,

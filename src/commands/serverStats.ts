@@ -3,6 +3,7 @@ import { database } from "../helpers/database";
 import Chart from "chart.js/auto"
 import { createCanvas } from "canvas";
 import { config } from "../config";
+import { channelGuard } from "../helpers/guards";
 
 const get_data = async (timeframe, guild) => {
   if (timeframe === 'daily') {
@@ -98,6 +99,8 @@ export = {
       .setRequired(false))
     .setDMPermission(false),
 	async execute(interaction) {
+    if (!(await channelGuard)(interaction, [config.channels.meditation, config.channels.commands], interaction.channelId)) return;
+    
     const type = interaction.options.getString('type') || 'meditation_count';
     const timeframe = interaction.options.getString('timeframe') || 'daily';
 
@@ -230,8 +233,6 @@ export = {
       'monthly': 'Months',
       'yearly': 'Years'
     }
-
-    console.log(raw_data)
 
     const attachment = new AttachmentBuilder(canvas.toBuffer(), {name: "chart.png"});
     const embed = new EmbedBuilder()

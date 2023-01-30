@@ -4,9 +4,9 @@ import { config } from "../config";
 import Chart from "chart.js/auto"
 import { createCanvas } from "canvas";
 import { getStreak } from "../helpers/streaks";
+import { channelGuard } from "../helpers/guards";
 
 const get_data = async (timeframe, guild, user) => {  
-  console.log(guild, user)
   if (timeframe === 'daily') {
     // Sums meditation times that have the same "times_ago" value
     const data = await database.$queryRaw`
@@ -103,6 +103,8 @@ export = {
       .setRequired(false))
     .setDMPermission(false),
 	async execute(interaction) {
+    if (!(await channelGuard)(interaction, [config.channels.meditation, config.channels.commands], interaction.channelId)) return;
+
     const user = interaction.options.getUser('user') || interaction.user;
     const type = interaction.options.getString('type') || 'meditation_minutes';
     const timeframe = interaction.options.getString('timeframe') || 'daily';
@@ -164,9 +166,6 @@ export = {
       acc[data.times_ago] = data;
       return acc;
     }, {})
-
-    console.log(raw_data)
-    console.log(parsed_data)
 
     // Makes the chart. Gets the last 12 days, weeks, months, or years of data. dd/mm/yyyy
     const data: {date, value}[] = [];

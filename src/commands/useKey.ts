@@ -1,24 +1,22 @@
 import { SlashCommandBuilder } from "discord.js";
 import { database } from "../helpers/database";
+import { adminCommand } from "../helpers/commandPermissions";
 
 export = {
 	data: new SlashCommandBuilder()
 		.setName('usekey')
 		.setDescription('Use your key to redeem a game.')
-    .setDMPermission(true),
+		.setDefaultMemberPermissions(adminCommand())
+    .setDMPermission(false),
 	async execute(interaction) {
 		const key = await database.steamKeys.findFirst({
 			where: {
-				reservation: interaction.user.id
+				used: false,
 			}
 		});
 
 		if (!key) {
-			return interaction.reply({ content: ':x: You do not have a key. You can win one by participating in the meditation challenges!', ephemeral: true });
-		}
-
-		if (interaction.inGuild()) {
-			return interaction.reply({ content: ':x: This command can only be used in DMs.', ephemeral: true });
+			return interaction.reply({ content: ':x: No keys available.', ephemeral: true });
 		}
 
 		await database.steamKeys.update({
@@ -30,6 +28,6 @@ export = {
 			}
 		});
 
-		return interaction.reply({ content: `:white_check_mark: Your key is: \`${key.key}\`` });
+		return interaction.reply({ content: `:white_check_mark: Key has successfully been selected and marked as used.\n\n\`\`\`${key.key}\`\`\`\n\n**This message is ephemeral and the key will be lost if you do not copy and paste it somewhere private.**`, ephemeral: true });
 	},
 };

@@ -1,4 +1,4 @@
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { CategoryChannel, EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { adminCommand } from "../helpers/commandPermissions";
 import { database } from "../helpers/database";
 import { config } from "../config";
@@ -12,8 +12,7 @@ export = {
 	async execute(interaction) {
 		const keyExists = await database.steamKeys.findFirst({
 			where: {
-				used: false,
-				reservation: ""
+				used: false
 			}
 		});
 
@@ -35,9 +34,26 @@ export = {
 				key: keyExists.key
 			},
 			data: {
-				reservation: member.id
+				used: true
 			}
 		});
+
+		const dmEmbed = new EmbedBuilder()
+			.setTitle(":tada: You've won a key! :tada:")
+			.setThumbnail(member.user.avatarURL())
+			.setFields([
+				{
+					name: `**Congratulations!**`,
+					value: `You've won a key for Playne: The Meditation Game on Steam!\n\n**Your key is:** \`${keyExists.key}\`\n\nThanks for participating in the meditation challenges!`
+				}
+			])
+			.setFooter({ text: `From ${interaction.guild.name}` })
+
+		try {
+			await member.send({ embeds: [dmEmbed] });
+		} catch {
+			return interaction.reply({ content: `:x: Could not send DM to member. The key chosen is \`${keyExists.key}\`. Please copy it and provide it to the user elsewhere.\n\n**This message is ephemeral and the key will be lost if you do not copy it immediately.**`, ephemeral: true });
+		}
 
 		const monthly_total = await database.meditations.aggregate({
 			where: {

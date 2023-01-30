@@ -3,6 +3,7 @@ import { database } from "../helpers/database";
 import { updateRoles } from "../helpers/streaks";
 import { config } from "../config";
 import { getStreak } from "../helpers/streaks";
+import { channelGuard } from "../helpers/guards";
 
 export = {
 	data: new SlashCommandBuilder()
@@ -14,6 +15,8 @@ export = {
         .setRequired(true))
     .setDMPermission(false),
 	async execute(interaction) {
+    if (!(await channelGuard)(interaction, [config.channels.meditation, config.channels.commands], interaction.channelId)) return;
+
 		const minutes: number = interaction.options.getInteger('minutes');
 
     const user = interaction.user.id;
@@ -37,8 +40,10 @@ export = {
         session_time: true
       }
     });
+
+    const motivation_messages = (await database.quoteBook.findMany()).map((quote) => quote.quote).concat(config.motivational_messages);
     
-    const motivation = config.motivational_messages[Math.floor(Math.random() * config.motivational_messages.length)];
+    const motivation = motivation_messages[Math.floor(Math.random() * motivation_messages.length)];
     const update = await updateRoles(interaction.client, interaction.guild, interaction.user);
 
     

@@ -1,5 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { getStreak } from "../helpers/streaks";
+import { config } from "../config";
+import { channelGuard } from "../helpers/guards";
 
 export = {
 	data: new SlashCommandBuilder()
@@ -11,6 +13,8 @@ export = {
       .setRequired(false))
     .setDMPermission(false),
 	async execute(interaction) {
+    if (!(await channelGuard)(interaction, [config.channels.meditation, config.channels.commands], interaction.channelId)) return;
+
     const user = interaction.options.getUser('user') || interaction.user;
     const streak = await getStreak(interaction.client, interaction.guild, user);
 
