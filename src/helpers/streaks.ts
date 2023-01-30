@@ -106,7 +106,7 @@ export const getStreak = async (client: Client, guild: Guild, user: User) => {
       GROUP BY "days_ago", "session_user", "session_guild", "occurred_at"
     )
     SELECT * FROM cte
-    ORDER BY "days_ago" DESC;`;
+    ORDER BY "days_ago" ASC;`;
 
   var streak = 0;
 
