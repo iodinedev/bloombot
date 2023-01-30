@@ -6,6 +6,7 @@ import { createCanvas } from "canvas";
 import { getStreak } from "../helpers/streaks";
 
 const get_data = async (timeframe, guild, user) => {  
+  console.log(guild, user)
   if (timeframe === 'daily') {
     // Sums meditation times that have the same "times_ago" value
     const data = await database.$queryRaw`
@@ -163,6 +164,9 @@ export = {
       acc[data.times_ago] = data;
       return acc;
     }, {})
+
+    console.log(raw_data)
+    console.log(parsed_data)
 
     // Makes the chart. Gets the last 12 days, weeks, months, or years of data. dd/mm/yyyy
     const data: {date, value}[] = [];
