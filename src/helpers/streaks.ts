@@ -82,8 +82,16 @@ export const updateRoles = async (client: Client, guild: Guild, user: User) => {
   remove_roles = remove_roles.filter(role => !duplicates.includes(role));
 
   // Add and remove roles
+  try {
   if (add_roles.length > 0) await member.roles.add(add_roles);
   if (remove_roles.length > 0) await member.roles.remove(remove_roles);
+  } catch (error: any) {
+    if (error.code === 50013) {
+      console.log('Missing permissions to manage roles');
+    } else {
+      console.log(error);
+    }
+  }
 
   // new_streak returns the streak role if it was added, otherwise it returns an empty array
   return {
