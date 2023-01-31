@@ -7,9 +7,21 @@ export = {
 	data: new SlashCommandBuilder()
 		.setName('recent')
 		.setDescription('Gets your recent meditation entries.')
+    .addIntegerOption(option =>
+      option.setName('page')
+        .setDescription('The page you want to see.')
+        .setRequired(false))
     .setDMPermission(false),
 	async execute(interaction) {
     if (!(await channelGuard)(interaction, [config.channels.meditation, config.channels.commands], interaction.channelId)) return;
+
+    let page = 0;
+
+    if (interaction.options.getInteger('page') !== null) {
+      page = interaction.options.getInteger('page') - 1;
+    }
+
+    if (page < 0) return interaction.reply({ content: 'That\'s not a valid page!', ephemeral: true });
 
 		const sessions = await database.meditations.findMany({
       where: {
@@ -23,15 +35,18 @@ export = {
       ],
     });
 
+    
     const embeds: any[] = [];
     let embed = new Discord.EmbedBuilder()
       .setTitle('Entries')
       .setDescription('Here\'s a list of your meditation sessions:');
-
+      
     if (sessions.length === 0) {
       embed.setDescription('There are no entries yet!');
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
+
+    if (page > Math.ceil(sessions.length / 10)) return interaction.reply({ content: `That's not a valid page! Last page is \`${Math.ceil(sessions.length / 10)}\`.`, ephemeral: true });
 
     const today = new Date();
 
@@ -70,8 +85,6 @@ export = {
           .setLabel('Next')
           .setStyle(Discord.ButtonStyle.Primary)
       );
-
-    let page = 0;
 
     if (embeds.length > 1) {
       const msg = await interaction.reply({ embeds: [embeds[page]], components: [row], fetchReply: true, ephemeral: true });

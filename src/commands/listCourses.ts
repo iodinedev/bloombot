@@ -6,9 +6,19 @@ export = {
 	data: new SlashCommandBuilder()
 		.setName('listcourses')
 		.setDescription('Lists all the courses added to the database.')
+    .addIntegerOption(
+      option => option.setName('page')
+        .setDescription('The page you want to see.')
+        .setRequired(false))
     .setDefaultMemberPermissions(adminCommand())
     .setDMPermission(false),
 	async execute(interaction) {
+    let page = 0;
+
+    if (interaction.options.getInteger('page') && interaction.options.getInteger('page') > 0) {
+      page = interaction.options.getInteger('page') - 1;
+    }
+
     const courses = await database.courses.findMany();
     const embeds: any[] = [];
     let embed = new EmbedBuilder()
@@ -19,6 +29,8 @@ export = {
       embed.setDescription('There are no courses yet!');
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
+
+    if (page > Math.ceil(courses.length / 10)) return interaction.reply({ content: `That's not a valid page! Last page is \`${Math.ceil(courses.length / 10)}\`.`, ephemeral: true });
 
     for (let i = 0; i < courses.length; i++) {
       const fields = embed.toJSON().fields;
@@ -47,8 +59,6 @@ export = {
           .setLabel('Next')
           .setStyle(ButtonStyle.Primary)
       );
-
-    let page = 0;
 
     if (embeds.length > 1) {
       const msg = await interaction.reply({ embeds: [embeds[page]], components: [row], fetchReply: true, ephemeral: true });

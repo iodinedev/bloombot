@@ -10,4 +10,4 @@ export const makeSearchable = (data: string): string => {
   return data.toLowerCase().replace(/[^a-z0-9]/g, '');
 };
 
-export const alphanumeric = (str: string) => str.replace(/[^A-Za-z0-9_]/g, '');
+export const alphanumeric = (str: string) => str.replace(/[^A-Za-z0-9_ ]/g, '');

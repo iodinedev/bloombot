@@ -290,16 +290,16 @@ export = {
     const fields = [
       {
         name: 'All-Time Meditation Minutes',
-        value: `\`\`\`${user_time}\`\`\``,
+        value: `\`\`\`${user_time.toLocaleString()}\`\`\``,
         inline: false,
       },
       {
         name: 'All-Time Session Count',
-        value: `\`\`\`${user_count}\`\`\``,
+        value: `\`\`\`${user_count.toLocaleString()}\`\`\``,
         inline: false,
       },
-      { name: `Minutes The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${raw_data.reduce((a, b) => a + Number(b.total_time), 0)}\`\`\``, inline: true },
-      { name: `Sessions The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${raw_data.reduce((a, b) => a + Number(b.count), 0)}\`\`\``, inline: true },
+      { name: `Minutes The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${raw_data.reduce((a, b) => a + Number(b.total_time), 0).toLocaleString()}\`\`\``, inline: true },
+      { name: `Sessions The Past 12 ${timeframeWords[timeframe]}`, value: `\`\`\`${raw_data.reduce((a, b) => a + Number(b.count), 0).toLocaleString()}\`\`\``, inline: true },
       {
         name: 'Current Streak',
         value: `\`\`\`${streak} days\`\`\``,

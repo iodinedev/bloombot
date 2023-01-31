@@ -44,7 +44,7 @@ export = {
 
     const motivation_messages = (await database.quoteBook.findMany()).map((quote) => alphanumeric(quote.quote));
     
-    const motivation = motivation_messages.length > 0 ? `\n*${motivation_messages[Math.floor(Math.random() * motivation_messages.length)]}` : "";
+    const motivation = motivation_messages.length > 0 ? `\n*${motivation_messages[Math.floor(Math.random() * motivation_messages.length)]}*` : "";
     const update = await updateRoles(interaction.client, interaction.guild, interaction.user);
 
     

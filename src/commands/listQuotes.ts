@@ -11,10 +11,20 @@ export = {
       option.setName('id')
         .setDescription('The ID of the quote you want to see.')
         .setRequired(false))
+    .addIntegerOption(option =>
+      option.setName('page')
+        .setDescription('The page you want to see.')
+        .setRequired(false))
     .setDefaultMemberPermissions(modCommand())
     .setDMPermission(false),
   async execute(interaction) {
     const id = interaction.options.getInteger('id');
+    let page = 0;
+
+    if (interaction.options.getInteger('page') && interaction.options.getInteger('page') > 0) {
+      page = interaction.options.getInteger('page') - 1;
+    }
+
     if (id) {
       const quote = await database.quoteBook.findUnique({
         where: {
@@ -36,18 +46,20 @@ export = {
       return interaction.reply({ embeds: [embed], ephemeral: true });
     } else {
       // Max 10 fields, uses buttons to paginate
-      const terms = await database.quoteBook.findMany();
+      const quotes = await database.quoteBook.findMany();
       const embeds: any[] = [];
       let embed = new Discord.EmbedBuilder()
         .setTitle('Quotes')
         .setDescription('Here\'s a list of all the quotes:');
 
-      if (terms.length === 0) {
+      if (quotes.length === 0) {
         embed.setDescription('There are no quotes yet!');
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
 
-      for (let i = 0; i < terms.length; i++) {
+      if (page > Math.ceil(quotes.length / 10)) return interaction.reply({ content: `That's not a valid page! Last page is \`${Math.ceil(quotes.length / 10)}\`.`, ephemeral: true });
+
+      for (let i = 0; i < quotes.length; i++) {
         const fields = embed.toJSON().fields;
         if (fields && fields.length === 10) {
           embeds.push(embed);
@@ -56,11 +68,11 @@ export = {
             .setDescription('Here\'s a list of all the quotes:');
         }
 
-        const cut = terms[i].quote.slice(0, 150);
-        const value = terms[i].quote.length > 150 ? `${clean(cut)}...` : clean(terms[i].quote);
+        const cut = quotes[i].quote.slice(0, 150);
+        const value = quotes[i].quote.length > 150 ? `${clean(cut)}...` : clean(quotes[i].quote);
 
-        embed.addFields({ name: `ID: ${terms[i].id}`, value: value });
-        embed.setFooter({ text: `Page ${embeds.length + 1} of ${Math.ceil(terms.length / 10)}` });
+        embed.addFields({ name: `ID: ${quotes[i].id}`, value: value });
+        embed.setFooter({ text: `Page ${embeds.length + 1} of ${Math.ceil(quotes.length / 10)}` });
       }
 
       embeds.push(embed);
@@ -77,8 +89,6 @@ export = {
             .setLabel('Next')
             .setStyle(Discord.ButtonStyle.Primary)
         );
-
-      let page = 0;
 
       if (embeds.length > 1) {
         const msg = await interaction.reply({ embeds: [embeds[page]], components: [row], fetchReply: true, ephemeral: true });
