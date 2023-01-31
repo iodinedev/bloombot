@@ -5,11 +5,11 @@ import { modCommand } from "../helpers/commandPermissions";
 
 export = {
 	data: new SlashCommandBuilder()
-		.setName('deleteterm')
-		.setDescription('Deletes a term from the glossary.')
+		.setName('removeterm')
+		.setDescription('Removes a term from the glossary.')
     .addStringOption(option =>
       option.setName('term')
-        .setDescription('The term you want to delete.')
+        .setDescription('The term you want to remove.')
         .setAutocomplete(true)
         .setRequired(true))
     .setDefaultMemberPermissions(modCommand())
@@ -62,7 +62,7 @@ export = {
           .setStyle(ButtonStyle.Primary)
       );
 
-    interaction.reply({ content: 'Are you sure you want to delete this term?', ephemeral: true, components: [row] });
+    interaction.reply({ content: 'Are you sure you want to remove this term?', ephemeral: true, components: [row] });
 
     const filter = i => i.user.id === interaction.user.id;
     const collector = interaction.channel.createMessageComponentCollector({ filter, time: 15000 });
@@ -75,15 +75,15 @@ export = {
           }
         });
 
-        interaction.editReply({ content: 'Term deleted!', ephemeral: true, components: [] });
+        interaction.editReply({ content: 'Term removed!', ephemeral: true, components: [] });
       } else if (i.customId === 'no') {
-        interaction.editReply({ content: 'Term not deleted.', ephemeral: true });
+        interaction.editReply({ content: 'Term not removed.', ephemeral: true });
       }
     })
 
     collector.on('end', collected => {
       if (collected.size === 0) {
-        interaction.editReply({ content: 'You did not respond in time. Term not deleted.', ephemeral: true });
+        interaction.editReply({ content: 'You did not respond in time. Term not removed.', ephemeral: true });
       }
     })
   }

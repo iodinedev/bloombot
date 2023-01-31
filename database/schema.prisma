@@ -44,3 +44,12 @@ model QuoteBook {
   author String @default("Anonymous")
   date  DateTime  @default(now())
 }
+
+model Courses {
+  id   Int    @id @default(autoincrement())
+  name  String @unique
+  search  String @unique
+  participant_role String
+  graduate_role String
+  date DateTime  @default(now())
+}

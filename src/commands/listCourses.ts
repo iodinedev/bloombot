@@ -4,33 +4,33 @@ import { database } from "../helpers/database";
 
 export = {
 	data: new SlashCommandBuilder()
-		.setName('listkeys')
-		.setDescription('Lists all the Playne keys.')
+		.setName('listcourses')
+		.setDescription('Lists all the courses added to the database.')
     .setDefaultMemberPermissions(adminCommand())
     .setDMPermission(false),
 	async execute(interaction) {
-		const keys = await database.steamKeys.findMany();
+    const courses = await database.courses.findMany();
     const embeds: any[] = [];
     let embed = new EmbedBuilder()
-      .setTitle('Playne Keys')
-      .setDescription('Here\'s a list of all the keys:');
+      .setTitle('Courses')
+      .setDescription('Here\'s a list of all the courses:');
 
-    if (keys.length === 0) {
-      embed.setDescription('There are no keys yet!');
+    if (courses.length === 0) {
+      embed.setDescription('There are no courses yet!');
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
-    for (let i = 0; i < keys.length; i++) {
+    for (let i = 0; i < courses.length; i++) {
       const fields = embed.toJSON().fields;
       if (fields && fields.length === 10) {
         embeds.push(embed);
         embed = new EmbedBuilder()
-          .setTitle('Playne Keys')
-          .setDescription('Here\'s a list of all the keys:');
+          .setTitle('Courses')
+          .setDescription('Here\'s a list of all the courses:');
       }
 
-      embed.addFields({ name: `\`\`\`${keys[i].key}\`\`\``, value: keys[i].used ? 'Used' : 'Unused', inline: true });
-      embed.setFooter({ text: `Page ${embeds.length + 1} of ${Math.ceil(keys.length / 10)}` });
+      embed.addFields({ name: `\`\`\`${courses[i].name}\`\`\``, value: '\u200B' });
+      embed.setFooter({ text: `Page ${embeds.length + 1} of ${Math.ceil(courses.length / 10)}` });
     }
 
     embeds.push(embed);
