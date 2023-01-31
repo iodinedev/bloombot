@@ -89,7 +89,7 @@ export const updateRoles = async (client: Client, guild: Guild, user: User) => {
     if (error.code === 50013) {
       console.log('Missing permissions to manage roles');
     } else {
-      console.log(error);
+      throw error;
     }
   }
 

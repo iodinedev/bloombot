@@ -15,7 +15,6 @@ export async function backup(client) {
   tables.forEach(async (table) => {
     // Gets all rows from the table, changing keys to progessive alphabet letters to avoid Discord's 2000 character limit
     // For example, if the table has 3 columns, the first row will be { a: 'value1', b: 'value2', c: 'value3' }
-    console.log(table.table_name)
     const rows: any = await database.$queryRaw(Prisma.raw(`SELECT * FROM "${table.table_name}"`));
 
     if (rows.length === 0) return;

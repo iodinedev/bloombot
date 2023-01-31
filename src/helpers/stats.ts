@@ -10,8 +10,6 @@ export const get_data = async (timeframe, guild, user = null) => {
     get_user = true;
   }
 
-  console.log(get_user)
-
   if (timeframe === 'daily') {
     // Sums meditation times that have the same "times_ago" value
     const data = await database.$queryRaw`
