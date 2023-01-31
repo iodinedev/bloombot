@@ -29,7 +29,8 @@ export = {
 		}
 
 		// Ensure that the user is in the course
-		const member = await interaction.guild.members.fetch(interaction.user.id);
+		const guild = await interaction.client.guilds.fetch(courseEntry.guild);
+		const member = await guild.members.fetch(interaction.user.id);
 		if (!member.roles.cache.has(courseEntry.participant_role)) {
 			await interaction.reply({ content: `You are not in the course: **${course}**.`, ephemeral: true });
 			return;

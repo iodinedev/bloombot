@@ -58,7 +58,8 @@ export = {
         name: courseName,
         search: makeSearchable(courseName),
         participant_role: participantRole.id,
-        graduate_role: graduateRole.id
+        graduate_role: graduateRole.id,
+        guild: interaction.guild.id
       }
     });
 		

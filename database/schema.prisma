@@ -51,5 +51,6 @@ model Courses {
   search  String @unique
   participant_role String
   graduate_role String
+  guild String
   date DateTime  @default(now())
 }
