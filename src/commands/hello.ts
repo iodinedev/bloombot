@@ -6,6 +6,6 @@ export = {
 		.setDescription('Says hello!')
 		.setDMPermission(false),
 	async execute(interaction) {
-		await interaction.editReply({ content: 'Hey there!' });
+		await interaction.reply({ content: 'Hey there!' });
 	},
 };
