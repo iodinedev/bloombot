@@ -52,4 +52,7 @@ export = {
 			throw error;
 		}
 	},
+	config: {
+		hidden: true
+	}
 };
