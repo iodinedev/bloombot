@@ -64,8 +64,8 @@ export = {
 
     const newcourse: string = interaction.options.getString('name') || oldcourse;
     const newsearch: string = makeSearchable(newcourse) || oldsearch;
-    const participantRole: string = interaction.options.getRole('participant_role').id || course.participant_role;
-    const graduateRole: string = interaction.options.getRole('graduate_role').id || course.graduate_role;
+    const participantRole: string = interaction.options.getRole('participant_role')?.id || course.participant_role;
+    const graduateRole: string = interaction.options.getRole('graduate_role')?.id || course.graduate_role;
 
     if (oldsearch !== newsearch) {
       // Ensure that the new course name does not already exist

@@ -9,29 +9,7 @@ export = {
     .addStringOption(option =>
       option.setName('course')
 				.setDescription('The course you want to mark as complete.')
-				.setAutocomplete(true)
 				.setRequired(true)),
-	async autocomplete(interaction) {
-		const course: string = interaction.options.getString('course');
-		const search: string = makeSearchable(course);
-
-		const terms = await database.courses.findMany({
-			where: {
-				name: {
-					contains: search
-				}
-			}
-		});
-
-		const suggestions = terms.map(term => {
-			return {
-				name: term.name,
-				value: term.name
-			};
-		});
-
-		await interaction.respond(suggestions);
-	},
 	async execute(interaction) {
 		const course: string = interaction.options.getString('course');
 		const search: string = makeSearchable(course);
