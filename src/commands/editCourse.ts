@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { PermissionsBitField, SlashCommandBuilder } from "discord.js";
 import { makeSearchable } from "../helpers/glossary";
 import { database } from "../helpers/database";
 import { adminCommand } from "../helpers/commandPermissions";
@@ -96,9 +96,9 @@ export = {
     if (participantRole.managed) return interaction.reply({ content: ':x: Participant role is a bot role.', ephemeral: true });
     if (graduateRole.managed) return interaction.reply({ content: ':x: Graduate role is a bot role.', ephemeral: true });
 
-    // Ensures that the roles are not priveleged (have no permissions at all)
-    if (Number(participantRole.permissions.bitfield) !== 0) return interaction.reply({ content: `:x: Participant role is priveleged. Please clear all permissions from <@&${participantRole.id}>`, ephemeral: true, allowedMentions: { roles: [] } });
-    if (Number(graduateRole.permissions.bitfield) !== 0) return interaction.reply({ content: `:x: Graduate role is priveleged. Please clear all permissions from <@&${graduateRole.id}>`, ephemeral: true, allowedMentions: { roles: [] } });
+    // Ensures that the roles are not priveleged
+    if (new PermissionsBitField(participantRole.permissions.bitfield).has('Administrator')) return interaction.reply({ content: `:x: Participant role has admin permission.`, ephemeral: true, allowedMentions: { roles: [] } });
+    if (new PermissionsBitField(graduateRole.permissions.bitfield).has('Administrator')) return interaction.reply({ content: `:x: Graduate role has admin permissions.`, ephemeral: true, allowedMentions: { roles: [] } });
 
     // Ensures that the roles are not the same
     if (participantRole.id === graduateRole.id) return interaction.reply({ content: ':x: Participant and graduate roles cannot be the same.', ephemeral: true });
