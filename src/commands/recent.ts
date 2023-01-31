@@ -61,13 +61,13 @@ export = {
 
       // Show time if the date is today, otherwise show the date
       const date = new Date(sessions[i].occurred_at);
-      var dateTime = `\`${sessions[i].id}\` - ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+      var dateTime = `\`${sessions[i].id}\` - ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} Today`;
 
       if (date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()) {
-        dateTime = `\`${sessions[i].id}\` - ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}`;
+        dateTime = `ID: \`${sessions[i].id}\` - ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}`;
       }
 
-      embed.addFields({ name: dateTime, value: `\`\`\`${sessions[i].session_time}\`\`\`` });
+      embed.addFields({ name: dateTime, value: `\`\`\`${sessions[i].session_time} minutes\`\`\`` });
       embed.setFooter({ text: `Page ${embeds.length + 1} of ${Math.ceil(sessions.length / 10)}` });
     }
 

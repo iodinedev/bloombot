@@ -2,7 +2,6 @@ import { database } from "./database";
 import { config } from "../config";
 import { Prisma } from "@prisma/client";
 import { AttachmentBuilder } from "discord.js";
-import brotli from "brotli";
 
 // Takes a snapshot of the current state of the database and saves it to the backup channel
 // This is used to restore the database in case of a crash
