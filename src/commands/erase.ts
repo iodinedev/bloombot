@@ -1,6 +1,7 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { modCommand } from "../helpers/commandPermissions";
 import { config } from "../config";
+import { clean } from "../helpers/strings";
 
 export = {
 	data: new SlashCommandBuilder()
@@ -46,7 +47,7 @@ export = {
     }
 
     // This is to escape the ` character.
-    const sanitized = message.content.replace(/`/g, '\\`');
+    const sanitized = clean(message.content);
     const images = message.attachments.map(attachment => attachment.url);
 
     const embed = new EmbedBuilder()

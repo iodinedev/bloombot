@@ -1,5 +1,5 @@
 import { PermissionsBitField, SlashCommandBuilder } from "discord.js";
-import { makeSearchable } from "../helpers/glossary";
+import { makeSearchable } from "../helpers/strings";
 import { database } from "../helpers/database";
 import { adminCommand } from "../helpers/commandPermissions";
 

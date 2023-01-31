@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { adminCommand } from "../helpers/commandPermissions";
 import { database } from "../helpers/database";
-import { makeSearchable } from "../helpers/glossary";
+import { makeSearchable } from "../helpers/strings";
 
 export = {
 	data: new SlashCommandBuilder()

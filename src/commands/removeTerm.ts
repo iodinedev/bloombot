@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, ButtonStyle, ButtonBuilder, ActionRowBuilder } from "discord.js";
-import { makeSearchable } from "../helpers/glossary";
+import { makeSearchable } from "../helpers/strings";
 import { database } from "../helpers/database";
 import { modCommand } from "../helpers/commandPermissions";
 

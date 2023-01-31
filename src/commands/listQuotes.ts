@@ -1,6 +1,7 @@
 import { database } from '../helpers/database';
 import Discord from 'discord.js';
 import { modCommand } from "../helpers/commandPermissions";
+import { clean } from '../helpers/strings';
 
 export = {
   data: new Discord.SlashCommandBuilder()
@@ -56,7 +57,7 @@ export = {
         }
 
         const cut = terms[i].quote.slice(0, 150);
-        const value = terms[i].quote.length > 150 ? `${cut}...` : terms[i].quote;
+        const value = terms[i].quote.length > 150 ? `${clean(cut)}...` : clean(terms[i].quote);
 
         embed.addFields({ name: `ID: ${terms[i].id}`, value: value });
         embed.setFooter({ text: `Page ${embeds.length + 1} of ${Math.ceil(terms.length / 10)}` });

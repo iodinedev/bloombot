@@ -4,6 +4,7 @@ import { updateRoles } from "../helpers/streaks";
 import { config } from "../config";
 import { getStreak } from "../helpers/streaks";
 import { channelGuard } from "../helpers/guards";
+import { alphanumeric } from "../helpers/strings";
 
 export = {
 	data: new SlashCommandBuilder()
@@ -41,7 +42,7 @@ export = {
       }
     });
 
-    const motivation_messages = (await database.quoteBook.findMany()).map((quote) => quote.quote).concat(config.motivational_messages);
+    const motivation_messages = (await database.quoteBook.findMany()).map((quote) => alphanumeric(quote.quote));
     
     const motivation = motivation_messages[Math.floor(Math.random() * motivation_messages.length)];
     const update = await updateRoles(interaction.client, interaction.guild, interaction.user);

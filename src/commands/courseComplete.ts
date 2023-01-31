@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
 import { database } from "../helpers/database";
-import { makeSearchable } from "../helpers/glossary";
+import { makeSearchable } from "../helpers/strings";
 
 export = {
 	data: new SlashCommandBuilder()
