@@ -64,8 +64,8 @@ export = {
 
     const newcourse: string = interaction.options.getString('name') || oldcourse;
     const newsearch: string = makeSearchable(newcourse) || oldsearch;
-    const participantRole = interaction.options.getRole('participant_role') || course.participant_role;
-    const graduateRole = interaction.options.getRole('graduate_role') || course.graduate_role;
+    const participantRole: string = interaction.options.getRole('participant_role').id || course.participant_role;
+    const graduateRole: string = interaction.options.getRole('graduate_role').id || course.graduate_role;
 
     if (oldsearch !== newsearch) {
       // Ensure that the new course name does not already exist
@@ -87,21 +87,21 @@ export = {
 
     // Verifies that the roles exist
     await interaction.guild.roles.fetch();
-    const participantRoleExists = interaction.guild.roles.cache.find(role => role.id === participantRole.id);
-    const graduateRoleExists = interaction.guild.roles.cache.find(role => role.id === graduateRole.id);
+    const participantRoleExists = interaction.guild.roles.cache.find(role => role.id === participantRole);
+    const graduateRoleExists = interaction.guild.roles.cache.find(role => role.id === graduateRole);
 
     if (!participantRoleExists) return interaction.reply({ content: ':x: Participant role does not exist.', ephemeral: true });
     if (!graduateRoleExists) return interaction.reply({ content: ':x: Graduate role does not exist.', ephemeral: true });
 
-    if (participantRole.managed) return interaction.reply({ content: ':x: Participant role is a bot role.', ephemeral: true });
-    if (graduateRole.managed) return interaction.reply({ content: ':x: Graduate role is a bot role.', ephemeral: true });
+    if (participantRoleExists.managed) return interaction.reply({ content: ':x: Participant role is a bot role.', ephemeral: true });
+    if (graduateRoleExists.managed) return interaction.reply({ content: ':x: Graduate role is a bot role.', ephemeral: true });
 
-    // Ensures that the roles are not priveleged
-    if (new PermissionsBitField(participantRole.permissions.bitfield).has('Administrator')) return interaction.reply({ content: `:x: Participant role has admin permission.`, ephemeral: true, allowedMentions: { roles: [] } });
-    if (new PermissionsBitField(graduateRole.permissions.bitfield).has('Administrator')) return interaction.reply({ content: `:x: Graduate role has admin permissions.`, ephemeral: true, allowedMentions: { roles: [] } });
+    // Ensures that the roles are nidot priveleged
+    if (new PermissionsBitField(participantRoleExists.permissions.bitfield).has('Administrator')) return interaction.reply({ content: `:x: Participant role has admin permission.`, ephemeral: true, allowedMentions: { roles: [] } });
+    if (new PermissionsBitField(graduateRoleExists.permissions.bitfield).has('Administrator')) return interaction.reply({ content: `:x: Graduate role has admin permissions.`, ephemeral: true, allowedMentions: { roles: [] } });
 
     // Ensures that the roles are not the same
-    if (participantRole.id === graduateRole.id) return interaction.reply({ content: ':x: Participant and graduate roles cannot be the same.', ephemeral: true });
+    if (participantRole === graduateRole) return interaction.reply({ content: ':x: Participant and graduate roles cannot be the same.', ephemeral: true });
 
     if (!participantRoleExists) return interaction.reply({ content: ':x: Participant role does not exist.', ephemeral: true });
     if (!graduateRoleExists) return interaction.reply({ content: ':x: Graduate role does not exist.', ephemeral: true });
@@ -114,8 +114,8 @@ export = {
       data: {
         name: newcourse,
         search: newsearch,
-        participant_role: participantRole.id,
-        graduate_role: graduateRole.id
+        participant_role: participantRole,
+        graduate_role: graduateRole
       }
     });
 
