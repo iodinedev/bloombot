@@ -90,7 +90,7 @@ export = {
 				}
 			});
 
-			interaction.editReply({ content: 'Key deleted!', ephemeral: true, components: [] });
+			interaction.reply({ content: 'Key deleted!', ephemeral: true, components: [] });
 		}
 	},
 };
