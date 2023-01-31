@@ -42,7 +42,7 @@ export = {
 		// Add the role
 		try {
 			await member.roles.add(courseEntry.graduate_role);
-			return interaction.reply({ content: `:tada: Congrats! I marked you as having completed the course **${course}**.`, ephemeral: true });
+			return interaction.reply({ content: `:tada: Congrats! I marked you as having completed the course: **${course}**.`, ephemeral: true });
 		} catch (error: any) {
 			if (error.code === 50013) {
 				await interaction.reply({ content: `I don't have permission to give you the role for **${course}**.`, ephemeral: true });
