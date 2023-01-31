@@ -36,6 +36,7 @@ export const config = {
     "starchannel": "856865368098078720",
     "reportchannel": "855894610001395743",
     "patreon": "551895169532952578",
+    "backup": "1069911235224678460"
   },
   "roles": {
     "meditation_challenger": "481597332249640960",
