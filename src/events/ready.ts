@@ -6,7 +6,7 @@ export = async (client, message) => {
   setInterval(() => {
     backup(client);
   }, 1000 * 60 * 60 * 24);
-  
+  backup(client);
   // Prints the database name
   const current_database: any = await database.$queryRaw`select current_database()`;
   console.log(`Current database: ${current_database[0].current_database}`);
