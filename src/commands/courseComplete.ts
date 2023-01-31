@@ -10,9 +10,7 @@ export = {
       option.setName('course')
 				.setDescription('The course you want to mark as complete.')
 				.setAutocomplete(true)
-				.setRequired(true))
-		.setDefaultMemberPermissions(null)
-		.setDMPermission(true),
+				.setRequired(true)),
 	async autocomplete(interaction) {
 		const course: string = interaction.options.getString('course');
 		const search: string = makeSearchable(course);
@@ -65,6 +63,6 @@ export = {
 
 		// Add the role
 		await member.roles.add(courseEntry.graduate_role);
-		return interaction.reply(`Congrats! You have completed the course **${course}**.`);
+		return interaction.reply(`:tada: Congrats! I marked you as having completed the course **${course}**.`);
 	},
 };
