@@ -44,11 +44,19 @@ export = {
 
     collector.on('collect', async i => {
       if (i.customId === 'yes') {
+        try {
         await database.quoteBook.delete({
           where: {
             id: id
           }
         });
+      } catch (error: any) {
+        if (error.code === 'P2025') {
+          return interaction.editReply({ content: ':x: Quote does not exist. If this is unexpected, please contact a developer.', ephemeral: true });
+        }
+
+        throw error;
+      }
 
         interaction.editReply({ content: 'Quote deleted!', ephemeral: true, components: [] });
       } else if (i.customId === 'no') {
