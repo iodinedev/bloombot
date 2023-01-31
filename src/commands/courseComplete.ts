@@ -22,20 +22,20 @@ export = {
 		});
 
 		if (!courseEntry) {
-			await interaction.reply({ content: `The course **${course}** does not exist.`, ephemeral: true });
+			await interaction.reply({ content: `The course does not exist: **${course}**.`, ephemeral: true });
 			return;
 		}
 
 		// Ensure that the user is in the course
 		const member = await interaction.guild.members.fetch(interaction.user.id);
 		if (!member.roles.cache.has(courseEntry.participant_role)) {
-			await interaction.reply({ content: `You are not in the course **${course}**.`, ephemeral: true });
+			await interaction.reply({ content: `You are not in the course: **${course}**.`, ephemeral: true });
 			return;
 		}
 
 		// Ensure that the user does not already have the role
 		if (member.roles.cache.has(courseEntry.graduate_role)) {
-			await interaction.reply({ content: `You have already completed the course **${course}**.`, ephemeral: true });
+			await interaction.reply({ content: `You have already completed the course: **${course}**.`, ephemeral: true });
 			return;
 		}
 
