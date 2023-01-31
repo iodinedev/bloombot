@@ -24,7 +24,7 @@ export = {
     } else {
       // Only get commands the user can use cmd.data.default_member_permissions
       const admin_commands = interaction.client.commands.filter(cmd => new PermissionsBitField(cmd.data.default_member_permissions).has(new PermissionsBitField(adminCommand())) && interaction.member.permissions.has(cmd.data.default_member_permissions));
-      const mod_commands = interaction.client.commands.filter(cmd => new PermissionsBitField(cmd.data.default_member_permissions).has(new PermissionsBitField(modCommand())) && interaction.member.permissions.has(cmd.data.default_member_permissions && !admin_commands.has(cmd)));
+      const mod_commands = interaction.client.commands.filter(cmd => new PermissionsBitField(cmd.data.default_member_permissions).has(new PermissionsBitField(modCommand())) && interaction.member.permissions.has(cmd.data.default_member_permissions) && !admin_commands.get(cmd.data.name));
       const commands = interaction.client.commands.filter(cmd => cmd.data.default_member_permissions === undefined && !cmd.config?.hidden);
 
       const fields: APIEmbedField[] = [];
