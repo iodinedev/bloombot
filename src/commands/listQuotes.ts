@@ -71,7 +71,7 @@ export = {
         const cut = quotes[i].quote.slice(0, 150);
         const value = quotes[i].quote.length > 150 ? `${clean(cut)}...` : clean(quotes[i].quote);
 
-        embed.addFields({ name: `ID: ${quotes[i].id}`, value: value });
+        embed.addFields({ name: `ID: \`${quotes[i].id}\``, value: value });
         embed.setFooter({ text: `Page ${embeds.length + 1} of ${Math.ceil(quotes.length / 10)}` });
       }
 
