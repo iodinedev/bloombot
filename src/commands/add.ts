@@ -44,11 +44,11 @@ export = {
 
     const motivation_messages = (await database.quoteBook.findMany()).map((quote) => alphanumeric(quote.quote));
     
-    const motivation = motivation_messages[Math.floor(Math.random() * motivation_messages.length)];
+    const motivation = motivation_messages.length > 0 ? `\n*${motivation_messages[Math.floor(Math.random() * motivation_messages.length)]}` : "";
     const update = await updateRoles(interaction.client, interaction.guild, interaction.user);
 
     
-    await interaction.reply({ content: `Added **${minutes} minutes** to your meditation time! Your total meditation time is ${total._sum.session_time} minutes :tada:\n*${motivation}*` });
+    await interaction.reply({ content: `Added **${minutes} minutes** to your meditation time! Your total meditation time is ${total._sum.session_time} minutes :tada:${motivation}` });
 
     if (update.new_streak.length > 0) {
       return interaction.followUp({
