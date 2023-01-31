@@ -42,7 +42,7 @@ export async function backup(client) {
     const compressed = JSON.stringify(minimized)
     
     try {
-      const attachment = new AttachmentBuilder(Buffer.from(compressed), { name: table.table_name + '.br' });
+      const attachment = new AttachmentBuilder(Buffer.from(compressed), { name: table.table_name + '.json' });
 
       await backup_channel.send({ content: `${keys}`, files: [attachment]})
     } catch (e) {
