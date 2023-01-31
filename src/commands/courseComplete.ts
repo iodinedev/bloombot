@@ -9,7 +9,9 @@ export = {
     .addStringOption(option =>
       option.setName('course')
 				.setDescription('The course you want to mark as complete.')
-				.setRequired(true)),
+				.setRequired(true))
+		.setDefaultMemberPermissions(0)
+		.setDMPermission(true),
 	async execute(interaction) {
 		const course: string = interaction.options.getString('course');
 		const search: string = makeSearchable(course);
