@@ -68,33 +68,32 @@ export = {
       await interaction.reply({ content: 'Message deleted and user notified.', ephemeral: true });
     } catch (error) {
       await interaction.reply({ content: 'Message deleted but user could not be notified.', ephemeral: true });
-    } 
-    // finally {
-    //   // Logs the message
-    //   const logEmbed = new EmbedBuilder()
-    //     .setTitle('Message Deleted')
-    //     .setColor(config.embedColor)
-    //     .setDescription(`**Message ID:** \`${messageID}\`\n**Reason:** \`${reason}\`\n**Channel:** <#${message.channel.id}>\n**Author:** ${message.author.tag} (\`${message.author.id}\`)`)
-    //     .addFields({ name: 'Message Content', value: `\`\`\`${sanitized}\`\`\`` })
-    //     .setTimestamp(new Date())
-    //     .setFooter({ text: `Deleted by ${interaction.user.tag}`, iconURL: interaction.user.avatarURL() });
+    } finally {
+      // Logs the message
+      const logEmbed = new EmbedBuilder()
+        .setTitle('Message Deleted')
+        .setColor(config.embedColor)
+        .setDescription(`**Message ID:** \`${messageID}\`\n**Reason:** \`${reason}\`\n**Channel:** <#${message.channel.id}>\n**Author:** ${message.author.tag} (\`${message.author.id}\`)`)
+        .addFields({ name: 'Message Content', value: `\`\`\`${sanitized}\`\`\`` })
+        .setTimestamp(new Date())
+        .setFooter({ text: `Deleted by ${interaction.user.tag}`, iconURL: interaction.user.avatarURL() });
 
-    //   const imageLogEmbeds = images.map(image => {
-    //     return new EmbedBuilder()
-    //       .setTitle('Image Deleted')
-    //       .setColor(config.embedColor)
-    //       .setImage(image)
-    //       .setTimestamp(new Date())
-    //       .setFooter({ text: `Deleted by ${interaction.user.tag}`, iconURL: interaction.user.avatarURL() });
-    //   });
+      const imageLogEmbeds = images.map(image => {
+        return new EmbedBuilder()
+          .setTitle('Image Deleted')
+          .setColor(config.embedColor)
+          .setImage(image)
+          .setTimestamp(new Date())
+          .setFooter({ text: `Deleted by ${interaction.user.tag}`, iconURL: interaction.user.avatarURL() });
+      });
 
-    //   const logChannel = interaction.guild.channels.cache.get(config.channels.logs);
+      const logChannel = interaction.guild.channels.cache.get(config.channels.logs);
 
-    //   try {
-    //     return logChannel.send({ embeds: [logEmbed, ...imageLogEmbeds] });
-    //   } catch {
-    //     return interaction.followUp({ content: 'Message not logged.', ephemeral: true });
-    //   }
-    // }
+      try {
+        return logChannel.send({ embeds: [logEmbed, ...imageLogEmbeds] });
+      } catch {
+        return interaction.followUp({ content: 'Message not logged.', ephemeral: true });
+      }
+    }
 	},
 };

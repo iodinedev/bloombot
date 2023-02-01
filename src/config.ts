@@ -31,8 +31,7 @@ export const config = {
     "welcome": "493402917001494539",
     "meditation": "440556997364940801",
     "commands": "837344434676564078",
-    // "announcement": "244917519477899264",
-    "announcement": "819707523225354260",
+    "announcement": "244917519477899264",
     "logs": "441207765357035541",
     "starchannel": "856865368098078720",
     "reportchannel": "855894610001395743",
@@ -41,8 +40,7 @@ export const config = {
     "moderator": "441207765357035541"
   },
   "roles": {
-    // "meditation_challenger": "796821826369617970",
-    "meditation_challenger": "791491167618334732",
+    "meditation_challenger": "796821826369617970",
     "patreon": "543900027928444935"
   },
   "emotes": {
