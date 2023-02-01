@@ -91,7 +91,7 @@ export = {
 
       const human_date = `${timestamp.getMonth() + 1}/${timestamp.getDate()}/${timestamp.getFullYear()} ${timestamp.getHours()}:${timestamp.getMinutes()}`;
 
-      await interaction.reply({ content: `Added ${minutes} minutes to ${user.username}'s meditation time at ${human_date}!` });
+      await interaction.reply({ content: `Added ${minutes} minutes to ${user.username}'s meditation time at ${human_date}!`, ephemeral: true });
     } else if (subcommand === 'list') {
       const user = interaction.options.getUser('user');
 
@@ -236,7 +236,7 @@ export = {
         }
       });
 
-      await interaction.reply({ content: `Updated session \`${id}\`!` });
+      await interaction.reply({ content: `Updated session \`${id}\`!`, ephemeral: true });
     } else if (subcommand === 'delete') {
       const id = interaction.options.getInteger('id');
 
