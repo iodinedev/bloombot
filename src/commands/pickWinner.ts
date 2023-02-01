@@ -40,6 +40,7 @@ export = {
 
 		const dmEmbed = new EmbedBuilder()
 			.setTitle(":tada: You've won a key! :tada:")
+			.setColor(config.embedColor)
 			.setThumbnail(member.user.avatarURL())
 			.setFields([
 				{
