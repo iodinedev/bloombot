@@ -75,17 +75,11 @@ export = {
         },
         orderBy: [
           {
-            id: 'desc'
+            occurred_at: 'desc'
           }
         ],
         take: 3
       });
-
-      if (!recent_meditations) {
-        return interaction.reply({
-          content: ":x: Looks like you don't have any meditation times! Use `.add` to add some time."
-        });
-      }
     
       const meditation_aggregation = await database.meditations.aggregate({
         where: {

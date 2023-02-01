@@ -41,7 +41,7 @@ export = {
           .setDescription('Here\'s a list of all the courses:');
       }
 
-      embed.addFields({ name: `\`\`\`${courses[i].name}\`\`\``, value: '\u200B' });
+      embed.addFields({ name: `\`\`\`${courses[i].name}\`\`\``, value: `Participant Role: <@&${courses[i].participant_role}> | Graduate Role: <@&${courses[i].graduate_role}>` });
       embed.setFooter({ text: `Page ${embeds.length + 1} of ${Math.ceil(courses.length / 10)}` });
     }
 

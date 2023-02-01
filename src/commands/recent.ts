@@ -30,7 +30,7 @@ export = {
       },
       orderBy: [
         {
-          id: 'desc'
+          occurred_at: 'desc'
         }
       ],
     });
@@ -61,10 +61,10 @@ export = {
 
       // Show time if the date is today, otherwise show the date
       const date = new Date(sessions[i].occurred_at);
-      var dateTime = `\`${sessions[i].id}\` - ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} Today`;
+      var dateTime = `\`${sessions[i].id}\` - ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
 
       if (date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()) {
-        dateTime = `ID: \`${sessions[i].id}\` - ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}`;
+        dateTime = `ID: \`${sessions[i].id}\` - ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })} Today`;
       }
 
       embed.addFields({ name: dateTime, value: `\`\`\`${sessions[i].session_time} minutes\`\`\`` });

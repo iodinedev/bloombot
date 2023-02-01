@@ -5,12 +5,14 @@ import { AttachmentBuilder } from "discord.js";
 
 // Takes a snapshot of the current state of the database and saves it to the backup channel
 // This is used to restore the database in case of a crash
-export async function backup(client) {
+export async function backup(client): Promise<void> {
   // Get the backup channel
   const backup_channel = client.channels.cache.get(config.channels.backup);
 
   // Gets all tables
   const tables: any = await database.$queryRaw`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`;
+
+  console.log(tables)
 
   tables.forEach(async (table) => {
     // Gets all rows from the table, changing keys to progessive alphabet letters to avoid Discord's 2000 character limit
@@ -48,4 +50,6 @@ export async function backup(client) {
       await logChannel.send({ content: `Error while backing up ${table.table_name}: ${e}` });
     }
   });
+
+  return;
 }

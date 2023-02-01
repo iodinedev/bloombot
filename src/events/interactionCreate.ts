@@ -1,3 +1,5 @@
+import * as pickwinnerActions from "../helpers/pickwinner";
+
 export = async (client, interaction) => {
 	if (interaction.isCommand()) {
 		const command = interaction.client.commands.get(interaction.commandName);
@@ -28,5 +30,9 @@ export = async (client, interaction) => {
 		} catch (error) {
 			console.error(error);
 		}
+	} else if (interaction.isButton()) {
+		pickwinnerActions.acceptKey(interaction);
+		pickwinnerActions.cancelKey(interaction);
+		pickwinnerActions.deleteKey(interaction);
 	}
 }

@@ -13,6 +13,7 @@ export = {
     .addIntegerOption(option =>
       option.setName('minutes')
         .setDescription('The number of minutes you want to add.')
+        .setMinValue(1)
         .setRequired(true))
     .setDMPermission(false),
 	async execute(interaction) {
