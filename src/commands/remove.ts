@@ -8,7 +8,7 @@ export = {
 		.setDescription('Removes a meditation session by ID.')
     .addIntegerOption(option =>
       option.setName('id')
-        .setDescription('The ID of the meditation session you want to remove. Use `/rank` to find them.')
+        .setDescription('The ID of the meditation session you want to remove. Use `/recent` to find them.')
         .setRequired(true))
     .setDMPermission(false),
 	async execute(interaction) {

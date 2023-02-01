@@ -39,7 +39,7 @@ export const config = {
     "backup": "1069911235224678460"
   },
   "roles": {
-    "meditation_challenger": "481597332249640960",
+    "meditation_challenger": "796821826369617970",
     "patreon": "543900027928444935"
   },
   "emotes": {

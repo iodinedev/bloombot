@@ -73,19 +73,23 @@ export = {
 		const month = date.getMonth() + 1;
 		const year = date.getFullYear();
 
+		const time = monthly_total._sum.session_time ? monthly_total._sum.session_time : 0;
+
 		const announcement_embed = new EmbedBuilder()
 			.setTitle(":tada: This month's meditation challenger in the spotlight is... :tada:")
 			.setThumbnail(member.user.avatarURL())
 			.setFields([
 				{
 					name: `**Monthly hall-of-fame member**`,
-					value: `**${member.user}** is our server member of the month, with a meditation time of **${monthly_total._sum.session_time}** minutes!\nYou're doing great, keep at it!`
+					value: `**${member.user}** is our server member of the month, with a meditation time of **${time}** minutes!\nYou're doing great, keep at it!`
 				}
 			])
 			.setFooter({ text: `Meditation challenge for ${month}/${year} | Selected on ${day}/${month}/${year}` })
 
 		const announcement_channel = await interaction.guild.channels.fetch(config.channels.announcement);
 
-		announcement_channel.send({ embeds: [announcement_embed] });		
+		await announcement_channel.send({ embeds: [announcement_embed] });		
+
+		await interaction.reply({ content: `:white_check_mark: Successfully picked winner and sent them a key.`, ephemeral: true });
 	},
 };
