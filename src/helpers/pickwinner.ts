@@ -34,22 +34,14 @@ export const acceptKey = async (interaction: any) => {
 
   // Send to moderation channel
   try {
-    const deleteButton = new ActionRowBuilder()
-      .addComponents(
-        new ButtonBuilder()
-          .setCustomId('deleteKey')
-          .setLabel('Delete')
-          .setStyle(ButtonStyle.Danger)
-      );
-
     const moderationChannel = await interaction.client.channels.fetch(config.channels.moderator);
     const moderationEmbed = new EmbedBuilder()
       .setTitle('Key Redeemed')
       .setColor(config.embedColor)
       .setThumbnail(interaction.user.avatarURL())
-      .setDescription(`**Key redeemed by ${interaction.user.tag}** To delete the key from the database, click the button below. This won't delete the key from the user's account.`)
+      .setDescription(`**Key redeemed by ${interaction.user.tag}**`)
       
-    await moderationChannel.send({ embeds: [moderationEmbed], components: [deleteButton] });
+    await moderationChannel.send({ embeds: [moderationEmbed] });
   } catch (error) {
     console.error(error);
   }
@@ -108,34 +100,4 @@ export const cancelKey = async (interaction: any) => {
   }
 
   return interaction.followUp({ content: ':white_check_mark: Key cancelled.', ephemeral: true });
-}
-
-export const deleteKey = async (interaction: any) => {
-  if (interaction.customId !== 'deleteKey') return;
-
-  // Interaction user must be admin. adminCommand() returns the appropriate permissions bitfield.
-  if (!interaction.member.permissions.has(adminCommand())) return interaction.followUp({ content: ':x: You do not have permission to use this command.', ephemeral: true });
-
-  await interaction.update({ components: [] });
-
-  try {
-    const moderationChannel = await interaction.client.channels.fetch(config.channels.moderator);
-    const moderationEmbed = new EmbedBuilder()
-      .setTitle('Key Deleted')
-      .setColor(config.embedColor)
-      .setThumbnail(interaction.user.avatarURL())
-      .setDescription(`**Key deleted by <@${interaction.user.id}>**`)
-      .setFields([
-        {
-          name: 'User',
-          value: `<@${interaction.user.id}>`
-        }
-      ]);
-
-    await moderationChannel.send({ embeds: [moderationEmbed] });
-  } catch (error) {
-    console.error(error);
-  }
-
-  return interaction.followUp({ content: ':white_check_mark: Key deleted.', ephemeral: true });
 }

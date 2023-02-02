@@ -33,6 +33,5 @@ export = async (client, interaction) => {
 	} else if (interaction.isButton()) {
 		pickwinnerActions.acceptKey(interaction);
 		pickwinnerActions.cancelKey(interaction);
-		pickwinnerActions.deleteKey(interaction);
 	}
 }
