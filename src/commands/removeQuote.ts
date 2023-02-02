@@ -58,15 +58,15 @@ export = {
         throw error;
       }
 
-        interaction.editReply({ content: 'Quote deleted!', ephemeral: true, components: [] });
+        return interaction.editReply({ content: 'Quote deleted!', ephemeral: true, components: [] });
       } else if (i.customId === 'no') {
-        interaction.editReply({ content: 'Quote not deleted.', ephemeral: true });
+        return interaction.editReply({ content: 'Quote not deleted.', ephemeral: true, components: [] });
       }
     })
 
     collector.on('end', collected => {
       if (collected.size === 0) {
-        interaction.editReply({ content: 'You did not respond in time. Quote not deleted.', ephemeral: true });
+        return interaction.editReply({ content: 'You did not respond in time. Quote not deleted.', ephemeral: true, components: [] });
       }
     })
 	},

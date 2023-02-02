@@ -12,8 +12,6 @@ export async function backup(client): Promise<void> {
   // Gets all tables
   const tables: any = await database.$queryRaw`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`;
 
-  console.log(tables)
-
   tables.forEach(async (table) => {
     // Gets all rows from the table, changing keys to progessive alphabet letters to avoid Discord's 2000 character limit
     // For example, if the table has 3 columns, the first row will be { a: 'value1', b: 'value2', c: 'value3' }
