@@ -74,13 +74,13 @@ export = {
 
 					interaction.editReply({ content: 'Key deleted!', ephemeral: true, components: [] });
 				} else if (i.customId === 'no') {
-					interaction.editReply({ content: 'Key not deleted.', ephemeral: true });
+					interaction.editReply({ content: 'Key not deleted.', ephemeral: true, components: [] });
 				}
 			})
 
 			collector.on('end', collected => {
 				if (collected.size === 0) {
-					interaction.editReply({ content: 'You did not respond in time. Key not deleted.', ephemeral: true });
+					interaction.editReply({ content: 'You did not respond in time. Key not deleted.', ephemeral: true, components: [] });
 				}
 			})
 		} else {

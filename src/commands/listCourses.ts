@@ -68,12 +68,16 @@ export = {
 
       collector.on('collect', async (i: any) => {
         if (i.customId === 'previous') {
+          collector.resetTimer();
+          
           page--;
           if (page === 0) {
             (<any>row.components[0]).setDisabled(true);
           }
           (<any>row.components[1]).setDisabled(false);
         } else if (i.customId === 'next') {
+          collector.resetTimer();
+          
           page++;
           if (page === embeds.length - 1) {
             (<any>row.components[1]).setDisabled(true);

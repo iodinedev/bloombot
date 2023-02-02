@@ -49,6 +49,8 @@ export = {
 
     collector.on('collect', async i => {
       if (i.customId === 'yes') {
+        collector.resetTimer();
+
         await database.meditations.delete({
           where: {
             id: meditation_id
@@ -59,13 +61,15 @@ export = {
 
         interaction.editReply({ content: 'Session deleted!', ephemeral: true, components: [] });
       } else if (i.customId === 'no') {
-        interaction.editReply({ content: 'Session not deleted.', ephemeral: true });
+        collector.resetTimer();
+
+        interaction.editReply({ content: 'Session not deleted.', ephemeral: true, components: [] });
       }
     })
 
     collector.on('end', collected => {
       if (collected.size === 0) {
-        interaction.editReply({ content: 'You did not respond in time. Session not deleted.', ephemeral: true });
+        interaction.editReply({ content: 'You did not respond in time. Session not deleted.', ephemeral: true, components: [] });
       }
     })
 	},

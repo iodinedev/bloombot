@@ -77,13 +77,13 @@ export = {
 
         interaction.editReply({ content: 'Term removed!', ephemeral: true, components: [] });
       } else if (i.customId === 'no') {
-        interaction.editReply({ content: 'Term not removed.', ephemeral: true });
+        interaction.editReply({ content: 'Term not removed.', ephemeral: true, components: [] });
       }
     })
 
     collector.on('end', collected => {
       if (collected.size === 0) {
-        interaction.editReply({ content: 'You did not respond in time. Term not removed.', ephemeral: true });
+        interaction.editReply({ content: 'You did not respond in time. Term not removed.', ephemeral: true, components: [] });
       }
     })
   }

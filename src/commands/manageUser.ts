@@ -174,12 +174,16 @@ export = {
 
         collector.on('collect', async (i: any) => {
           if (i.customId === 'previous') {
+            collector.resetTimer();
+
             page--;
             if (page === 0) {
               (<any>row.components[0]).setDisabled(true);
             }
             (<any>row.components[1]).setDisabled(false);
           } else if (i.customId === 'next') {
+            collector.resetTimer();
+
             page++;
             if (page === embeds.length - 1) {
               (<any>row.components[1]).setDisabled(true);
@@ -187,6 +191,11 @@ export = {
             (<any>row.components[0]).setDisabled(false);
           }
           await i.update({ embeds: [embeds[page]], components: [row], ephemeral: true });
+        });
+
+        collector.on('end', async () => {
+          (<any>row.components[0]).setDisabled(true);
+          (<any>row.components[1]).setDisabled(true);
         });
       } else {
         await interaction.reply({ embeds: [embeds[page]], ephemeral: true })
@@ -272,6 +281,8 @@ export = {
 
       collector.on('collect', async i => {
         if (i.customId === 'yes') {
+          collector.resetTimer();
+
           await database.meditations.delete({
             where: {
               id: id
@@ -282,13 +293,15 @@ export = {
 
           interaction.editReply({ content: 'Session deleted!', ephemeral: true, components: [] });
         } else if (i.customId === 'no') {
-          interaction.editReply({ content: 'Session not deleted.', ephemeral: true });
+          collector.resetTimer();
+
+          interaction.editReply({ content: 'Session not deleted.', ephemeral: true, components: [] });
         }
       })
 
       collector.on('end', collected => {
         if (collected.size === 0) {
-          interaction.editReply({ content: 'You did not respond in time. Session not deleted.', ephemeral: true });
+          interaction.editReply({ content: 'You did not respond in time. Session not deleted.', ephemeral: true, components: [] });
         }
       })
     } else if (subcommand === "reset") {

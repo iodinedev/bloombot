@@ -111,12 +111,16 @@ export = {
 
         collector.on('collect', async (i: any) => {
           if (i.customId === 'previous') {
+            collector.resetTimer();
+
             page--;
             if (page === 0) {
               (<any>row.components[0]).setDisabled(true);
             }
             (<any>row.components[1]).setDisabled(false);
           } else if (i.customId === 'next') {
+            collector.resetTimer();
+
             page++;
             if (page === embeds.length - 1) {
               (<any>row.components[1]).setDisabled(true);
@@ -124,6 +128,11 @@ export = {
             (<any>row.components[0]).setDisabled(false);
           }
           await i.update({ embeds: [embeds[page]], components: [row] });
+        });
+
+        collector.on('end', async () => {
+          (<any>row.components[0]).setDisabled(true);
+          (<any>row.components[1]).setDisabled(true);
         });
       } else {
         await interaction.reply({ embeds: [embeds[page]] })
@@ -216,12 +225,16 @@ export = {
 
           collector.on('collect', async (i: any) => {
             if (i.customId === 'previous') {
+              collector.resetTimer();
+
               page--;
               if (page === 0) {
                 (<any>row.components[0]).setDisabled(true);
               }
               (<any>row.components[1]).setDisabled(false);
             } else if (i.customId === 'next') {
+              collector.resetTimer();
+
               page++;
               if (page === embeds.length - 1) {
                 (<any>row.components[1]).setDisabled(true);
@@ -229,6 +242,11 @@ export = {
               (<any>row.components[0]).setDisabled(false);
             }
             await i.update({ embeds: [embeds[page]], components: [row] });
+          });
+
+          collector.on('end', async () => {
+            (<any>row.components[0]).setDisabled(true);
+            (<any>row.components[1]).setDisabled(true);
           });
         } else {
           await interaction.reply({ embeds: [embeds[page]] })
