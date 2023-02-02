@@ -2,7 +2,6 @@ import { database } from "../helpers/database";
 import { backup } from "../helpers/backup";
 
 export = async (client, message) => {
-  console.log(await database.steamKeys.findMany())
   // Backup the database
   setInterval(() => {
     backup(client);
