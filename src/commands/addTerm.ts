@@ -50,12 +50,14 @@ export = {
       .setCustomId('usageInput')
       .setLabel('Usage')
       .setPlaceholder('Enter an example sentence showing how to use the term.')
+      .setRequired(false)
       .setStyle(TextInputStyle.Short);
 
     const categoryInput = new TextInputBuilder()
       .setCustomId('categoryInput')
       .setLabel('Category')
       .setPlaceholder('Enter the category the term belongs to.')
+      .setRequired(false)
       .setStyle(TextInputStyle.Short);
 
     const linksInput = new TextInputBuilder()
