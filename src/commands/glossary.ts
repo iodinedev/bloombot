@@ -1,6 +1,7 @@
 import { database } from '../helpers/database';
 import Discord from 'discord.js';
 import { clean, makeSearchable } from '../helpers/strings';
+import { config } from '../config';
 
 export = {
   data: new Discord.SlashCommandBuilder()
@@ -66,6 +67,7 @@ export = {
       const embeds: any[] = [];
       let embed = new Discord.EmbedBuilder()
         .setTitle('Glossary')
+        .setColor(config.embedColor)
         .setDescription('Here\'s a list of all my glossary terms:');
 
       if (terms.length === 0) {
@@ -81,6 +83,7 @@ export = {
           embeds.push(embed);
           embed = new Discord.EmbedBuilder()
             .setTitle('Glossary')
+            .setColor(config.embedColor)
             .setDescription('Here\'s a list of all my glossary terms:');
         }
 
@@ -157,6 +160,7 @@ export = {
 
         const embed = new Discord.EmbedBuilder()
           .setTitle(`Term: ${termData.term}`)
+          .setColor(config.embedColor)
           .setDescription(termData.definition)
           .addFields(fields);
         return interaction.reply({ embeds: [embed] });
@@ -182,6 +186,7 @@ export = {
         const embeds: any[] = [];
         let embed = new Discord.EmbedBuilder()
           .setTitle('Search Results')
+          .setColor(config.embedColor)
           .setDescription(`Here\'s a list of all the terms matching the search \`${clean(term)}\`:`);
 
         if (terms.length === 0) {
@@ -197,6 +202,7 @@ export = {
             embeds.push(embed);
             embed = new Discord.EmbedBuilder()
               .setTitle('Search Results')
+              .setColor(config.embedColor)
               .setDescription(`Here\'s a list of all the terms matching the search \`${clean(term)}\`:`);
           }
 
