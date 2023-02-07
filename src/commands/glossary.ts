@@ -149,14 +149,16 @@ export = {
         });
 
         if (!termData) return interaction.reply({ content: 'That\'s not a valid term!', ephemeral: true });
+
+        const fields: any[] = [];
+        if (termData.usage) fields.push({ name: 'Usage', value: termData.usage });
+        if (termData.category) fields.push({ name: 'Category', value: termData.category });
+        if (termData.links.length > 0) fields.push({ name: 'Links', value: termData.links.join("\n") });
+
         const embed = new Discord.EmbedBuilder()
           .setTitle(`Term: ${termData.term}`)
           .setDescription(termData.definition)
-          .addFields([
-            { name: 'Usage', value: termData.usage },
-            { name: 'Category', value: termData.category },
-            { name: 'Links', value: termData.links.length > 0 ? termData.links.join("\n") : 'None' }
-          ]);
+          .addFields(fields);
         return interaction.reply({ embeds: [embed] });
       } else {
         return interaction.reply({ content: 'You need to specify a term!', ephemeral: true });

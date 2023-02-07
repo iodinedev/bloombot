@@ -5,8 +5,8 @@ import { makeSearchable } from "./strings";
 export const addTerm = async (interaction) => {
   const term: string = interaction.fields.getTextInputValue('termInput');
     const definition: string = interaction.fields.getTextInputValue('definitionInput');
-    const usage: string = interaction.fields.getTextInputValue('usageInput') || 'N/A';
-    const category: string = interaction.fields.getTextInputValue('categoryInput') || 'None';
+    const usage: string = interaction.fields.getTextInputValue('usageInput') || '';
+    const category: string = interaction.fields.getTextInputValue('categoryInput') || '';
     const links: string = interaction.fields.getTextInputValue('linksInput');
     const search: string = makeSearchable(term);
 
