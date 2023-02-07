@@ -12,7 +12,7 @@ export = {
 		.setDMPermission(false),
 	async execute(interaction) {
     const suggestion = interaction.options.getString('suggestion');
-    const suggestionChannel = interaction.guild.channels.fetch(config.channels.suggestion);
+    const suggestionChannel = await interaction.guild.channels.fetch(config.channels.suggestion);
 
     const suggestionEmbed = new EmbedBuilder()
       .setColor(config.embedColor)
