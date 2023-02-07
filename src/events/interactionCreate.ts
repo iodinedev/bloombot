@@ -1,3 +1,4 @@
+import { addTerm } from "../helpers/terms"
 import * as pickwinnerActions from "../helpers/pickwinner";
 
 export = async (client, interaction) => {
@@ -33,5 +34,7 @@ export = async (client, interaction) => {
 	} else if (interaction.isButton()) {
 		pickwinnerActions.acceptKey(interaction);
 		pickwinnerActions.cancelKey(interaction);
+	} else if (interaction.isModalSubmit()) {
+		addTerm(interaction)
 	}
 }

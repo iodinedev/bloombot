@@ -43,6 +43,18 @@ export = {
       }
     });
 
+    const guild_total = await database.meditations.aggregate({
+      where: {
+        session_guild: guild
+      },
+      _sum: {
+        session_time: true
+      },
+      _count: {
+        session_time: true
+      }
+    });
+
     const motivation_messages = (await database.quoteBook.findMany()).map((quote) => alphanumeric(quote.quote));
     
     const motivation = motivation_messages.length > 0 ? `\n*${motivation_messages[Math.floor(Math.random() * motivation_messages.length)]}*` : "";
@@ -50,6 +62,15 @@ export = {
 
     
     await interaction.reply({ content: `Added **${minutes} minutes** to your meditation time! Your total meditation time is ${total._sum.session_time} minutes :tada:${motivation}` });
+
+    if (guild_total._count.session_time % 10 === 0 && guild_total._count.session_time > 0) {
+      var time_in_hours = Math.round(guild_total._count.session_time / 60);
+
+      await interaction.channel
+        .send(
+          `Awesome sauce! This server has collectively generated ${time_in_hours} hours of realmbreaking meditation!`
+        );
+    }
 
     if (update.new_streak.length > 0) {
       return interaction.followUp({

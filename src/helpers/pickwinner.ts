@@ -34,7 +34,7 @@ export const acceptKey = async (interaction: any) => {
 
   // Send to moderation channel
   try {
-    const moderationChannel = await interaction.client.channels.fetch(config.channels.moderator);
+    const moderationChannel = await interaction.client.channels.fetch(config.channels.logs);
     const moderationEmbed = new EmbedBuilder()
       .setTitle('Key Redeemed')
       .setColor(config.embedColor)
@@ -81,7 +81,7 @@ export const cancelKey = async (interaction: any) => {
 
   // Send to moderation channel
   try {
-    const moderationChannel = await interaction.client.channels.fetch(config.channels.moderator);
+    const moderationChannel = await interaction.client.channels.fetch(config.channels.logs);
     const moderationEmbed = new EmbedBuilder()
       .setTitle('Key Cancelled')
       .setColor(config.embedColor)

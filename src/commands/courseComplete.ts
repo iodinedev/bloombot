@@ -1,4 +1,5 @@
-import { SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { config } from "../config";
 import { database } from "../helpers/database";
 import { makeSearchable } from "../helpers/strings";
 
@@ -41,6 +42,22 @@ export = {
 			await interaction.reply({ content: `You have already completed the course: **${course}**.`, ephemeral: true });
 			return;
 		}
+
+		// Notify staff
+		try {
+			const staffChannel = await guild.channels.fetch(config.channels.logs);
+
+			const logsEmbed = new EmbedBuilder()
+				.setTitle('Course Marked Completed')
+				.setColor(config.embedColor)
+				.addFields(
+					{ name: 'Course', value: course, inline: true },
+					{ name: 'User', value: `<@${interaction.user.id}>`, inline: true }
+				)
+				.setTimestamp();
+
+			await staffChannel.send({ embeds: [logsEmbed] });
+		} catch {}
 
 		// Add the role
 		try {

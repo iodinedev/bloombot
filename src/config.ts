@@ -37,7 +37,7 @@ export const config = {
     "reportchannel": "855894610001395743",
     "patreon": "551895169532952578",
     "backup": "1069911235224678460",
-    "moderator": "441207765357035541"
+    "suggestion": "553676378621476887"
   },
   "roles": {
     "meditation_challenger": "796821826369617970",
