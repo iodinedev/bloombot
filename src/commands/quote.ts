@@ -12,7 +12,7 @@ export = {
     const quoteCount = await database.commandUsage.count({
       where: {
         command: 'quote',
-        createdAt: {
+        date: {
           gte: new Date(Date.now() - 60000)
         }
       }

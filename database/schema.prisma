@@ -11,7 +11,7 @@ datasource db {
 model Glossary {
   term       String   @unique
   search     String   @unique
-  definition String   @db.VarChar(1024)
+  definition String
   usage      String
   links      String[]
   category   String

@@ -62,7 +62,7 @@ export = {
 
       if (page < 0) return interaction.reply({ content: 'That\'s not a valid page!', ephemeral: true });
 
-      // Max 10 fields, uses buttons to paginate
+      // Max 10 fields, uses buttons to paginate. If one of the terms is too long, it will be omitted.
       const terms = await database.glossary.findMany();
       const embeds: any[] = [];
       let embed = new Discord.EmbedBuilder()
@@ -78,6 +78,8 @@ export = {
       if (page > Math.ceil(terms.length / 10)) return interaction.reply({ content: `That's not a valid page! Last page is \`${Math.ceil(terms.length / 10)}\`.`, ephemeral: true });
 
       for (let i = 0; i < terms.length; i++) {
+        if (terms[i].term.length > 1024 || terms[i].definition.length > 1024) continue;
+
         const fields = embed.toJSON().fields;
         if (fields && fields.length === 10) {
           embeds.push(embed);
@@ -152,6 +154,8 @@ export = {
         });
 
         if (!termData) return interaction.reply({ content: 'That\'s not a valid term!', ephemeral: true });
+
+        if (termData.term.length > 1024 || termData.definition.length > 1024) return interaction.reply({ content: 'That term is too long! Tell the manager to shorten it.', ephemeral: true });
 
         const fields: any[] = [];
         if (termData.usage) fields.push({ name: 'Usage', value: termData.usage });
