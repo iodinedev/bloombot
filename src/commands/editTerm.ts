@@ -79,13 +79,13 @@ export = {
 
     if (oldsearch !== newsearch) {
       // Ensure that the new term does not already exist
-      const newterm = await database.glossary.findUnique({
+      const oldtermDb = await database.glossary.findUnique({
         where: {
           search: newsearch
         }
       });
 
-      if (newterm) {
+      if (oldtermDb && oldtermDb.search === newsearch) {
         return interaction.reply({ content: 'That term already exists!', ephemeral: true });
       }
     }

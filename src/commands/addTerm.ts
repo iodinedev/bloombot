@@ -43,7 +43,8 @@ export = {
     const definitionInput = new TextInputBuilder()
       .setCustomId('definitionInput')
       .setLabel('Definition')
-      .setPlaceholder('Enter the definition of the term.')
+      .setPlaceholder('Enter the definition of the term. (Max 1000 characters. For longer definitions, use a link to further reading.)')
+      .setMaxLength(1000)
       .setStyle(TextInputStyle.Paragraph);
 
     const usageInput = new TextInputBuilder()

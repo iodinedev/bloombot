@@ -11,7 +11,7 @@ datasource db {
 model Glossary {
   term       String   @unique
   search     String   @unique
-  definition String
+  definition String   @db.VarChar(1024)
   usage      String
   links      String[]
   category   String
@@ -52,6 +52,14 @@ model Courses {
   search  String @unique
   participant_role String
   graduate_role String
+  guild String
+  date DateTime  @default(now())
+}
+
+model CommandUsage {
+  id    Int    @id @default(autoincrement())
+  command String
+  user String
   guild String
   date DateTime  @default(now())
 }

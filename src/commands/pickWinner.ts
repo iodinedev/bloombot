@@ -139,9 +139,9 @@ export = {
 			});
 
 			const date = new Date();
-			const day = date.getDate();
-			const month = date.getMonth() + 1;
-			const year = date.getFullYear();
+			const pickDay = date.getDate();
+			const pickMonth = date.getMonth() + 1;
+			const pickYear = date.getFullYear();
 
 			const time = monthly_total._sum.session_time ? monthly_total._sum.session_time : 0;
 
@@ -154,7 +154,7 @@ export = {
 						value: `**${member.user}** is our server member of the month, with a meditation time of **${time}** minutes!\nYou're doing great, keep at it!`
 					}
 				])
-				.setFooter({ text: `Meditation challenge for ${month}/${year} | Selected on ${day}/${month}/${year}` })
+				.setFooter({ text: `Meditation challenge for ${month}/${pickYear} | Selected on ${pickDay}/${pickMonth}/${pickYear}` })
 
 			const announcement_channel = await interaction.guild.channels.fetch(config.channels.announcement);
 

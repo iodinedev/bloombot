@@ -1,9 +1,19 @@
 import { addTerm } from "../helpers/terms"
 import * as pickwinnerActions from "../helpers/pickwinner";
+import { database } from "../helpers/database";
 
 export = async (client, interaction) => {
 	if (interaction.isCommand()) {
 		const command = interaction.client.commands.get(interaction.commandName);
+
+		// Logs user's command usage in database
+		await database.commandUsage.create({
+			data: {
+				command: interaction.commandName,
+				user: interaction.user.id,
+				guild: interaction.guild.id
+			}
+		});
 
 		if (!command) {
 			console.error(`No command matching ${interaction.commandName} was found.`);
