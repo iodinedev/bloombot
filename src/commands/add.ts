@@ -35,7 +35,7 @@ export = {
           .setStyle(ButtonStyle.Primary)
       );
 
-      interaction.reply({ content: `Are you sure you want to add ${minutes} minutes?`, ephemeral: true, components: [row] });
+      interaction.reply({ content: `Are you sure you want to add ${minutes} minutes?`, components: [row] });
 
       const filter = i => i.user.id === interaction.user.id;
       const collector = interaction.channel.createMessageComponentCollector({ filter, time: 15000 });
@@ -48,13 +48,13 @@ export = {
         } else if (i.customId === 'no') {
           collector.resetTimer();
 
-          interaction.editReply({ content: 'Time not added.', ephemeral: true, components: [] });
+          interaction.editReply({ content: 'Time not added.', components: [] });
         }
       })
 
       collector.on('end', collected => {
         if (collected.size === 0) {
-          interaction.editReply({ content: 'You did not respond in time. Time not added.', ephemeral: true, components: [] });
+          interaction.editReply({ content: 'You did not respond in time. Time not added.', components: [] });
         }
       })
     } else {
@@ -104,17 +104,17 @@ async function addMinutes(interaction, minutes, replied) {
   const update = await updateRoles(interaction.client, interaction.guild, interaction.user);
 
   if (!replied) {
-    await interaction.reply({ content: `Added **${minutes} minutes** to your meditation time! Your total meditation time is ${total._sum.session_time} minutes :tada:${motivation}` });
+    await interaction.reply({ content: `Added **${minutes} minutes** to your meditation time! Your total meditation time is ${(total._sum.session_time ?? 0).toLocaleString()} minutes :tada:${motivation}` });
   } else {
-    await interaction.editReply({ content: `Added **${minutes} minutes** to your meditation time! Your total meditation time is ${total._sum.session_time} minutes :tada:${motivation}`, components: [] });
+    await interaction.editReply({ content: `Added **${minutes} minutes** to your meditation time! Your total meditation time is ${(total._sum.session_time ?? 0).toLocaleString()} minutes :tada:${motivation}`, components: [] });
   }
 
   if (guild_total._count.session_time % 10 === 0 && guild_total._count.session_time > 0) {
-    var time_in_hours = Math.round(guild_total._sum.session_time ?? 0 / 60);
+    var time_in_hours = Math.round((guild_total._sum.session_time ?? 0) / 60);
 
     await interaction.channel
       .send(
-        `Awesome sauce! This server has collectively generated ${time_in_hours} hours of realmbreaking meditation!`
+        `Awesome sauce! This server has collectively generated ${time_in_hours.toLocaleString()} hours of realmbreaking meditation!`
       );
   }
 

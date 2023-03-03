@@ -26,7 +26,12 @@ export = async (client, interaction) => {
 			console.error(`Error executing ${interaction.commandName}`);
 			console.error(error);
 
-			await interaction.reply({ content: 'A fatal error occured while executing the command.', ephemeral: true });
+			// Check if the command has been responded to already
+			if (interaction.replied) {
+				await interaction.followUp({ content: 'A fatal error occured while executing the command.', ephemeral: true });
+			} else {
+				await interaction.reply({ content: 'A fatal error occured while executing the command.', ephemeral: true });
+			}
 		}
 	} else if (interaction.isAutocomplete()) {
 		const command = interaction.client.commands.get(interaction.commandName);
@@ -45,6 +50,6 @@ export = async (client, interaction) => {
 		pickwinnerActions.acceptKey(interaction);
 		pickwinnerActions.cancelKey(interaction);
 	} else if (interaction.isModalSubmit()) {
-		addTerm(interaction)
+		addTerm(interaction);
 	}
 }

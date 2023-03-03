@@ -35,7 +35,8 @@ export const deployAppCommands = async (client) => {
 				{ body: commands },
 			);
 		}
-	} catch (error) {
+	} catch (error: any) {
+
 		console.error(error);
 	}
 }
