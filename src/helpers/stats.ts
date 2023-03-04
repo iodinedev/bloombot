@@ -1,13 +1,13 @@
-import { database } from './database';
-import { config } from '../config';
-import { createCanvas } from 'canvas';
-import Chart from 'chart.js/auto';
+import { database } from './database'
+import { config } from '../config'
+import { createCanvas } from 'canvas'
+import Chart from 'chart.js/auto'
 
 export const get_data = async (timeframe, guild, user = null) => {
-  var get_user = false;
+  let get_user = false
 
   if (user !== null) {
-    get_user = true;
+    get_user = true
   }
 
   if (timeframe === 'daily') {
@@ -24,9 +24,9 @@ export const get_data = async (timeframe, guild, user = null) => {
     WHERE "times_ago" <= 12
     GROUP BY "times_ago"
     ORDER BY "times_ago" ASC;
-    `;
+    `
 
-    return data;
+    return data
   }
 
   if (timeframe === 'weekly') {
@@ -43,9 +43,9 @@ FROM "weekly_data"
     WHERE "times_ago" <= 12
 GROUP BY "times_ago"
 ORDER BY "times_ago" ASC;
-    `;
+    `
 
-    return data;
+    return data
   }
 
   if (timeframe === 'monthly') {
@@ -62,9 +62,9 @@ ORDER BY "times_ago" ASC;
     WHERE "times_ago" <= 12
     GROUP BY "times_ago"
     ORDER BY "times_ago" ASC;
-    `;
+    `
 
-    return data;
+    return data
   }
 
   if (timeframe === 'yearly') {
@@ -81,146 +81,146 @@ ORDER BY "times_ago" ASC;
     WHERE "times_ago" <= 12
     GROUP BY "times_ago"
     ORDER BY "times_ago" ASC;
-    `;
+    `
 
-    return data;
+    return data
   }
 }
 
 export const make_chart = (raw_data, timeframe, type, color = `#${config.embedColor.toString(16)}`): Buffer => {
   const parsed_data = raw_data.reduce((acc, data) => {
-    acc[data.times_ago] = data;
-    return acc;
+    acc[data.times_ago] = data
+    return acc
   }, {})
 
   // Makes the chart. Gets the last 12 days, weeks, months, or years of data. dd/mm/yyyy
-  const data: {date, value}[] = [];
+  const data: Array<{ date, value }> = []
 
   if (timeframe === 'daily') {
     for (let i = 0; i < 12; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const day = date.getDate();
-      const month = date.getMonth() + 1;
+      const date = new Date()
+      date.setDate(date.getDate() - i)
+      const day = date.getDate()
+      const month = date.getMonth() + 1
 
-      var to_push = 0;
+      let to_push = 0
 
       if (parsed_data[i]) {
-        to_push = type === "meditation_minutes" ? parsed_data[i].total_time : parsed_data[i].count;
+        to_push = type === 'meditation_minutes' ? parsed_data[i].total_time : parsed_data[i].count
       }
 
       data.push({
         date: `${day}/${month}`,
         value: to_push
-      });
+      })
     }
   } else if (timeframe === 'weekly') {
     for (let i = 0; i < 12; i++) {
       // Date has an offset of -7 days to show the start of the week
-      const date = new Date();
-      date.setDate(date.getDate() - ((i * 7) + 7));
-      const day = date.getDate();
-      const month = date.getMonth() + 1;
+      const date = new Date()
+      date.setDate(date.getDate() - ((i * 7) + 7))
+      const day = date.getDate()
+      const month = date.getMonth() + 1
 
-      var to_push = 0;
+      let to_push = 0
 
       if (parsed_data[i]) {
-        to_push = type === "meditation_minutes" ? parsed_data[i].total_time : parsed_data[i].count;
+        to_push = type === 'meditation_minutes' ? parsed_data[i].total_time : parsed_data[i].count
       }
 
       data.push({
         date: `${day}/${month}`,
         value: to_push
-      });
+      })
     }
   } else if (timeframe === 'monthly') {
     for (let i = 0; i < 12; i++) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
-      const month = date.getMonth() + 1;
-      const year = date.getFullYear();
+      const date = new Date()
+      date.setMonth(date.getMonth() - i)
+      const month = date.getMonth() + 1
+      const year = date.getFullYear()
 
-      var to_push = 0;
+      let to_push = 0
 
       if (parsed_data[i]) {
-        to_push = type === "meditation_minutes" ? parsed_data[i].total_time : parsed_data[i].count;
+        to_push = type === 'meditation_minutes' ? parsed_data[i].total_time : parsed_data[i].count
       }
 
       data.push({
         date: `${month}/${year}`,
         value: to_push
-      });
+      })
     }
   } else if (timeframe === 'yearly') {
     for (let i = 0; i < 12; i++) {
-      const date = new Date();
-      date.setFullYear(date.getFullYear() - i);
-      const year = date.getFullYear();
+      const date = new Date()
+      date.setFullYear(date.getFullYear() - i)
+      const year = date.getFullYear()
 
-      var to_push = 0;
+      let to_push = 0
 
       if (parsed_data[i]) {
-        to_push = type === "meditation_minutes" ? parsed_data[i].total_time : parsed_data[i].count;
+        to_push = type === 'meditation_minutes' ? parsed_data[i].total_time : parsed_data[i].count
       }
 
       data.push({
         date: `${year}`,
         value: to_push
-      });
+      })
     }
   }
 
   // Inverts the data so that it's in the right order
-  data.reverse();
+  data.reverse()
 
-  const labels = data.map(d => d.date);
-  const values = data.map(d => Number(d.value));
-  const header = type === "meditation_minutes" ? "# of Minutes" : "# of Sessions";
+  const labels = data.map(d => d.date)
+  const values = data.map(d => Number(d.value))
+  const header = type === 'meditation_minutes' ? '# of Minutes' : '# of Sessions'
 
   // Makes the chart
-  const canvas = createCanvas(400, 250);
-  const canvas_ctx: any = canvas.getContext("2d");
+  const canvas = createCanvas(400, 250)
+  const canvas_ctx: any = canvas.getContext('2d')
 
-  Chart.defaults.color = '#ffffff';
+  Chart.defaults.color = '#ffffff'
 
   new Chart(canvas_ctx, {
-    type: "bar",
+    type: 'bar',
     data: {
-      labels: labels,
+      labels,
       datasets: [
         {
           label: header,
           data: values,
           backgroundColor: color,
-          borderColor: `#fff`,
-          borderWidth: 1,
-        },
-      ],
+          borderColor: '#fff',
+          borderWidth: 1
+        }
+      ]
     },
     options: {
       scales: {
         y: {
-          beginAtZero: true,
-        },
+          beginAtZero: true
+        }
       }
-    },
-  });
+    }
+  })
 
-  return canvas.toBuffer();
+  return canvas.toBuffer()
 }
 
 export const get_all_time = async (interaction) => {
   const data = await database.meditations.aggregate({
     where: {
-      session_guild: interaction.guildId,
+      session_guild: interaction.guildId
     },
     _sum: {
-      session_time: true,
+      session_time: true
     },
     _count: {
-      id: true,
+      id: true
     }
-  });
+  })
 
-  return data;
+  return data
 }

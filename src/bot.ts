@@ -1,24 +1,31 @@
 // Require the necessary discord.js classes
-import Discord from 'discord.js';
-import * as fs from 'fs';
-import path from 'path';
-import * as dotenv from 'dotenv';
-import * as deploy from './helpers/deploy';
+import Discord from 'discord.js'
+import * as fs from 'fs'
+import path from 'path'
+import * as dotenv from 'dotenv'
+import * as deploy from './helpers/deploy'
 
-dotenv.config();
+dotenv.config()
 
 const client = new Discord.Client({
-	intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildMessageReactions ],
-	partials: [Discord.Partials.Message, Discord.Partials.Channel, Discord.Partials.Reaction],
-});
+  intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildMessageReactions],
+  partials: [Discord.Partials.Message, Discord.Partials.Channel, Discord.Partials.Reaction]
+})
 
-fs.readdirSync(path.join(__dirname, "events")).filter(file => file.endsWith(".js")).forEach(file => {
-	const event = require(path.join(__dirname, `events/${file}`));
-	const eventName = file.split('.')[0];
-	client.on(eventName, event.bind(null, client));
-});
+fs.readdirSync(path.join(__dirname, 'events')).filter(file => file.endsWith('.js')).forEach(file => {
+  import(path.join(__dirname, `events/${file}`)).then(event => {
+    const eventName = file.split('.')[0]
+    client.on(eventName, event.bind(null, client))
+  }).catch(err => {
+    console.error(err)
+  })
+})
 
 // Deploys slash commands and adds them to the client.commands collection
-deploy.deployAppCommands(client);
+deploy.deployAppCommands(client).catch(err => {
+  console.error(err)
+})
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_TOKEN).catch(err => {
+  console.error(err)
+})

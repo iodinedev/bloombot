@@ -1,10 +1,10 @@
-import { SlashCommandBuilder } from "discord.js";
-import { modCommand } from "../helpers/commandPermissions";
+import { SlashCommandBuilder } from 'discord.js'
+import { modCommand } from '../helpers/commandPermissions'
 
 export = {
-	data: new SlashCommandBuilder()
-		.setName('timestamp')
-		.setDescription('Generates a UNIX timestamp. Hour, minute, and second individually default to 0.')
+  data: new SlashCommandBuilder()
+    .setName('timestamp')
+    .setDescription('Generates a UNIX timestamp. Hour, minute, and second individually default to 0.')
     .addIntegerOption(option =>
       option.setName('year')
         .setDescription('The year of the timestamp.')
@@ -31,17 +31,17 @@ export = {
         .setRequired(false))
     .setDefaultMemberPermissions(modCommand())
     .setDMPermission(false),
-	async execute(interaction) {
-    const year = interaction.options.getInteger('year');
-    const month = interaction.options.getInteger('month') - 1;
-    const day = interaction.options.getInteger('day');
-    const hour = interaction.options.getInteger('hour') || 0;
-    const minute = interaction.options.getInteger('minute') || 0;
-    const second = interaction.options.getInteger('second') || 0;
-    
-    const date = new Date(year, month, day, hour, minute, second);
-    const timestamp = date.getTime();
-    
-		return interaction.reply({ content: `${timestamp}`, ephemeral: true });
-	},
-};
+  async execute (interaction) {
+    const year = interaction.options.getInteger('year')
+    const month = interaction.options.getInteger('month') - 1
+    const day = interaction.options.getInteger('day')
+    const hour = interaction.options.getInteger('hour') || 0
+    const minute = interaction.options.getInteger('minute') || 0
+    const second = interaction.options.getInteger('second') || 0
+
+    const date = new Date(year, month, day, hour, minute, second)
+    const timestamp = date.getTime()
+
+    return interaction.reply({ content: `${timestamp}`, ephemeral: true })
+  }
+}

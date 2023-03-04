@@ -1,10 +1,10 @@
-import { starboardActions } from '../helpers/starboard';
+import { removeStar } from '../helpers/starboard'
 
 export = async (client, reaction, user) => {
   // When we receive a reaction we check if the reaction is partial or not, return because raw should fire this event
-  if (!reaction || reaction.partial) {
-    return;
+  if (reaction === null || reaction.partial !== null) {
+    return
   }
 
-  starboardActions.removeStar(client, user, reaction);
-};
+  await removeStar(client, user, reaction)
+}

@@ -1,5 +1,5 @@
-import { starboardActions } from '../helpers/starboard';
+import { removeMessage } from '../helpers/starboard'
 
 export = async (client, message, channel) => {
-  starboardActions.removeMessage(client, message);
-};
+  await removeMessage(client, message)
+}
