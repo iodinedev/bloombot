@@ -13,19 +13,12 @@ const client = new Discord.Client({
 })
 
 fs.readdirSync(path.join(__dirname, 'events')).filter(file => file.endsWith('.js')).forEach(file => {
-  import(path.join(__dirname, `events/${file}`)).then(event => {
-    const eventName = file.split('.')[0]
-    client.on(eventName, event.bind(null, client))
-  }).catch(err => {
-    console.error(err)
-  })
+  const event = require(path.join(__dirname, `events/${file}`))
+  const eventName = file.split('.')[0]
+  client.on(eventName, event.bind(null, client))
 })
 
 // Deploys slash commands and adds them to the client.commands collection
-deploy.deployAppCommands(client).catch(err => {
-  console.error(err)
-})
+deploy.deployAppCommands(client)
 
-client.login(process.env.DISCORD_TOKEN).catch(err => {
-  console.error(err)
-})
+client.login(process.env.DISCORD_TOKEN)
