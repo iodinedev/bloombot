@@ -20,17 +20,18 @@ export = {
     if (!(await channelGuard(interaction, [config.channels.meditation, config.channels.commands], interaction.channelId))) return
 
     const minutes: number = interaction.options.getInteger('minutes') ?? 0
+    const random_id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
     // Check with user if they want to add the minutes if they are over 300
     if (minutes > 300) {
       const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           new ButtonBuilder()
-            .setCustomId('yes')
+            .setCustomId(`yes-${random_id}`)
             .setLabel('Yes')
             .setStyle(ButtonStyle.Danger),
           new ButtonBuilder()
-            .setCustomId('no')
+            .setCustomId(`no-${random_id}`)
             .setLabel('No')
             .setStyle(ButtonStyle.Primary)
         )
@@ -41,11 +42,11 @@ export = {
       const collector = interaction.channel?.createMessageComponentCollector({ filter, time: 15000 }) as InteractionCollector<ButtonInteraction>
 
       collector?.on('collect', async i => {
-        if (i.customId === 'yes') {
+        if (i.customId === `yes-${random_id}`) {
           collector.resetTimer()
 
           await addMinutes(interaction, minutes, true)
-        } else if (i.customId === 'no') {
+        } else if (i.customId === `no-${random_id}`) {
           collector.resetTimer()
 
           await interaction.editReply({ content: 'Time not added.', components: [] })

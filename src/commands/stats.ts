@@ -162,9 +162,6 @@ export = {
       // Gets the data for the chart
       const raw_data: any = await get_data(timeframe, interaction.guild.id)
 
-      console.log(timeframe)
-      console.log(raw_data)
-
       const canvas = make_chart(raw_data, timeframe, type)
 
       const all_time = await get_all_time(interaction)
