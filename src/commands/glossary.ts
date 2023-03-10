@@ -20,6 +20,7 @@ export = {
         .addStringOption(option =>
           option.setName('term')
             .setDescription('The term you want info about.')
+            .setAutocomplete(true)
             .setRequired(true)))
     .addSubcommand(subcommand =>
       subcommand.setName('search')
@@ -27,6 +28,7 @@ export = {
         .addStringOption(option =>
           option.setName('term')
             .setDescription('The term you want info about.')
+            .setAutocomplete(true)
             .setRequired(true)))
     .setDMPermission(false),
   async autocomplete (interaction) {
@@ -48,7 +50,7 @@ export = {
       }
     })
 
-    await interaction.respond(suggestions)
+    return await interaction.respond(suggestions)
   },
   async execute (interaction) {
     const subcommand = interaction.options.getSubcommand()
@@ -140,7 +142,7 @@ export = {
           (<any>row.components[1]).setDisabled(true)
         })
       } else {
-        await interaction.reply({ embeds: [embeds[page]] })
+        return await interaction.reply({ embeds: [embeds[page]] })
       }
     } else if (subcommand === 'info') {
       const term = interaction.options.getString('term')
@@ -153,9 +155,9 @@ export = {
           }
         })
 
-        if (termData == null) return interaction.reply({ content: 'That\'s not a valid term!', ephemeral: true })
+        if (termData == null) return await interaction.reply({ content: 'That\'s not a valid term!', ephemeral: true })
 
-        if (termData.term.length > 1024 || termData.definition.length > 1024) return interaction.reply({ content: 'That term is too long! Tell the manager to shorten it.', ephemeral: true })
+        if (termData.term.length > 1024 || termData.definition.length > 1024) return await interaction.reply({ content: 'That term is too long! Tell the manager to shorten it.', ephemeral: true })
 
         const fields: any[] = []
         if (termData.usage) fields.push({ name: 'Usage', value: termData.usage })
@@ -167,9 +169,9 @@ export = {
           .setColor(config.embedColor)
           .setDescription(termData.definition)
           .addFields(fields)
-        return interaction.reply({ embeds: [embed] })
+        return await interaction.reply({ embeds: [embed] })
       } else {
-        return interaction.reply({ content: 'You need to specify a term!', ephemeral: true })
+        return await interaction.reply({ content: 'You need to specify a term!', ephemeral: true })
       }
     } else if (subcommand === 'search') {
       const term = interaction.options.getString('term')
@@ -261,11 +263,11 @@ export = {
             (<any>row.components[1]).setDisabled(true)
           })
         } else {
-          await interaction.reply({ embeds: [embeds[page]] })
+          return await interaction.reply({ embeds: [embeds[page]] })
         }
       }
     }
 
-    return interaction.reply({ content: 'You need to specify a subcommand!', ephemeral: true })
+    return await interaction.reply({ content: 'You need to specify a subcommand!', ephemeral: true })
   }
 }
