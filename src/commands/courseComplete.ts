@@ -13,7 +13,7 @@ export = {
         .setRequired(true))
     .setDefaultMemberPermissions(0)
     .setDMPermission(true),
-  async execute (interaction) {
+  async execute(interaction) {
     const course: string = interaction.options.getString('course')
     const search: string = makeSearchable(course)
 
@@ -68,6 +68,8 @@ export = {
         await interaction.reply({ content: `I don't have permission to give you the role for **${course}**.`, ephemeral: true })
         return
       }
+
+      console.log(error)
 
       throw error
     }

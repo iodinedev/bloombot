@@ -20,13 +20,11 @@ Once you have access, be sure to visit #Channels & Roles to grab some roles and 
 Thanks for joining us. We hope you enjoy your stay!`)
 
   try {
-    return member.send({ embeds: [embed] }).catch((err) => {
-      console.error(err)
-    })
+    return await member.send({ embeds: [embed] });
   } catch (err: any) {
     if (err.code === 50007) {
       // User has DMs disabled
-      return
+      return;
     }
 
     console.error(err)

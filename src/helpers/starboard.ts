@@ -2,6 +2,8 @@ import { EmbedBuilder } from 'discord.js'
 import { config } from '../config'
 import { database } from './database'
 
+import type { Message } from 'discord.js'
+
 export async function addStar (client, user, reaction) {
   if (
     reaction._emoji &&
@@ -76,21 +78,23 @@ export async function removeStar (client, user, reaction) {
       client.channels.cache
         .get(config.channels.starchannel)
         .messages.fetch(result.embedID)
-        .then((starmessage) => {
+        .then(async (starmessage: Message) => {
           if (reaction.count > 0) {
-            const starmessageEmbed = starmessage.embeds[0]
-            let times = starmessageEmbed.footer.text.substring(
+            const starmessageEmbed = EmbedBuilder.from(starmessage.embeds[0])
+
+            let times = starmessage.embeds[0].footer?.text.substring(
               16,
-              starmessageEmbed.footer.text.length
-            )
-            times = reaction.count
-            starmessageEmbed.setFooter(
-              '⭐ Times starred: ' + times.toString()
-            )
-            return starmessage.edit(starmessageEmbed)
+              starmessage.embeds[0].footer.text.length
+            ) ?? 0;
+
+            starmessageEmbed.setFooter({
+              text: '⭐ Times starred: ' + times.toString()
+            })
+
+            return await starmessage.edit({ embeds: [starmessageEmbed] });
           } else {
-            database.stars.delete({ where: { messageID: reaction.message.id } }).then(() => {
-              return starmessage.delete()
+            database.stars.delete({ where: { messageID: reaction.message.id } }).then(async () => {
+              return await starmessage.delete()
             })
           }
         })

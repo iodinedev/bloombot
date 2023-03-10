@@ -6,12 +6,15 @@ export = async (client, interaction) => {
   if (interaction.isCommand()) {
     const command = interaction.client.commands.get(interaction.commandName)
 
+    // Sets the guild ID if the command was executed in a guild, otherwise sets it to null
+    const guild = interaction.guild ? interaction.guild.id : null
+
     // Logs user's command usage in database
     await database.commandUsage.create({
       data: {
         command: interaction.commandName,
         user: interaction.user.id,
-        guild: interaction.guild.id
+        guild: guild
       }
     })
 
