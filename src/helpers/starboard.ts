@@ -81,17 +81,13 @@ export async function removeStar (client, user, reaction) {
         .get(config.channels.starchannel)
         .messages.fetch(result.embedID)
         .then(async (starmessage: Message) => {
-          if (reaction.count > 0) {
+          const count = reaction.count;
+
+          if (count > config.min_stars) {
             const starmessageEmbed = EmbedBuilder.from(starmessage.embeds[0])
-
-            let times = starmessage.embeds[0].footer?.text.substring(
-              16,
-              starmessage.embeds[0].footer.text.length
-            ) ?? 0;
-
-            starmessageEmbed.setFooter({
-              text: '⭐ Times starred: ' + times.toString()
-            })
+              .setFooter({
+                text: '⭐ Times starred: ' + count.toString()
+              })
 
             return await starmessage.edit({ embeds: [starmessageEmbed] });
           } else {
