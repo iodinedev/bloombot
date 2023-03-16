@@ -37,7 +37,7 @@ jobs:
     
     name: Deploy to VPS
     
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     runs-on: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v1
@@ -47,4 +47,4 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_RSA_KEY }}
-          script: cd ${{ secrets.PROJECT_PATH }} && git fetch --all && git reset --hard origin/master && cd ../ && docker compose up -d --no-deps --build ${{secrets.PROJECT_PATH }}
+          script: cd ${{ secrets.PROJECT_PATH }} && git fetch --all && git reset --hard origin/main && cd ../ && docker compose up -d --no-deps --build ${{secrets.PROJECT_PATH }}
