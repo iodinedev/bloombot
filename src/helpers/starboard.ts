@@ -83,7 +83,7 @@ export async function removeStar (client, user, reaction) {
         .then(async (starmessage: Message) => {
           const count = reaction.count;
 
-          if (count > config.min_stars) {
+          if (count >= config.min_stars) {
             const starmessageEmbed = EmbedBuilder.from(starmessage.embeds[0])
               .setFooter({
                 text: '⭐ Times starred: ' + count.toString()
