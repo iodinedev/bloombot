@@ -63,8 +63,10 @@ export async function addStar (client, user, reaction) {
       starchannel.messages.fetch(result.embedID).then(async (starmessage) => {
         const starmessageEmbed = starmessage.embeds[0]
         const times = reaction.count
-        starmessageEmbed.setFooter('⭐ Times starred: ' + times.toString())
-        return await starmessage.edit({ embeds: [starmessageEmbed] })
+
+        const starboardMessage = EmbedBuilder.from(starmessage.embeds[0])
+          .setFooter({ text: '⭐ Times starred: ' + times.toString() })
+        return await starmessage.edit({ embeds: [starboardMessage] })
       })
     }
   }
