@@ -31,7 +31,7 @@ export = {
 
     const quoteEmbed = new EmbedBuilder()
       .setColor(config.embedColor)
-      .setDescription(`${quoteText}\n\n- ${quoteAuthor}`)
+      .setDescription(`${quoteText}\n\n― ${quoteAuthor}`)
 
     await interaction.reply({ embeds: [quoteEmbed] })
   }
