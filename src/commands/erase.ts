@@ -2,6 +2,7 @@ import { EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { modCommand } from '../helpers/commandPermissions'
 import { config } from '../config'
 import { clean } from '../helpers/strings'
+import { rollbar } from '../helpers/rollbar'
 
 export = {
   data: new SlashCommandBuilder()
@@ -41,8 +42,8 @@ export = {
 
     try {
       await message.delete()
-    } catch (error) {
-      console.error(error)
+    } catch (error: any) {
+      rollbar.error(error)
       return interaction.reply({ content: 'Message could not be deleted.', ephemeral: true })
     }
 

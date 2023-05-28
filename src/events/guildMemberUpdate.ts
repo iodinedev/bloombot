@@ -1,5 +1,6 @@
 import { config } from '../config'
 import { EmbedBuilder } from 'discord.js'
+import { rollbar } from '../helpers/rollbar'
 
 export = async (client, oldMember, newMember) => {
   if (
@@ -29,8 +30,8 @@ export = async (client, oldMember, newMember) => {
         .then((message) => {
           message.react(config.emotes.wave)
         })
-    } catch (err) {
-      console.error(err)
+    } catch (err: any) {
+      rollbar.error(err)
     }
   }
 }

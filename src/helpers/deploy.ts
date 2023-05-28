@@ -1,6 +1,7 @@
 import Discord from 'discord.js'
 import fs from 'fs'
 import path from 'path'
+import { rollbar } from './rollbar'
 
 const commands: any[] = []
 const commandFiles = fs.readdirSync(path.join(__dirname, '../commands/')).filter(file => file.endsWith('.js'))
@@ -30,12 +31,26 @@ export const deployAppCommands = async (client) => {
     } else {
       console.log(`[WARNING] The bot is not in production mode. The commands will only be deployed to the guild with ID ${process.env.TEST_GUILD_ID}.`)
 
-      await rest.put(
-        Discord.Routes.applicationGuildCommands(process.env.CLIENT_ID!, process.env.TEST_GUILD_ID!),
-        { body: commands }
-      )
+      try {
+        await rest.put(
+          Discord.Routes.applicationGuildCommands(process.env.CLIENT_ID!, process.env.TEST_GUILD_ID!),
+          { body: commands }
+        )
+      } catch (error: any) {
+        // APPLICATION_COMMAND_PERMISSIONS_UPDATE
+        if (error.code === 50001) {
+          return console.log(`[WARNING] The bot does not have permission to manage slash commands in the guild with ID ${process.env.TEST_GUILD_ID}.`)
+        }
+
+        // APPLICATION_COMMANDS_DUPLICATE_NAME
+        if (error.code === 50041) {
+          return console.log(`[WARNING] The bot has a duplicate command name in the guild with ID ${process.env.TEST_GUILD_ID}.`)
+        }
+
+        rollbar.error(error)
+      }
     }
   } catch (error: any) {
-    console.error(error)
+    rollbar.error(error)
   }
 }

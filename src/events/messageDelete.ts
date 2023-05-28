@@ -1,5 +1,10 @@
 import { removeMessage } from '../helpers/starboard'
+import { rollbar } from '../helpers/rollbar'
 
 export = async (client, message, channel) => {
-  await removeMessage(client, message)
+  try {
+    await removeMessage(client, message)
+  } catch (err: any) {
+    rollbar.error(err);
+  }
 }

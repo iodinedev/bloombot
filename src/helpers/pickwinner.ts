@@ -2,6 +2,7 @@ import { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle
 import { config } from '../config'
 import { database } from './database'
 import { adminCommand } from './commandPermissions'
+import { rollbar } from './rollbar'
 
 export const acceptKey = async (interaction: any) => {
   if (interaction.customId !== 'redeemKey') return
@@ -42,8 +43,8 @@ export const acceptKey = async (interaction: any) => {
       .setDescription(`**Key redeemed by ${interaction.user.tag}**`)
 
     await moderationChannel.send({ embeds: [moderationEmbed] })
-  } catch (error) {
-    console.error(error)
+  } catch (error: any) {
+    rollbar.error(error)
   }
 
   const link = hyperlink('Redeem your key', `https://store.steampowered.com/account/registerkey?key=${reservedKey.key}`)
@@ -74,8 +75,8 @@ export const cancelKey = async (interaction: any) => {
         reserved: null
       }
     })
-  } catch (error) {
-    console.error(error)
+  } catch (error: any) {
+    rollbar.error(error)
     return
   }
 
@@ -95,8 +96,8 @@ export const cancelKey = async (interaction: any) => {
       ])
 
     await moderationChannel.send({ embeds: [moderationEmbed] })
-  } catch (error) {
-    console.error(error)
+  } catch (error: any) {
+    rollbar.error(error)
   }
 
   return interaction.followUp({ content: ':white_check_mark: Key cancelled.', ephemeral: true })

@@ -1,5 +1,6 @@
 import { ColorResolvable, EmbedBuilder } from 'discord.js'
 import { config } from '../config'
+import { rollbar } from '../helpers/rollbar'
 
 export = async (client, member) => {
   if (member.user.bot) return
@@ -27,6 +28,6 @@ Thanks for joining us. We hope you enjoy your stay!`)
       return;
     }
 
-    console.error(err)
+    rollbar.error(err);
   }
 }
