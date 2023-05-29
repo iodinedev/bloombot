@@ -4,8 +4,6 @@ import { rollbar } from '../helpers/rollbar'
 
 export = async (client, message) => {
   try {
-    throw new Error('Test error')
-    
     // Backup the database
     setInterval(() => {
       backup(client)

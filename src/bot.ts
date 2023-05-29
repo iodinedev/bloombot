@@ -1,11 +1,12 @@
+import * as dotenv from 'dotenv'
+dotenv.config()
+
 // Require the necessary discord.js classes
 import Discord from 'discord.js'
 import * as fs from 'fs'
 import path from 'path'
-import * as dotenv from 'dotenv'
 import * as deploy from './helpers/deploy'
 
-dotenv.config()
 
 const client = new Discord.Client({
   intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildMessageReactions],
