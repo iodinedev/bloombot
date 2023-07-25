@@ -12,6 +12,8 @@ import { rollbar } from './helpers/rollbar'
 
 let startup_sucessful = false;
 
+console.log("Starting up...");
+
 (async () => {
   try {
     // Backup the database
@@ -50,8 +52,6 @@ let startup_sucessful = false;
     const eventName = file.split('.')[0]
     client.on(eventName, event.bind(null, client))
   })
-
-  console.log("Startup successful: " + startup_sucessful)
 
   // Deploys slash commands and adds them to the client.commands collection
   deploy.deployAppCommands(client, startup_sucessful)
