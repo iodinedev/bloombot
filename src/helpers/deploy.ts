@@ -6,7 +6,7 @@ import { rollbar } from './rollbar'
 const commands: any[] = []
 const commandFiles = fs.readdirSync(path.join(__dirname, '../commands/')).filter(file => file.endsWith('.js'))
 
-export const deployAppCommands = async (client) => {
+export const deployAppCommands = async (client, startup_sucessful) => {
   const rest = new Discord.REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!)
   client.commands = new Discord.Collection()
 
@@ -16,7 +16,17 @@ export const deployAppCommands = async (client) => {
 
     if ('data' in command && 'execute' in command) {
       commands.push(command.data.toJSON())
-      client.commands.set(command.data.name, command)
+      if (startup_sucessful) {
+        client.commands.set(command.data.name, command)
+      } else {
+        // Startup was not successful, so we want to replace the command with an error message
+        client.commands.set(command.data.name, {
+          data: command.data,
+          async execute (interaction) {
+            await interaction.reply({ content: 'Looks like the bot is having some issues right now. Please try again later.', ephemeral: true })
+          }
+        })
+      }
     } else {
       console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`)
     }
@@ -25,7 +35,7 @@ export const deployAppCommands = async (client) => {
   try {
     if (process.env.TEST_GUILD_ID === undefined) {
       await rest.put(
-        Discord.Routes.applicationCommands(client.user.id),
+        Discord.Routes.applicationCommands(process.env.CLIENT_ID!),
         { body: commands }
       )
     } else {
@@ -33,7 +43,7 @@ export const deployAppCommands = async (client) => {
 
       try {
         await rest.put(
-          Discord.Routes.applicationGuildCommands(client.user.id, process.env.TEST_GUILD_ID!),
+          Discord.Routes.applicationGuildCommands(process.env.CLIENT_ID!, process.env.TEST_GUILD_ID!),
           { body: commands }
         )
       } catch (error: any) {

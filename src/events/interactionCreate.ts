@@ -11,14 +11,16 @@ export = async (client, interaction) => {
       // Sets the guild ID if the command was executed in a guild, otherwise sets it to "null"
       const guild = interaction.guild ? interaction.guild.id : 'null'
 
-      // Logs user's command usage in database
-      await database.commandUsage.create({
-        data: {
-          command: interaction.commandName,
-          user: interaction.user.id,
-          guild: guild
-        }
-      })
+      try {
+        // Logs user's command usage in database
+        await database.commandUsage.create({
+          data: {
+            command: interaction.commandName,
+            user: interaction.user.id,
+            guild: guild
+          }
+        })
+      } catch {}
 
       if (!command) {
         rollbar.error(`No command matching ${interaction.commandName} was found.`)
