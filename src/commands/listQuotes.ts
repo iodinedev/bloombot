@@ -1,10 +1,10 @@
 import { database } from '../helpers/database'
-import Discord from 'discord.js'
+import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js'
 import { modCommand } from '../helpers/commandPermissions'
 import { clean } from '../helpers/strings'
 
 export = {
-  data: new Discord.SlashCommandBuilder()
+  data: new SlashCommandBuilder()
     .setName('listquotes')
     .setDescription('Shows a list of all quotes.')
     .addIntegerOption(option =>
@@ -36,7 +36,7 @@ export = {
         return interaction.reply({ content: 'That quote doesn\'t exist!', ephemeral: true })
       }
 
-      const embed = new Discord.EmbedBuilder()
+      const embed = new EmbedBuilder()
         .setTitle(`Quote ID: ${quote.id}`)
         .setDescription(quote.quote)
         .addFields([
@@ -48,7 +48,7 @@ export = {
       // Max 10 fields, uses buttons to paginate
       const quotes = await database.quoteBook.findMany()
       const embeds: any[] = []
-      let embed = new Discord.EmbedBuilder()
+      let embed = new EmbedBuilder()
         .setTitle('Quotes')
         .setDescription('Here\'s a list of all the quotes:')
 
@@ -63,7 +63,7 @@ export = {
         const fields = embed.toJSON().fields
         if ((fields != null) && fields.length === 10) {
           embeds.push(embed)
-          embed = new Discord.EmbedBuilder()
+          embed = new EmbedBuilder()
             .setTitle('Quotes')
             .setDescription('Here\'s a list of all the quotes:')
         }
@@ -77,17 +77,17 @@ export = {
 
       embeds.push(embed)
 
-      const row = new Discord.ActionRowBuilder()
+      const row = new ActionRowBuilder()
         .addComponents(
-          new Discord.ButtonBuilder()
+          new ButtonBuilder()
             .setCustomId('previous')
             .setLabel('Previous')
-            .setStyle(Discord.ButtonStyle.Primary)
+            .setStyle(ButtonStyle.Primary)
             .setDisabled(true),
-          new Discord.ButtonBuilder()
+          new ButtonBuilder()
             .setCustomId('next')
             .setLabel('Next')
-            .setStyle(Discord.ButtonStyle.Primary)
+            .setStyle(ButtonStyle.Primary)
         )
 
       if (embeds.length > 1) {

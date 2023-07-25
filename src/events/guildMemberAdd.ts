@@ -1,8 +1,11 @@
-import { ColorResolvable, EmbedBuilder } from 'discord.js'
+import { EmbedBuilder } from 'discord.js'
 import { config } from '../config'
 import { rollbar } from '../helpers/rollbar'
 
-export = async (client, member) => {
+export = async (
+  client,
+  member
+) => {
   if (member.user.bot) return
 
   const embed = new EmbedBuilder()

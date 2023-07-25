@@ -87,7 +87,7 @@ export const updateRoles = async (client: Client, guild: Guild, user: User) => {
     if (remove_roles.length > 0) await member.roles.remove(remove_roles)
   } catch (error: any) {
     if (error.code === 50013) {
-      console.log('Missing permissions to manage roles')
+      console.warn('[WARNING] Missing permissions to manage roles')
     } else {
       throw error
     }

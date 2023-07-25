@@ -1,5 +1,5 @@
 import path from 'path'
-import * as fs from 'fs'
+import { readdirSync } from 'fs'
 import { rollbar } from '../helpers/rollbar'
 
 export = async (client, message) => {
@@ -24,7 +24,7 @@ export = async (client, message) => {
       message.content.startsWith(prefix) && args.shift().slice(prefix.length).split(' ')[0].toLowerCase()
 
     if (command) {
-      const commandfile = fs.readdirSync(path.join(__dirname, '../commands/')).filter(file => file.endsWith('.js')).find(file => file === `${command}.js`)
+      const commandfile = readdirSync(path.join(__dirname, '../commands/')).filter(file => file.endsWith('.js')).find(file => file === `${command}.js`)
 
       if (commandfile) {
         message.channel.sendTyping()

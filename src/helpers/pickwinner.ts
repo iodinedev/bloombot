@@ -1,7 +1,6 @@
-import { ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, hideLinkEmbed, hyperlink } from 'discord.js'
+import { ChannelType, EmbedBuilder, hideLinkEmbed, hyperlink } from 'discord.js'
 import { config } from '../config'
 import { database } from './database'
-import { adminCommand } from './commandPermissions'
 import { rollbar } from './rollbar'
 
 export const acceptKey = async (interaction: any) => {

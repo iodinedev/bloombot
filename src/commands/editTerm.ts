@@ -43,8 +43,6 @@ export = {
     const term = interaction.options.getString('term')
     const search = makeSearchable(term)
 
-    console.log(search)
-
     const terms = await database.glossary.findMany({
       where: {
         search: {

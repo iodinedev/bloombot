@@ -2,6 +2,7 @@ import { EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { config } from '../config'
 import { database } from '../helpers/database'
 import { makeSearchable } from '../helpers/strings'
+import { rollbar } from '../helpers/rollbar'
 
 export = {
   data: new SlashCommandBuilder()
@@ -69,7 +70,7 @@ export = {
         return
       }
 
-      console.log(error)
+      rollbar.error(error)
 
       throw error
     }

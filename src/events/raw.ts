@@ -1,4 +1,5 @@
 import { rollbar } from "../helpers/rollbar"
+import type { Client } from "discord.js"
 
 export = async (client, packet) => {
   try {

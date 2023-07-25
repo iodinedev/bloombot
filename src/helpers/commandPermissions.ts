@@ -1,13 +1,13 @@
-import Discord from 'discord.js'
+import { PermissionFlagsBits } from 'discord.js'
 
 export const adminCommand = () => {
-  const permissions = Discord.PermissionFlagsBits.Administrator
+  const permissions = PermissionFlagsBits.Administrator
 
   return permissions
 }
 
 export const modCommand = () => {
-  const permissions = Discord.PermissionFlagsBits.ManageRoles
+  const permissions = PermissionFlagsBits.ManageRoles
 
   return permissions
 }

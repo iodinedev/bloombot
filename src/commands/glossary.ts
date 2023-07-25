@@ -1,10 +1,10 @@
 import { database } from '../helpers/database'
-import Discord from 'discord.js'
+import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js'
 import { clean, makeSearchable } from '../helpers/strings'
 import { config } from '../config'
 
 export = {
-  data: new Discord.SlashCommandBuilder()
+  data: new SlashCommandBuilder()
     .setName('glossary')
     .setDescription('Shows a list of all glossary terms, or info about a specific term.')
     .addSubcommand(subcommand =>
@@ -67,7 +67,7 @@ export = {
       // Max 10 fields, uses buttons to paginate. If one of the terms is too long, it will be omitted.
       const terms = await database.glossary.findMany()
       const embeds: any[] = []
-      let embed = new Discord.EmbedBuilder()
+      let embed = new EmbedBuilder()
         .setTitle('Glossary')
         .setColor(config.embedColor)
         .setDescription('Here\'s a list of all my glossary terms:')
@@ -85,7 +85,7 @@ export = {
         const fields = embed.toJSON().fields
         if ((fields != null) && fields.length === 10) {
           embeds.push(embed)
-          embed = new Discord.EmbedBuilder()
+          embed = new EmbedBuilder()
             .setTitle('Glossary')
             .setColor(config.embedColor)
             .setDescription('Here\'s a list of all my glossary terms:')
@@ -97,17 +97,17 @@ export = {
 
       embeds.push(embed)
 
-      const row = new Discord.ActionRowBuilder()
+      const row = new ActionRowBuilder()
         .addComponents(
-          new Discord.ButtonBuilder()
+          new ButtonBuilder()
             .setCustomId('previous')
             .setLabel('Previous')
-            .setStyle(Discord.ButtonStyle.Primary)
+            .setStyle(ButtonStyle.Primary)
             .setDisabled(true),
-          new Discord.ButtonBuilder()
+          new ButtonBuilder()
             .setCustomId('next')
             .setLabel('Next')
-            .setStyle(Discord.ButtonStyle.Primary)
+            .setStyle(ButtonStyle.Primary)
         )
 
       if (embeds.length > 1) {
@@ -164,7 +164,7 @@ export = {
         if (termData.category) fields.push({ name: 'Category', value: termData.category })
         if (termData.links.length > 0) fields.push({ name: 'Links', value: termData.links.join('\n') })
 
-        const embed = new Discord.EmbedBuilder()
+        const embed = new EmbedBuilder()
           .setTitle(`Term: ${termData.term}`)
           .setColor(config.embedColor)
           .setDescription(termData.definition)
@@ -190,7 +190,7 @@ export = {
 
         // Max 10 fields, uses buttons to paginate
         const embeds: any[] = []
-        let embed = new Discord.EmbedBuilder()
+        let embed = new EmbedBuilder()
           .setTitle('Search Results')
           .setColor(config.embedColor)
           .setDescription(`Here\'s a list of all the terms matching the search \`${clean(term)}\`:`)
@@ -206,7 +206,7 @@ export = {
           const fields = embed.toJSON().fields
           if ((fields != null) && fields.length === 10) {
             embeds.push(embed)
-            embed = new Discord.EmbedBuilder()
+            embed = new EmbedBuilder()
               .setTitle('Search Results')
               .setColor(config.embedColor)
               .setDescription(`Here\'s a list of all the terms matching the search \`${clean(term)}\`:`)
@@ -218,17 +218,17 @@ export = {
 
         embeds.push(embed)
 
-        const row = new Discord.ActionRowBuilder()
+        const row = new ActionRowBuilder()
           .addComponents(
-            new Discord.ButtonBuilder()
+            new ButtonBuilder()
               .setCustomId('previous')
               .setLabel('Previous')
-              .setStyle(Discord.ButtonStyle.Primary)
+              .setStyle(ButtonStyle.Primary)
               .setDisabled(true),
-            new Discord.ButtonBuilder()
+            new ButtonBuilder()
               .setCustomId('next')
               .setLabel('Next')
-              .setStyle(Discord.ButtonStyle.Primary)
+              .setStyle(ButtonStyle.Primary)
           )
 
         if (embeds.length > 1) {

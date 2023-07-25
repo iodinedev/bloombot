@@ -1,5 +1,5 @@
 import { addTerm } from '../helpers/terms'
-import * as pickwinnerActions from '../helpers/pickwinner'
+import { acceptKey, cancelKey } from '../helpers/pickwinner'
 import { database } from '../helpers/database'
 import { rollbar } from '../helpers/rollbar'
 
@@ -60,8 +60,8 @@ export = async (client, interaction) => {
         }
       }
     } else if (interaction.isButton()) {
-      pickwinnerActions.acceptKey(interaction)
-      pickwinnerActions.cancelKey(interaction)
+      acceptKey(interaction)
+      cancelKey(interaction)
     } else if (interaction.isModalSubmit()) {
       addTerm(interaction)
     }
