@@ -10,7 +10,6 @@ COPY . .
 RUN yarn install
 RUN yarn prisma generate
 
-RUN rm -rf dist
 RUN yarn tsc
 
 CMD [ "node", "dist/bot.js" ]

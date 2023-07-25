@@ -23,9 +23,9 @@ export const deployAppCommands = async (client) => {
   }
 
   try {
-    if (process.env.PRODUCTION! === 'true') {
+    if (process.env.TEST_GUILD_ID === undefined) {
       await rest.put(
-        Discord.Routes.applicationCommands(process.env.CLIENT_ID!),
+        Discord.Routes.applicationCommands(client.user.id),
         { body: commands }
       )
     } else {
@@ -33,7 +33,7 @@ export const deployAppCommands = async (client) => {
 
       try {
         await rest.put(
-          Discord.Routes.applicationGuildCommands(process.env.CLIENT_ID!, process.env.TEST_GUILD_ID!),
+          Discord.Routes.applicationGuildCommands(client.user.id, process.env.TEST_GUILD_ID!),
           { body: commands }
         )
       } catch (error: any) {

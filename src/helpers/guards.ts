@@ -1,5 +1,5 @@
 export const channelGuard = async (interaction, channels: string[], current: string) => {
-  if (process.env.PRODUCTION === 'false') {
+  if (process.env.TEST_GUILD_ID !== undefined) {
     console.log('Channel guard bypassed (development mode).')
     return true
   }
