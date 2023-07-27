@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 poise = "0.5.5"
 tokio = { version = "1.29.1", features = ["full"] }
+pretty_env_logger = "0.5.0"
+log = "0.4.19"
+dotenv = "0.15.0"
