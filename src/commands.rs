@@ -29,6 +29,12 @@ pub async fn add(
   #[min = 1]
   minutes: u32,
 ) -> Result<(), Error> {
+  let conn = &ctx.data().database;
+  let user_id = ctx.author().id.as_u64();
+  let guild_id = ctx.guild_id().unwrap();
+
+  conn.add_user_meditation_time(user_id, guild_id.as_u64(), minutes).await?;
+
   let response = format!("You added {minutes} minutes to your meditation time");
 
   ctx.say(response).await?;
@@ -46,7 +52,7 @@ pub async fn stats(_: Context<'_>) -> Result<(), Error> {
   Ok(())
 }
 
-/// Get the stats of you or a specified user
+/// Get the stats of you or a specified user in this server
 #[poise::command(slash_command)]
 pub async fn user(
   ctx: Context<'_>,
@@ -64,11 +70,17 @@ pub async fn user(
     }
   };
 
-  let conn = ctx.data().database.get_conn().await?;
+  let conn = &ctx.data().database;
+  let total = conn.get_user_meditation_time(user.user.id.as_u64(), ctx.guild_id().unwrap().as_u64()).await?;
 
-  
+  let response = format!("{user} has meditated for {total} minutes", user = user.user.name, total = total);
 
-  ctx.say(response).await?;
+  ctx.send(|f| f
+    .embed(|f| f
+      .title("User Meditation Time")
+      .description(response)
+      .color(serenity::Color::DARK_GREEN)
+    )).await?;
 
   Ok(())
 }
@@ -76,9 +88,17 @@ pub async fn user(
 /// Get the stats of the server
 #[poise::command(slash_command)]
 pub async fn server(ctx: Context<'_>) -> Result<(), Error> {
-  let response = format!("Stats for server {}", ctx.guild().unwrap().name);
+  let conn = &ctx.data().database;
+  let total = conn.get_server_meditation_time(ctx.guild_id().unwrap().as_u64()).await?;
 
-  ctx.say(response).await?;
+  let response = format!("The server has meditated for {total} minutes", total = total);
+
+  ctx.send(|f| f
+    .embed(|f| f
+      .title("Server Meditation Time")
+      .description(response)
+      .color(serenity::Color::DARK_GREEN)
+    )).await?;
 
   Ok(())
 }
