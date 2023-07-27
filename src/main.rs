@@ -1,14 +1,18 @@
 #![warn(clippy::str_to_string)]
 
 mod commands;
+mod database;
 
 use poise::serenity_prelude as serenity;
-use std::{collections::HashMap, env::var, sync::Mutex};
+use std::env::var;
 use log::info;
 use dotenv::dotenv;
+use database::Database;
 
 // Custom user data passed to all command functions
-pub struct Data {}
+pub struct Data {
+  pub database: Database,
+}
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
@@ -31,7 +35,7 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
 async fn main() {
   dotenv().ok();
 
-  let commands = vec![commands::help(), commands::add()];
+  let commands = vec![commands::help(), commands::add(), commands::stats()];
 
   pretty_env_logger::init();
 
@@ -87,7 +91,9 @@ async fn main() {
           Err(_) => poise::builtins::register_globally(ctx, &framework.options().commands).await?
         }
 
-        Ok(Data {})
+        Ok(Data {
+          database: Database::new().await.expect("Failed to connect to database")
+        })
       })
     })
     .options(options)
