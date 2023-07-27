@@ -1,1 +1,56 @@
--- Add migration script here
+CREATE TABLE Glossary (
+  id SERIAL PRIMARY KEY,
+  term VARCHAR(255) UNIQUE,
+  search VARCHAR(255) UNIQUE,
+  definition TEXT,
+  usage TEXT,
+  links TEXT[],
+  category VARCHAR(255),
+  aliases TEXT[]
+);
+
+CREATE TABLE Meditations (
+  id SERIAL PRIMARY KEY,
+  session_user VARCHAR(255),
+  occurred_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  session_time INT,
+  session_guild VARCHAR(255)
+);
+
+CREATE TABLE Stars (
+  id SERIAL PRIMARY KEY,
+  messageID VARCHAR(255) UNIQUE,
+  embedID VARCHAR(255) UNIQUE,
+  messageChannelID VARCHAR(255)
+);
+
+CREATE TABLE SteamKeys (
+  key VARCHAR(255) UNIQUE,
+  reserved VARCHAR(255),
+  used BOOLEAN
+);
+
+CREATE TABLE QuoteBook (
+  id SERIAL PRIMARY KEY,
+  quote TEXT,
+  author VARCHAR(255) DEFAULT 'Anonymous',
+  date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Courses (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) UNIQUE,
+  search VARCHAR(255) UNIQUE,
+  participant_role VARCHAR(255),
+  graduate_role VARCHAR(255),
+  guild VARCHAR(255),
+  date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE CommandUsage (
+  id SERIAL PRIMARY KEY,
+  command VARCHAR(255),
+  user VARCHAR(255),
+  guild VARCHAR(255),
+  date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
