@@ -8,9 +8,7 @@ use log::info;
 use dotenv::dotenv;
 
 // Custom user data passed to all command functions
-pub struct Data {
-  votes: Mutex<HashMap<String, u32>>,
-}
+pub struct Data {}
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
@@ -33,7 +31,7 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
 async fn main() {
   dotenv().ok();
 
-  let commands = vec![commands::help(), commands::vote(), commands::getvotes()];
+  let commands = vec![commands::help(), commands::add()];
 
   pretty_env_logger::init();
 
@@ -89,9 +87,7 @@ async fn main() {
           Err(_) => poise::builtins::register_globally(ctx, &framework.options().commands).await?
         }
 
-        Ok(Data {
-          votes: Mutex::new(HashMap::new()),
-        })
+        Ok(Data {})
       })
     })
     .options(options)
