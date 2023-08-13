@@ -24,6 +24,4 @@ COPY --from=build /usr/src/app/dist ./dist
 # Copy node_modules from the base stage
 COPY --from=base /usr/src/app/node_modules ./node_modules
 COPY package.json yarn.lock ./
-# Copy database from the base stage
-COPY --from=base /usr/src/app/database ./database
 CMD [ "node", "dist/bot.js" ]
