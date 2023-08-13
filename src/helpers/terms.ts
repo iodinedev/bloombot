@@ -42,7 +42,6 @@ export const addTerm = async (interaction) => {
     // Add the term to the database
     await database.glossary.create({
       data: {
-        id: interaction.id,
         term,
         search,
         definition,
@@ -58,7 +57,6 @@ export const addTerm = async (interaction) => {
   // Add the term to the database
   await database.glossary.create({
     data: {
-      id: interaction.id,
       term,
       search,
       definition,

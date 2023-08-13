@@ -54,7 +54,6 @@ export = {
 
     await database.courses.create({
       data: {
-        id: interaction.id,
         name: courseName,
         search: makeSearchable(courseName),
         participant_role: participantRole.id,

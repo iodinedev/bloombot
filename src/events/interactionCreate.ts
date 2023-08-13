@@ -15,7 +15,6 @@ export = async (client, interaction) => {
         // Logs user's command usage in database
         await database.commandUsage.create({
           data: {
-            id: interaction.id,
             command: interaction.commandName,
             user: interaction.user.id,
             guild: guild

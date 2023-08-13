@@ -9,7 +9,7 @@ datasource db {
 }
 
 model Glossary {
-  id         String   @id
+  id         Int      @id @default(autoincrement())
   term       String   @unique
   search     String   @unique
   definition String
@@ -20,47 +20,47 @@ model Glossary {
 }
 
 model Meditations {
-  id            String   @id
+  id    Int    @id @default(autoincrement())
   session_user  String
-  occurred_at   DateTime @default(now())
+  occurred_at  DateTime  @default(now())
   session_time  Int
   session_guild String
 }
 
 model Stars {
-  id               String @id
+  id               Int    @id @default(autoincrement())
   messageID        String @unique
   embedID          String @unique
   messageChannelID String
 }
 
 model SteamKeys {
-  key      String  @unique
+  key  String  @unique
   reserved String?
-  used     Boolean
+  used Boolean
 }
 
 model QuoteBook {
-  id     String   @id
-  quote  String
-  author String   @default("Anonymous")
-  date   DateTime @default(now())
+  id    Int    @id @default(autoincrement())
+  quote String
+  author String @default("Anonymous")
+  date  DateTime  @default(now())
 }
 
 model Courses {
-  id               String   @id
-  name             String   @unique
-  search           String   @unique
+  id   Int    @id @default(autoincrement())
+  name  String @unique
+  search  String @unique
   participant_role String
-  graduate_role    String
-  guild            String
-  date             DateTime @default(now())
+  graduate_role String
+  guild String
+  date DateTime  @default(now())
 }
 
 model CommandUsage {
-  id      String   @id
+  id    Int    @id @default(autoincrement())
   command String
-  user    String
-  guild   String
-  date    DateTime @default(now())
+  user String
+  guild String
+  date DateTime  @default(now())
 }
