@@ -82,6 +82,7 @@ export = {
 
       await database.meditations.create({
         data: {
+          id: interaction.id,
           session_user: user.id,
           session_time: minutes,
           session_guild: interaction.guild.id,

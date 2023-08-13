@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js'
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 import { adminCommand } from '../helpers/commandPermissions'
 import { database } from '../helpers/database'
 
@@ -12,8 +12,8 @@ export = {
         .setRequired(true))
     .setDefaultMemberPermissions(adminCommand())
     .setDMPermission(false),
-  async execute (interaction) {
-    const key: string = interaction.options.getString('key')
+  async execute (interaction: ChatInputCommandInteraction) {
+    const key: string = interaction.options.getString('key') ?? ''
 
     const keyExists = await database.steamKeys.findFirst({
       where: {

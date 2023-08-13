@@ -171,6 +171,7 @@ export = {
         // Add the term to the database
         await database.glossary.create({
           data: {
+            id: interaction.id,
             term,
             search,
             definition,

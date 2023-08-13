@@ -70,6 +70,7 @@ async function addMinutes (interaction, minutes: number, replied): Promise<void>
 
   await database.meditations.create({
     data: {
+      id: interaction.id,
       session_user: user,
       session_time: minutes,
       session_guild: guild

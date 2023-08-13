@@ -6,14 +6,14 @@ export = {
   data: new SlashCommandBuilder()
     .setName('removequote')
     .setDescription('Removes a quote from the database.')
-    .addIntegerOption(option =>
+    .addStringOption(option =>
       option.setName('id')
         .setDescription('The ID of the quote to remove. Use /listquotes to get a list of IDs.')
         .setRequired(true))
     .setDefaultMemberPermissions(modCommand())
     .setDMPermission(false),
   async execute (interaction) {
-    const id: number = interaction.options.getInteger('id')
+    const id: string = interaction.options.getString('id')
 
     const quoteExists = await database.quoteBook.findFirst({
       where: {

@@ -6,13 +6,13 @@ export = {
   data: new SlashCommandBuilder()
     .setName('remove')
     .setDescription('Removes a meditation session by ID.')
-    .addIntegerOption(option =>
+    .addStringOption(option =>
       option.setName('id')
         .setDescription('The ID of the meditation session you want to remove. Use `/recent` to find them.')
         .setRequired(true))
     .setDMPermission(false),
   async execute (interaction) {
-    const meditation_id: number = interaction.options.getInteger('id')
+    const meditation_id: string = interaction.options.getString('id')
 
     const meditation = await database.meditations.findUnique({
       where: {

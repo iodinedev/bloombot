@@ -45,6 +45,7 @@ export async function addStar (client, user, reaction) {
 
         channel.send({ embeds: [starBoardMessage] }).then((sentmessage) => {
           const starObject = {
+            id: sentmessage.id,
             messageID: reaction.message.id,
             embedID: sentmessage.id,
             messageChannelID: reaction.message.channel.id

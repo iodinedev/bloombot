@@ -22,6 +22,7 @@ export = {
 
     await database.quoteBook.create({
       data: {
+        id: interaction.id,
         quote,
         author
       }
