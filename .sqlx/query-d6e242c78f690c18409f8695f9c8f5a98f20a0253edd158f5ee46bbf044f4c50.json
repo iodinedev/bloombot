@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM steamkey WHERE steam_key = $1 AND guild_id = $2\n      ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d6e242c78f690c18409f8695f9c8f5a98f20a0253edd158f5ee46bbf044f4c50"
+}

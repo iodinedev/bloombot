@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT COUNT(record_id) AS total_count, SUM(meditation_minutes) AS total_sum\n        FROM meditation\n        WHERE guild_id = $1 AND user_id = $2\n      ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_sum",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "209c931c20a51d92b92fe01b42b73229f922b94c070a4e0165f085b4f25994d1"
+}
