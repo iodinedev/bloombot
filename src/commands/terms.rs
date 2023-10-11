@@ -40,7 +40,7 @@ struct UpdateTermModal {
   links: Option<String>,
 }
 
-async fn term_not_found(
+pub async fn term_not_found(
   ctx: Context<'_>,
   transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
   guild_id: serenity::GuildId,
@@ -97,7 +97,7 @@ pub async fn terms(_: poise::Context<'_, AppData, AppError>) -> Result<()> {
 
 /// Adds a new term to the glossary. Uses a modal to collect information.
 #[poise::command(slash_command)]
-async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Result<()> {
+pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Result<()> {
   use poise::Modal as _;
 
   let term_data = AddTermModal::execute(ctx).await?;
@@ -160,7 +160,7 @@ async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Result<()
 
 /// Updates an existing term in the glossary using a modal.
 #[poise::command(slash_command)]
-async fn edit(
+pub async fn edit(
   ctx: poise::ApplicationContext<'_, AppData, AppError>,
   #[description = "The term to edit"] term_name: String,
 ) -> Result<()> {
@@ -258,7 +258,7 @@ async fn edit(
 
 /// Removes a term from the database.
 #[poise::command(slash_command)]
-async fn remove(
+pub async fn remove(
   ctx: Context<'_>,
   #[description = "The term to remove"] term: String,
 ) -> Result<()> {

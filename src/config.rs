@@ -1,4 +1,5 @@
 use poise::serenity_prelude::{self as serenity, Guild, Member, RoleId};
+use log::info;
 
 pub const EMBED_COLOR: u32 = 0xFDAC2E;
 pub const TERMS_PER_PAGE: usize = 10;
@@ -86,6 +87,7 @@ pub enum TimeSumRoles {
 
 impl TimeSumRoles {
   pub fn to_role_id(&self) -> serenity::RoleId {
+    info!("to_role_id: {:?}", self);
     serenity::RoleId(match self {
       TimeSumRoles::One => 504641899890475018,
       TimeSumRoles::Two => 504641945596067851,

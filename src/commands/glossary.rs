@@ -19,7 +19,7 @@ pub async fn glossary(_: Context<'_>) -> Result<()> {
 
 /// Shows a list of all glossary terms.
 #[poise::command(slash_command)]
-async fn list(
+pub async fn list(
   ctx: Context<'_>,
   #[description = "The page to show"] page: Option<usize>,
 ) -> Result<()> {
@@ -100,7 +100,7 @@ async fn list(
 
 /// Shows information about a glossary term.
 #[poise::command(slash_command)]
-async fn info(
+pub async fn info(
   ctx: Context<'_>,
   #[description = "The term to show information about"] term: String,
 ) -> Result<()> {
@@ -183,7 +183,7 @@ async fn info(
 ///
 /// You may search for `greeting` or `answer and attract attention` or something similar, and the AI will find the closest match.
 #[poise::command(slash_command)]
-async fn search(
+pub async fn search(
   ctx: Context<'_>,
   #[description = "The term to search for"] search: String,
 ) -> Result<()> {

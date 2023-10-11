@@ -20,7 +20,7 @@ pub async fn manage(_: Context<'_>) -> Result<()> {
 
 /// Creates a new meditation entry for the user. Note that all times are in UTC.
 #[poise::command(slash_command)]
-async fn create(
+pub async fn create(
   ctx: Context<'_>,
   #[description = "The user to create the entry for"] user: serenity::User,
   #[description = "The number of minutes for the entry"]
@@ -115,7 +115,7 @@ async fn create(
 
 /// Lists all meditation entries for the user.
 #[poise::command(slash_command)]
-async fn list(
+pub async fn list(
   ctx: Context<'_>,
   #[description = "The user to list the entries for"] user: serenity::User,
   #[description = "The page to show"] page: Option<usize>,
@@ -197,7 +197,7 @@ async fn list(
 
 /// Updates a meditation entry for the user. Note that all times are in UTC.
 #[poise::command(slash_command)]
-async fn update(
+pub async fn update(
   ctx: Context<'_>,
   #[description = "The entry to update"] entry_id: String,
   #[description = "The number of minutes for the entry"]
@@ -309,7 +309,7 @@ async fn update(
 
 /// Deletes a meditation entry for the user.
 #[poise::command(slash_command)]
-async fn delete(
+pub async fn delete(
   ctx: Context<'_>,
   #[description = "The entry to delete"] entry_id: String,
 ) -> Result<()> {
@@ -361,7 +361,7 @@ async fn delete(
 
 /// Resets all meditation entries for the user.
 #[poise::command(slash_command)]
-async fn reset(
+pub async fn reset(
   ctx: Context<'_>,
   #[description = "The user to reset the entries for"] user: serenity::User,
 ) -> Result<()> {

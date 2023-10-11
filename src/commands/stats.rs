@@ -22,7 +22,7 @@ pub async fn stats(_: Context<'_>) -> Result<()> {
 
 /// Gets the stats of a specified user.
 #[poise::command(slash_command)]
-async fn user(
+pub async fn user(
   ctx: Context<'_>,
   #[description = "The user to get the stats of. (Defaults to you)"] user: Option<serenity::User>,
   #[description = "The type of stats to get. (Defaults to minutes)"]
@@ -117,7 +117,7 @@ async fn user(
 
 /// Gets the stats of the current guild.
 #[poise::command(slash_command)]
-async fn server(
+pub async fn server(
   ctx: Context<'_>,
   #[description = "The type of stats to get. (Defaults to minutes)"] stats_type: Option<StatsType>,
   #[description = "The timeframe to get the stats for. (Defaults to daily)"] timeframe: Option<

@@ -12,16 +12,10 @@ async fn create_add_response(
   user_id: serenity::UserId,
   minutes: i32,
 ) -> Result<String> {
-  let quote = DatabaseHandler::get_random_motivation(transaction, &guild_id).await?;
   let user_total =
     DatabaseHandler::get_user_meditation_sum(transaction, &guild_id, &user_id).await?;
 
-  let quote = match quote {
-    Some(quote) => format!("\n\n{}", quote),
-    None => "".to_string(),
-  };
-
-  Ok(format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_total} minutes :tada:{quote}"))
+  Ok(format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_total} minutes :tada:"))
 }
 
 /// Adds minutes to your meditation time.

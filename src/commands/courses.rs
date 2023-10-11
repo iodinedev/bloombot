@@ -20,7 +20,7 @@ pub async fn course(_: Context<'_>) -> Result<()> {
 
 /// Adds a course and relevant graduate role to the database.
 #[poise::command(slash_command)]
-async fn add(
+pub async fn add(
   ctx: Context<'_>,
   #[description = "Name of the course"] course_name: String,
   #[description = "The role participants of the course are assumed to have"]

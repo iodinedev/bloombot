@@ -20,7 +20,7 @@ pub async fn quotes(_: Context<'_>) -> Result<()> {
 
 /// Adds a quote to the database.
 #[poise::command(slash_command)]
-async fn add(
+pub async fn add(
   ctx: Context<'_>,
   #[description = "The quote to add"] quote: String,
   #[description = "The author of the quote [defaults to 'Anonymous']"] author: Option<String>,
@@ -52,7 +52,7 @@ async fn add(
 
 /// Lists all quotes in the database.
 #[poise::command(slash_command)]
-async fn list(
+pub async fn list(
   ctx: Context<'_>,
   #[description = "The page to show"] page: Option<usize>,
 ) -> Result<()> {

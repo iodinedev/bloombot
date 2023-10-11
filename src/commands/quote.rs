@@ -18,7 +18,7 @@ pub async fn quote(ctx: Context<'_>) -> Result<()> {
     Some(quote) => {
       ctx
         .say(format!(
-          "> {}\n\n- {}",
+          "> {}\n\n\\- {}",
           quote.quote,
           quote.author.unwrap_or("Anonymous".to_string())
         ))

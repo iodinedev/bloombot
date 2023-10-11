@@ -1,12 +1,29 @@
 use anyhow::{Context as ErrorContext, Error, Result};
 use commands::{
-  add::add, add_key::add_key, coffee::coffee, complete::complete, courses::course, erase::erase,
-  glossary::glossary, hello::hello, list_keys::list_keys, manage::manage, pick_winner::pick_winner,
-  ping::ping, quote::quote, quotes::quotes, recent::recent, remove_entry::remove_entry,
-  remove_key::remove_key, remove_quote::remove_quote, stats::stats, streak::streak,
-  suggest::suggest, terms::terms, use_key::use_key,
+  add::add,
+  add_key::add_key,
+  coffee::coffee,
+  complete::complete,
+  courses::course,
+  erase::erase,
+  glossary::glossary,
+  hello::hello,
+  list_keys::list_keys,
+  manage::manage,
+  pick_winner::pick_winner,
+  ping::ping,
+  quote::quote,
+  quotes::quotes,
+  recent::recent,
+  remove_entry::remove_entry,
+  remove_key::remove_key,
+  remove_quote::remove_quote,
+  stats::stats,
+  streak::streak,
+  suggest::suggest,
+  terms::terms,
+  use_key::use_key,
 };
-use config::CHANNELS;
 use dotenv::dotenv;
 use log::{error, info};
 use poise::serenity_prelude::{self as serenity, channel};
@@ -89,6 +106,7 @@ async fn main() -> Result<()> {
           let guild_id = serenity::GuildId(test_guild.parse::<u64>()?);
           poise::builtins::register_in_guild(ctx, &framework.options().commands, guild_id).await?;
         } else {
+          info!("Registering commands globally");
           poise::builtins::register_globally(ctx, &framework.options().commands).await?;
         }
         Ok(Data {
@@ -195,16 +213,7 @@ async fn event_handler(
       events::reaction_remove(ctx, database, removed_reaction).await?;
     }
     Event::Ready { .. } => {
-      let channel = serenity::ChannelId(CHANNELS.welcome);
-      channel
-        .send_message(&ctx, |m| {
-          m.embed(|e| {
-            config::BloomBotEmbed::from(e)
-              .title("Bot Online")
-              .description("The bot is now online and ready to receive commands.")
-          })
-        })
-        .await?;
+      info!("Connected!");
     }
     _ => {}
   }
