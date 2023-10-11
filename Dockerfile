@@ -1,27 +1,20 @@
-# ---- Base Node ----
-FROM node:18 AS base
-# Create app directory
-WORKDIR /usr/src/app
-COPY package.json yarn.lock ./
-# Install app dependencies excluding dev dependencies
-RUN yarn install --production
-# Generate Prisma Client
-COPY ./database ./database
-RUN yarn prisma generate
+FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
+WORKDIR /app
 
-# ---- Build ----
-FROM base AS build
-WORKDIR /usr/src/app
+FROM chef AS planner
 COPY . .
-RUN yarn tsc
+RUN cargo chef prepare --recipe-path recipe.json
 
-# --- Release ----
-FROM node:18 AS release
-# Create app directory
-WORKDIR /usr/src/app
-# Copy built js code from previous stage
-COPY --from=build /usr/src/app/dist ./dist
-# Copy node_modules from the base stage
-COPY --from=base /usr/src/app/node_modules ./node_modules
-COPY package.json yarn.lock ./
-CMD [ "node", "dist/bot.js" ]
+FROM chef AS builder 
+COPY --from=planner /app/recipe.json recipe.json
+# Build dependencies - this is the caching Docker layer!
+RUN cargo chef cook --release --recipe-path recipe.json
+# Build application
+COPY . .
+RUN cargo build --release --bin bloombot
+
+# We do not need the Rust toolchain to run the binary!
+FROM debian:bookworm-slim AS runtime
+WORKDIR /app
+COPY --from=builder /app/target/release/bloombot /usr/local/bin
+ENTRYPOINT ["/usr/local/bin/bloombot"]

@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT record_id, starred_message_id, board_message_id, starred_channel_id\n        FROM \"star\"\n        WHERE starred_message_id = $1\n      ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "starred_message_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "board_message_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "starred_channel_id",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e10d586d0be0cb5f088dc09b710ad29282b56ff16f0f9c3f109b35a61746542c"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM quote WHERE quote = $1 AND guild_id = $2\n      ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5e2cbba35b345c45fbcc1396dde373f91de0caa92683d9c56cb7641ff06c5383"
+}

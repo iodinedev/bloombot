@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM \"star\" WHERE record_id = $1\n      ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1c2b782c2dc4fdcc8ccd90913c6ff660734f17ff5aeb64c20538a7645ce540cb"
+}

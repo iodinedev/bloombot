@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM meditation WHERE user_id = $1 AND guild_id = $2\n      ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fdf0996777e84a16d442c3507ec9ef845aa6353649672569b302e7ac35e1d4e0"
+}

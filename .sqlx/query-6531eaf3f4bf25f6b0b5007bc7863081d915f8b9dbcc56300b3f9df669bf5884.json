@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT SUM(meditation_minutes) AS guild_total FROM meditation WHERE guild_id = $1\n      ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "guild_total",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "6531eaf3f4bf25f6b0b5007bc7863081d915f8b9dbcc56300b3f9df669bf5884"
+}
