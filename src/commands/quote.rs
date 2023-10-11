@@ -1,6 +1,7 @@
 use crate::database::DatabaseHandler;
 use crate::Context;
 use anyhow::Result;
+use crate::config::BloomBotEmbed;
 
 /// Gets a motivational quote.
 #[poise::command(slash_command, member_cooldown = 1200)]
@@ -16,12 +17,20 @@ pub async fn quote(ctx: Context<'_>) -> Result<()> {
       ctx.say("No quotes found.").await?;
     }
     Some(quote) => {
-      ctx
-        .say(format!(
-          "> {}\n\n\\- {}",
-          quote.quote,
+      let embed = BloomBotEmbed::new()
+        .description(format!(
+          "> {}\n\n\\― {}",
+          quote.quote.as_str(),
           quote.author.unwrap_or("Anonymous".to_string())
         ))
+        .to_owned();
+
+      ctx
+        .send(|f| {
+          f.embeds = vec![embed];
+
+          f
+        })
         .await?;
     }
   }

@@ -28,7 +28,7 @@ pub struct UserStats {
   pub all_minutes: i64,
   pub all_count: u64,
   pub timeframe_stats: TimeframeStats,
-  pub streak: i32,
+  pub streak: u64,
 }
 
 pub struct GuildStats {
@@ -517,7 +517,7 @@ impl DatabaseHandler {
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     guild_id: &serenity::GuildId,
     user_id: &serenity::UserId,
-  ) -> Result<i32> {
+  ) -> Result<u64> {
     let mut row = sqlx::query_as!(
       MeditationCountByDay,
       r#"

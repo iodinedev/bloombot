@@ -92,7 +92,7 @@ pub async fn create(
   DatabaseHandler::create_meditation_entry(
     &mut transaction,
     &guild_id,
-    &ctx.author().id,
+    &user.id,
     minutes,
     datetime,
   )

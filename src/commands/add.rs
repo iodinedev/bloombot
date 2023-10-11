@@ -6,18 +6,6 @@ use anyhow::Result;
 use log::error;
 use poise::serenity_prelude::{self as serenity, Mentionable};
 
-async fn create_add_response(
-  transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-  guild_id: serenity::GuildId,
-  user_id: serenity::UserId,
-  minutes: i32,
-) -> Result<String> {
-  let user_total =
-    DatabaseHandler::get_user_meditation_sum(transaction, &guild_id, &user_id).await?;
-
-  Ok(format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_total} minutes :tada:"))
-}
-
 /// Adds minutes to your meditation time.
 #[poise::command(slash_command, guild_only)]
 pub async fn add(
@@ -35,7 +23,25 @@ pub async fn add(
   let mut transaction = data.db.start_transaction().await?;
   DatabaseHandler::add_minutes(&mut transaction, &guild_id, &user_id, minutes).await?;
 
-  let response = create_add_response(&mut transaction, guild_id, user_id, minutes).await?;
+  let user_sum =
+    DatabaseHandler::get_user_meditation_sum(&mut transaction, &guild_id, &user_id).await?;
+  let user_streak = DatabaseHandler::get_streak(&mut transaction, &guild_id, &user_id).await?;
+  let random_quote = DatabaseHandler::get_random_quote(&mut transaction, &guild_id).await?;
+
+  let response = match random_quote {
+    Some(quote) => {
+      // Strip non-alphanumeric characters from the quote
+      let quote = quote.quote
+        .chars()
+        .filter(|c| c.is_alphanumeric() || c.is_whitespace())
+        .collect::<String>();
+      
+      format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:\n*{quote}*")
+    },
+    None => {
+      format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:")
+    }
+  };
 
   if minutes > 300 {
     let ctx_id = ctx.id();
@@ -137,11 +143,12 @@ pub async fn add(
 
   let guild = ctx.guild().unwrap();
   let mut member = guild.member(ctx, user_id).await?;
+
   let current_time_roles = TimeSumRoles::get_users_current_roles(&guild, &member);
   let current_streak_roles = StreakRoles::get_users_current_roles(&guild, &member);
 
-  let updated_time_role = TimeSumRoles::from_sum(guild_sum);
-  let updated_streak_role = StreakRoles::from_streak(guild_count);
+  let updated_time_role = TimeSumRoles::from_sum(user_sum);
+  let updated_streak_role = StreakRoles::from_streak(user_streak);
 
   if let Some(updated_time_role) = updated_time_role {
     if !current_time_roles.contains(&updated_time_role.to_role_id()) {

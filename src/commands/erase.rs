@@ -49,8 +49,8 @@ pub async fn erase(
     );
   }
 
-  match ctx
-    .author()
+  match message
+    .author
     .direct_message(ctx, |f| f.set_embed(dm_embed.to_owned()))
     .await
   {
@@ -96,7 +96,7 @@ pub async fn erase(
   }
 
   log_embed.footer(|f| {
-    f.icon_url(message.author.avatar_url().unwrap_or_default())
+    f.icon_url(ctx.author().avatar_url().unwrap_or_default())
       .text(format!("Deleted by {}", ctx.author()))
   });
 

@@ -187,7 +187,7 @@ impl StreakRoles {
       StreakRoles::Owl => 857242214588612629,
       StreakRoles::Eagle => 857242212991762463,
       StreakRoles::Dragon => 857242210302427186,
-      StreakRoles::Alien => 85724215578486375,
+      StreakRoles::Alien => 857242155784863754,
     })
   }
 

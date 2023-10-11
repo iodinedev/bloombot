@@ -6,7 +6,10 @@ use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
 /// Removes one of your meditation entries
-#[poise::command(slash_command)]
+#[poise::command(
+  slash_command,
+  rename = "remove",
+)]
 pub async fn remove_entry(
   ctx: Context<'_>,
   #[description = "The ID of the entry to remove"] id: String,
