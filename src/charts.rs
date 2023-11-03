@@ -21,9 +21,7 @@ fn next_largest_factor(x: u32) -> u32 {
   let quotient = x / factor;
 
   // Find the next largest number that is a multiple of 5n
-  let next_largest = (quotient + 1) * factor;
-
-  next_largest
+  (quotient + 1) * factor
 }
 
 impl ChartDrawer {
@@ -55,14 +53,12 @@ impl ChartDrawer {
 
     let upper_bound = match stats_type {
       StatsType::MeditationMinutes => {
-        let largest = stats.iter().map(|x| x.minutes).max().unwrap();
-        let largest = next_largest_factor(largest as u32);
-        largest
+        let largest = stats.iter().map(|x| x.sum.unwrap()).max().unwrap();
+        next_largest_factor(largest as u32)
       }
       StatsType::MeditationCount => {
         let largest = stats.iter().map(|x| x.count).max().unwrap();
-        let largest = next_largest_factor(largest as u32);
-        largest
+        next_largest_factor(largest.unwrap() as u32)
       }
     };
 
@@ -83,27 +79,23 @@ impl ChartDrawer {
       .y_label_style(("sans-serif", 25).into_font())
       .x_label_formatter(&|x| {
         // Dates
-        let x: i64 = x.clone().try_into().unwrap();
+        let x: i64 = (*x).try_into().unwrap();
         match timeframe {
           Timeframe::Daily => {
             let date = now - chrono::Duration::days(12 - x);
-            let date = date.format("%m/%d").to_string();
-            return date;
+            date.format("%m/%d").to_string()
           }
           Timeframe::Weekly => {
             let date = now - chrono::Duration::weeks(12 - x);
-            let date = date.format("%m/%d").to_string();
-            return date;
+            date.format("%m/%d").to_string()
           }
           Timeframe::Monthly => {
             let date = now - chrono::Duration::days((12 * 30) - (x * 30));
-            let date = date.format("%y/%m").to_string();
-            return date;
+            date.format("%y/%m").to_string()
           }
           Timeframe::Yearly => {
             let date = now - chrono::Duration::days((12 * 365) - (x * 365));
-            let date = date.format("%Y").to_string();
-            return date;
+            date.format("%Y").to_string()
           }
         }
       })
@@ -123,17 +115,17 @@ impl ChartDrawer {
     let stats = match stats_type {
       StatsType::MeditationMinutes => stats
         .iter()
-        .map(|x| x.minutes.try_into().unwrap())
+        .map(|x| x.sum.unwrap().try_into().unwrap())
         .collect::<Vec<u32>>(),
       StatsType::MeditationCount => stats
         .iter()
-        .map(|x| x.count.try_into().unwrap())
+        .map(|x| (x.count.unwrap()).try_into().unwrap())
         .collect::<Vec<u32>>(),
     };
 
     chart.draw_series((0..12).map(|x: u32| {
-      let height = stats.get(x as usize).unwrap().clone();
-      let mut rect = Rectangle::new([(x + 1, 0), (x + 1, height)], shape_color.filled());
+      let height = stats.get(x as usize).unwrap();
+      let mut rect = Rectangle::new([(x + 1, 0), (x + 1, *height)], shape_color.filled());
 
       rect.set_margin(0, 0, 15, 15);
 

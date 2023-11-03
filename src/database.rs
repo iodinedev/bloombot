@@ -3,9 +3,7 @@ use anyhow::{Context, Result};
 use chrono::Utc;
 use futures::{stream::Stream, TryStreamExt, StreamExt};
 use log::info;
-use pgvector;
 use poise::serenity_prelude::{self as serenity, Mentionable};
-use sqlx;
 use ulid::Ulid;
 
 #[derive(Debug)]
@@ -47,8 +45,8 @@ pub enum Timeframe {
 
 #[derive(Debug)]
 pub struct TimeframeStats {
-  pub minutes: i64,
-  pub count: u64,
+  pub sum: Option<i64>,
+  pub count: Option<i64>,
 }
 
 pub struct MeditationData {
@@ -1254,9 +1252,10 @@ impl DatabaseHandler {
     .fetch_one(&mut **transaction)
     .await?;
 
-    let timeframe_data = sqlx::query!(
+    let timeframe_data = sqlx::query_as!(
+      TimeframeStats,
       r#"
-        SELECT COUNT(record_id) AS timeframe_count, SUM(meditation_minutes) AS timeframe_sum
+        SELECT COUNT(record_id) AS count, SUM(meditation_minutes) AS sum
         FROM meditation
         WHERE guild_id = $1 AND user_id = $2 AND occurred_at >= $3 AND occurred_at <= $4
       "#,
@@ -1271,10 +1270,7 @@ impl DatabaseHandler {
     let user_stats = UserStats {
       all_minutes: total_data.total_sum.unwrap_or(0),
       all_count: total_data.total_count.unwrap_or(0).try_into()?,
-      timeframe_stats: TimeframeStats {
-        minutes: timeframe_data.timeframe_sum.unwrap_or(0),
-        count: timeframe_data.timeframe_count.unwrap_or(0).try_into()?,
-      },
+      timeframe_stats: timeframe_data,
       streak: DatabaseHandler::get_streak(transaction, guild_id, user_id).await?,
     };
 
@@ -1306,9 +1302,10 @@ impl DatabaseHandler {
     .fetch_one(&mut **transaction)
     .await?;
 
-    let timeframe_data = sqlx::query!(
+    let timeframe_data = sqlx::query_as!(
+      TimeframeStats,
       r#"
-        SELECT COUNT(record_id) AS timeframe_count, SUM(meditation_minutes) AS timeframe_sum
+        SELECT COUNT(record_id) AS count, SUM(meditation_minutes) AS sum
         FROM meditation
         WHERE guild_id = $1 AND occurred_at >= $2 AND occurred_at <= $3
       "#,
@@ -1322,10 +1319,7 @@ impl DatabaseHandler {
     let guild_stats = GuildStats {
       all_minutes: total_data.total_sum.unwrap_or(0),
       all_count: total_data.total_count.unwrap_or(0).try_into()?,
-      timeframe_stats: TimeframeStats {
-        minutes: timeframe_data.timeframe_sum.unwrap_or(0),
-        count: timeframe_data.timeframe_count.unwrap_or(0).try_into()?,
-      },
+      timeframe_stats: timeframe_data,
     };
 
     Ok(guild_stats)
@@ -1434,7 +1428,7 @@ impl DatabaseHandler {
         };
 
         TimeframeStats {
-          minutes: meditation_minutes,
+          sum: Some(meditation_minutes),
           count: meditation_count.try_into().unwrap(),
         }
       })
@@ -1524,7 +1518,7 @@ impl DatabaseHandler {
         };
 
         TimeframeStats {
-          minutes: meditation_minutes,
+          sum: Some(meditation_minutes),
           count: meditation_count.try_into().unwrap(),
         }
       })

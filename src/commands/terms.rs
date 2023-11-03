@@ -195,7 +195,7 @@ pub async fn edit(
     definition: existing_term.meaning,
     example: existing_term.usage,
     category: existing_term.category,
-    links: links,
+    links,
   };
 
   let term_data = UpdateTermModal::execute_with_defaults(ctx, defaults).await?;

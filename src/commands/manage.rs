@@ -294,7 +294,7 @@ pub async fn update(
 
   let success_embed = BloomBotEmbed::new()
     .title("Success")
-    .description(format!("Meditation entry updated."))
+    .description("Meditation entry updated.")
     .to_owned();
   commit_and_say(
     ctx,
@@ -346,7 +346,7 @@ pub async fn delete(
 
   let success_embed = BloomBotEmbed::new()
     .title("Success")
-    .description(format!("Meditation entry deleted."))
+    .description("Meditation entry deleted.")
     .to_owned();
   commit_and_say(
     ctx,

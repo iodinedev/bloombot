@@ -71,7 +71,7 @@ pub async fn user(
         )
         .field(
           format!("Minutes The Past 12 {}", timeframe_header),
-          format!("```{}```", stats.timeframe_stats.minutes),
+          format!("```{}```", stats.timeframe_stats.sum.unwrap()),
           true,
         );
     }
@@ -84,7 +84,7 @@ pub async fn user(
         )
         .field(
           format!("Sessions The Past 12 {}", timeframe_header),
-          format!("```{}```", stats.timeframe_stats.count),
+          format!("```{}```", stats.timeframe_stats.count.unwrap()),
           true,
         );
     }
@@ -162,7 +162,7 @@ pub async fn server(
         )
         .field(
           format!("Minutes The Past 12 {}", timeframe_header),
-          format!("```{}```", stats.timeframe_stats.minutes),
+          format!("```{}```", stats.timeframe_stats.sum.unwrap()),
           true,
         );
     }
@@ -175,7 +175,7 @@ pub async fn server(
         )
         .field(
           format!("Sessions The Past 12 {}", timeframe_header),
-          format!("```{}```", stats.timeframe_stats.count),
+          format!("```{}```", stats.timeframe_stats.count.unwrap()),
           true,
         );
     }

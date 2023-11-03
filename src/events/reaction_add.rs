@@ -1,6 +1,6 @@
 use crate::config::{self, CHANNELS, EMOTES};
 use crate::database::DatabaseHandler;
-use anyhow::Result;
+use anyhow::{Result, Context as AnyhowContext};
 use poise::serenity_prelude::Mentionable;
 use poise::serenity_prelude::{ChannelId, Context, CreateEmbed, Reaction, ReactionType, UserId};
 
@@ -45,7 +45,7 @@ async fn check_report(ctx: &Context, user: &UserId, reaction: &Reaction) -> Resu
               config::BloomBotEmbed::from(e)
                 .title("Report")
                 .author(|a| {
-                  a.name(format!("{}", message_user.tag()))
+                  a.name(message_user.tag())
                     .icon_url(message_user.face())
                 })
                 .description(message.content.clone())
@@ -69,7 +69,7 @@ async fn check_report(ctx: &Context, user: &UserId, reaction: &Reaction) -> Resu
             m.embed(|e| {
               config::BloomBotEmbed::from(e)
                 .title("Report")
-                .description(format!("Your report has been sent to the moderation team."))
+                .description("Your report has been sent to the moderation team.")
             })
           })
           .await?;
@@ -82,62 +82,65 @@ async fn check_report(ctx: &Context, user: &UserId, reaction: &Reaction) -> Resu
 }
 
 async fn add_star(ctx: &Context, database: &DatabaseHandler, reaction: &Reaction) -> Result<()> {
-  match &reaction.emoji {
-    ReactionType::Unicode(emoji) => {
-      if emoji == &EMOTES.star && reaction.channel_id != CHANNELS.starchannel {
-        // Get count of star emoji on message
-        let star_count = reaction
-          .message(&ctx)
-          .await?
-          .reactions
-          .iter()
-          .find(|r| r.reaction_type == ReactionType::Unicode(EMOTES.star.to_string()))
-          .map(|r| r.count)
-          .unwrap_or(0);
+  if let ReactionType::Unicode(emoji) = &reaction.emoji {
+    if emoji == EMOTES.star && reaction.channel_id != CHANNELS.starchannel {
+      // Get count of star emoji on message
+      let star_count = reaction
+        .message(&ctx)
+        .await?
+        .reactions
+        .iter()
+        .find(|r| r.reaction_type == ReactionType::Unicode(EMOTES.star.to_string()))
+        .map(|r| r.count)
+        .unwrap_or(0);
 
-        let mut transaction = database.start_transaction().await?;
-        let star_message =
-          DatabaseHandler::get_star_message_by_message_id(&mut transaction, &reaction.message_id)
+      let mut transaction = database.start_transaction().await?;
+      let star_message =
+        DatabaseHandler::get_star_message_by_message_id(&mut transaction, &reaction.message_id)
+          .await?;
+
+      match star_message {
+        Some(star_message) => {
+          // Already exists, find the starboard channel
+          let starboard_channel = star_message.starred_channel_id;
+
+          // Get the starboard message
+          let mut starboard_message = starboard_channel
+            .message(&ctx, star_message.starred_message_id)
             .await?;
 
-        match star_message {
-          Some(star_message) => {
-            // Already exists, find the starboard channel
-            let starboard_channel = star_message.starred_channel_id;
+          let existing_embed = starboard_message.embeds.get(0).with_context(|| {
+            format!(
+              "Failed to get embed from starboard message {}",
+              starboard_message.id
+            )
+          })?;
+          
+          let mut updated_embed: CreateEmbed = existing_embed.clone().into();
 
-            // Get the starboard message
-            let mut starboard_message = starboard_channel
-              .message(&ctx, star_message.starred_message_id)
-              .await?;
+          updated_embed.footer(|f| f.text(format!("⭐ Times starred: {}", star_count)));
 
-            let existing_embed = starboard_message.embeds.get(0).unwrap();
-            let mut updated_embed: CreateEmbed = existing_embed.clone().into();
+          match starboard_message
+            .edit(ctx, |m| m.set_embed(updated_embed))
+            .await
+          {
+            Ok(_) => (),
+            Err(_) => {
+              let _ = starboard_channel
+                .delete_message(&ctx, starboard_message.id)
+                .await;
 
-            updated_embed.footer(|f| f.text(format!("⭐ Times starred: {}", star_count)));
-
-            match starboard_message
-              .edit(ctx, |m| m.set_embed(updated_embed))
-              .await
-            {
-              Ok(_) => (),
-              Err(_) => {
-                let _ = starboard_channel
-                  .delete_message(&ctx, starboard_message.id)
-                  .await;
-
-                create_star_message(ctx, &mut transaction, reaction, star_count).await?;
-                transaction.commit().await?;
-              }
+              create_star_message(ctx, &mut transaction, reaction, star_count).await?;
+              transaction.commit().await?;
             }
           }
-          None => {
-            create_star_message(ctx, &mut transaction, reaction, star_count).await?;
-            transaction.commit().await?;
-          }
+        }
+        None => {
+          create_star_message(ctx, &mut transaction, reaction, star_count).await?;
+          transaction.commit().await?;
         }
       }
     }
-    _ => {}
   }
 
   Ok(())

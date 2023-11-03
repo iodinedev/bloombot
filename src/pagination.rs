@@ -89,10 +89,9 @@ impl<'a> Pagination<'a> {
           embed.title(self.title.to_string());
           embed.description("No entries have been added yet.");
 
-          return embed;
-        }
-        {
-          return page.to_embed(&mut embed, self.title.as_str()).clone();
+          embed
+        } else {
+          page.to_embed(&mut embed, self.title.as_str()).clone()
         }
       }
       // This should never happen unless we have a bug in our pagination code
@@ -100,9 +99,9 @@ impl<'a> Pagination<'a> {
         embed.title(self.title.to_string());
         embed.description("This page does not exist.");
 
-        return embed;
+        embed
       }
-    };
+    }
   }
 }
 

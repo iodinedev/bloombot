@@ -42,7 +42,7 @@ pub async fn add(
   commit_and_say(
     ctx,
     transaction,
-    MessageType::TextOnly(format!(":white_check_mark: Quote has been added.")),
+    MessageType::TextOnly(":white_check_mark: Quote has been added.".to_string()),
     true,
   )
   .await?;

@@ -53,7 +53,7 @@ async fn finalize_winner(
     .thumbnail(winner.user.avatar_url().unwrap_or_default())
     .field(
       "**Congratulations!**",
-      format!("**Congratulations on winning the giveaway!** 🥳\n\nYou\'ve won a key for Playne: The Meditation Game on Steam!\n\n**Would you like to redeem your key? Press \'Redeem\' below! Otherwise, click \'Cancel\' to keep it for someone else :\\)**"),
+      "**Congratulations on winning the giveaway!** 🥳\n\nYou\'ve won a key for Playne: The Meditation Game on Steam!\n\n**Would you like to redeem your key? Press \'Redeem\' below! Otherwise, click \'Cancel\' to keep it for someone else :\\)**",
       false,
     )
     .footer(|f| {
@@ -141,9 +141,7 @@ async fn finalize_winner(
         .await?;
 
       ctx
-        .say(format!(
-          "Alright, we'll keep it for someone else. Congrats again!"
-        ))
+        .say("Alright, we'll keep it for someone else. Congrats again!")
         .await?;
       return Ok(());
     } else {
@@ -154,7 +152,7 @@ async fn finalize_winner(
 
   let timeout_embed = BloomBotEmbed::new()
     .title("**Congratulations!**")
-    .description(format!("**Congratulations on winning the giveaway!** 🥳\n\nYou\'ve won a key for Playne: The Meditation Game on Steam!\n\n**Would you like to redeem your key? Please DM our staff and we'll get one for you, right away!**"))
+    .description("**Congratulations on winning the giveaway!** 🥳\n\nYou\'ve won a key for Playne: The Meditation Game on Steam!\n\n**Would you like to redeem your key? Please DM our staff and we'll get one for you, right away!**")
     .footer(|f| {
       f.text(format!(
         "From {}",

@@ -28,7 +28,6 @@ use dotenv::dotenv;
 use log::{error, info};
 use poise::serenity_prelude::{self as serenity, channel};
 use poise::Event;
-use pretty_env_logger;
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use std::sync::Arc;

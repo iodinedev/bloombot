@@ -101,7 +101,7 @@ pub async fn add(
   commit_and_say(
     ctx,
     transaction,
-    MessageType::TextOnly(format!(":white_check_mark: Course has been added.")),
+    MessageType::TextOnly(":white_check_mark: Course has been added.".to_string()),
     true,
   )
   .await?;
@@ -250,7 +250,7 @@ pub async fn remove(
   commit_and_say(
     ctx,
     transaction,
-    MessageType::TextOnly(format!(":white_check_mark: Course has been removed.")),
+    MessageType::TextOnly(":white_check_mark: Course has been removed.".to_string()),
     true,
   )
   .await?;

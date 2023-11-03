@@ -11,7 +11,7 @@ use poise::serenity_prelude::{self as serenity, Mentionable};
 pub async fn add(
   ctx: Context<'_>,
   #[description = "Number of minutes to add"]
-  #[min = 0]
+  #[min = 1]
   minutes: i32,
 ) -> Result<()> {
   let data = ctx.data();
@@ -33,7 +33,14 @@ pub async fn add(
       // Strip non-alphanumeric characters from the quote
       let quote = quote.quote
         .chars()
-        .filter(|c| c.is_alphanumeric() || c.is_whitespace())
+        .filter(|c| c.is_alphanumeric() || c.is_whitespace() || c.is_ascii_punctuation())
+        .map(|c| {
+          if c.is_ascii_punctuation() {
+            format!("\\{c}")
+          } else {
+            c.to_string()
+          }
+        })
         .collect::<String>();
       
       format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:\n*{quote}*")
@@ -110,17 +117,17 @@ pub async fn add(
             match DatabaseHandler::commit_transaction(transaction).await {
               Ok(_) => {}
               Err(e) => {
-                let _ = check.edit(ctx, |f| f
-                  .content(":bangbang: A fatal error occured while trying to save your changes. Nothing has been saved."));
+                check.edit(ctx, |f| f
+                  .content(":bangbang: A fatal error occured while trying to save your changes. Nothing has been saved.")).await?;
                 return Err(anyhow::anyhow!("Could not send message: {}", e));
               }
             }
           }
         }
         Err(e) => {
-          let _ = check.edit(ctx, |f| {
+          check.edit(ctx, |f| {
             f.content(":x: An error occured. Nothing has been saved.")
-          });
+          }).await?;
           return Err(anyhow::anyhow!("Could not send message: {}", e));
         }
       }
@@ -158,7 +165,7 @@ pub async fn add(
           Err(err) => {
             error!("Error removing role: {}", err);
             ctx.send(|f| f
-              .content(format!(":x: An error occured while updating your time roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator."))
+              .content(":x: An error occured while updating your time roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
               .allowed_mentions(|f| f.empty_parse())).await?;
 
             return Ok(());
@@ -171,7 +178,7 @@ pub async fn add(
         Err(err) => {
           error!("Error adding role: {}", err);
           ctx.send(|f| f
-            .content(format!(":x: An error occured while updating your time roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator."))
+            .content(":x: An error occured while updating your time roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
             .allowed_mentions(|f| f.empty_parse())).await?;
 
           return Ok(());
@@ -193,7 +200,7 @@ pub async fn add(
             error!("Error removing role: {}", err);
 
             ctx.send(|f| f
-              .content(format!(":x: An error occured while updating your streak roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator."))
+              .content(":x: An error occured while updating your streak roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
               .allowed_mentions(|f| f.empty_parse())).await?;
 
             return Ok(());
@@ -207,7 +214,7 @@ pub async fn add(
           error!("Error adding role: {}", err);
 
           ctx.send(|f| f
-            .content(format!(":x: An error occured while updating your streak roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator."))
+            .content(":x: An error occured while updating your streak roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
             .allowed_mentions(|f| f.empty_parse())).await?;
 
           return Ok(());
@@ -215,7 +222,7 @@ pub async fn add(
       }
 
       ctx.send(|f| f
-        .content(format!(":tada: Congrats to {}, your hard work is paying off! Your current streak is {}, giving you the <@&{}> role!", member.mention(), guild_count, updated_streak_role.to_role_id()))
+        .content(format!(":tada: Congrats to {}, your hard work is paying off! Your current streak is {}, giving you the <@&{}> role!", member.mention(), user_streak, updated_streak_role.to_role_id()))
         .allowed_mentions(|f| f.empty_parse())).await?;
     }
   }
