@@ -19,7 +19,7 @@ pub async fn list_keys(
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   // Define some unique identifiers for the navigation buttons
   let ctx_id = ctx.id();

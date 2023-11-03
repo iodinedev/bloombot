@@ -87,7 +87,7 @@ pub async fn create(
   let data = ctx.data();
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   DatabaseHandler::create_meditation_entry(
     &mut transaction,
@@ -123,7 +123,7 @@ pub async fn list(
   let data = ctx.data();
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   // Define some unique identifiers for the navigation buttons
   let ctx_id = ctx.id();
@@ -225,7 +225,7 @@ pub async fn update(
     let data = ctx.data();
     let guild_id = ctx.guild_id().unwrap();
 
-    let mut transaction = data.db.start_transaction().await?;
+    let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
     DatabaseHandler::get_meditation_entry(&mut transaction, &guild_id, &entry_id).await?
   }
@@ -288,7 +288,7 @@ pub async fn update(
 
   let data = ctx.data();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   DatabaseHandler::update_meditation_entry(&mut transaction, &entry_id, minutes, datetime).await?;
 
@@ -317,7 +317,7 @@ pub async fn delete(
     let data = ctx.data();
     let guild_id = ctx.guild_id().unwrap();
 
-    let mut transaction = data.db.start_transaction().await?;
+    let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
     DatabaseHandler::get_meditation_entry(&mut transaction, &guild_id, &entry_id).await?
   }
@@ -340,7 +340,7 @@ pub async fn delete(
 
   let data = ctx.data();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   DatabaseHandler::delete_meditation_entry(&mut transaction, &entry_id).await?;
 
@@ -368,7 +368,7 @@ pub async fn reset(
   let data = ctx.data();
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   DatabaseHandler::reset_user_meditation_entries(&mut transaction, &guild_id, &user.id).await?;
 

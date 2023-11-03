@@ -3,6 +3,7 @@ use crate::database::DatabaseHandler;
 use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
+use std::sync::atomic::Ordering;
 
 pub mod add;
 pub mod add_key;
@@ -86,10 +87,25 @@ async fn commit_and_say(
       DatabaseHandler::rollback_transaction(transaction).await?;
       // As it's very likely that when this happens the interaction has timed out,
       // we don't want to send a response to the interaction, but rather to the channel.
-      let channel = ctx.channel_id();
-      let _ = channel
-        .say(ctx, ":x: An error occured. Nothing has been saved.")
-        .await;
+      // The alternative is that there is a second instance of the bot running, which we can detect by checking if the interaction has already been responded to.
+
+      match ctx {
+        poise::Context::Application(app_ctx) => {
+          if !(*app_ctx.has_sent_initial_response).load(Ordering::SeqCst) {
+            let _ = ctx
+              .channel_id()
+              .say(&ctx, ":x: An error occured. Nothing has been saved.")
+              .await;
+          }
+        }
+        poise::Context::Prefix(_) => {
+          let _ = ctx
+            .channel_id()
+            .say(&ctx, ":x: An error occured. Nothing has been saved.")
+            .await;
+        }
+      };
+
       return Err(anyhow::anyhow!("Could not send message: {}", e));
     }
   };

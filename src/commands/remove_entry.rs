@@ -17,7 +17,7 @@ pub async fn remove_entry(
   let data = ctx.data();
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   let entry =
     match DatabaseHandler::get_meditation_entry(&mut transaction, &guild_id, id.as_str()).await? {

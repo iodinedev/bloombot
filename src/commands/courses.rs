@@ -34,7 +34,7 @@ pub async fn add(
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
   if DatabaseHandler::course_exists(&mut transaction, &guild_id, course_name.as_str()).await? {
     ctx.say(":x: Course already exists.").await?;
     return Ok(());
@@ -132,7 +132,7 @@ pub async fn edit(
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
   let course =
     DatabaseHandler::get_course(&mut transaction, &guild_id, course_name.as_str()).await?;
 
@@ -155,7 +155,7 @@ pub async fn list(
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   // Define some unique identifiers for the navigation buttons
   let ctx_id = ctx.id();
@@ -239,7 +239,7 @@ pub async fn remove(
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
   if !DatabaseHandler::course_exists(&mut transaction, &guild_id, course_name.as_str()).await? {
     ctx.say(":x: Course does not exist.").await?;
     return Ok(());

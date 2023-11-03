@@ -19,7 +19,7 @@ pub async fn remove_quote(
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
   if !DatabaseHandler::quote_exists(&mut transaction, &guild_id, quote.as_str()).await? {
     ctx
       .send(|f| f.content(":x: Quote does not exist.").ephemeral(true))

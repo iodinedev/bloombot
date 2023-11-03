@@ -104,7 +104,7 @@ pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Resul
 
   match term_data {
     Some(term_data) => {
-      let mut transaction = ctx.data().db.start_transaction().await?;
+      let mut transaction = ctx.data().db.start_transaction_with_retry(5).await?;
 
       // We unwrap here, because we know that the command is guild-only.
       let guild_id = ctx.guild_id().unwrap();
@@ -164,7 +164,7 @@ pub async fn edit(
   ctx: poise::ApplicationContext<'_, AppData, AppError>,
   #[description = "The term to edit"] term_name: String,
 ) -> Result<()> {
-  let mut transaction = ctx.data().db.start_transaction().await?;
+  let mut transaction = ctx.data().db.start_transaction_with_retry(5).await?;
 
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
@@ -202,7 +202,7 @@ pub async fn edit(
 
   match term_data {
     Some(term_data) => {
-      let mut transaction = ctx.data().db.start_transaction().await?;
+      let mut transaction = ctx.data().db.start_transaction_with_retry(5).await?;
 
       let links = match term_data.links {
         Some(links) => links.split(",").map(|s| s.trim().to_string()).collect(),
@@ -267,7 +267,7 @@ pub async fn remove(
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
   if !DatabaseHandler::term_exists(&mut transaction, &guild_id, term.as_str()).await? {
     ctx
       .send(|f| f.content(":x: Term does not exist.").ephemeral(true))

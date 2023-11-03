@@ -113,7 +113,7 @@ async fn finalize_winner(
   {
     // Depending on which button was pressed, confirm or cancel
     if press.data.custom_id == redeem_id {
-      let mut conn = ctx.data().db.get_connection().await?;
+      let mut conn = ctx.data().db.get_connection_with_retry(5).await?;
       DatabaseHandler::mark_key_used(&mut conn, &reserved_key).await?;
       let hyperlink = format!(
         "[Redeem your key](https://store.steampowered.com/account/registerkey?key={})",
@@ -195,7 +195,7 @@ pub async fn pick_winner(
 
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   if !DatabaseHandler::unused_key_exists(&mut transaction, &guild_id).await? {
     ctx
@@ -255,7 +255,7 @@ pub async fn pick_winner(
   let start_datetime = chrono::NaiveDateTime::new(start_date, time).and_utc();
   let end_datetime = chrono::NaiveDateTime::new(end_date, time).and_utc();
 
-  let mut conn = data.db.get_connection().await?;
+  let mut conn = data.db.get_connection_with_retry(5).await?;
   // Since the stream is async, we can't use the same connection for the transaction
   let mut database_winner_candidates =
     DatabaseHandler::get_winner_candidates(&mut conn, start_datetime, end_datetime, &guild_id);

@@ -117,7 +117,16 @@ async fn main() -> Result<()> {
       })
     });
 
-  Ok(framework.run().await?)
+  match framework.run().await {
+    Ok(_) => {
+      info!("Framework exited successfully");
+      Ok(())
+    }
+    Err(e) => {
+      error!("Error while running framework: {}", e);
+      return Err(anyhow::anyhow!(e));
+    }
+  }
 }
 
 async fn error_handler(error: poise::FrameworkError<'_, Data, Error>) {

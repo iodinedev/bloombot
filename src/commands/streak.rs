@@ -18,7 +18,7 @@ pub async fn streak(
     None => ctx.author().id,
   };
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
   let streak = DatabaseHandler::get_streak(&mut transaction, &guild_id, &user_id).await?;
 
   if user.is_some() {

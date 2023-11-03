@@ -28,7 +28,7 @@ pub async fn list(
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   // Define some unique identifiers for the navigation buttons
   let ctx_id = ctx.id();
@@ -106,7 +106,7 @@ pub async fn info(
 ) -> Result<()> {
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = ctx.data().db.start_transaction().await?;
+  let mut transaction = ctx.data().db.start_transaction_with_retry(5).await?;
 
   let term_info = DatabaseHandler::get_term(&mut transaction, &guild_id, &term).await?;
   let mut embed = BloomBotEmbed::new();
@@ -195,7 +195,7 @@ pub async fn search(
   let guild_id = ctx.guild_id().unwrap();
 
   let start_time = std::time::Instant::now();
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
   let vector = pgvector::Vector::from(
     data
       .embeddings

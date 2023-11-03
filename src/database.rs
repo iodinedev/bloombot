@@ -1,7 +1,7 @@
 use crate::pagination::PageRow;
 use anyhow::{Context, Result};
 use chrono::Utc;
-use futures::{stream::Stream, StreamExt, TryStreamExt};
+use futures::{stream::Stream, TryStreamExt, StreamExt};
 use log::info;
 use pgvector;
 use poise::serenity_prelude::{self as serenity, Mentionable};
@@ -195,8 +195,70 @@ impl DatabaseHandler {
     Ok(self.pool.acquire().await?)
   }
 
+  pub async fn get_connection_with_retry(&self, max_retries: usize) -> Result<sqlx::pool::PoolConnection<sqlx::Postgres>> {
+    let mut attempts = 0;
+
+    loop {
+      match self.get_connection().await {
+        Ok(connection) => return Ok(connection),
+        Err(e) => {
+          if attempts >= max_retries {
+            return Err(e);
+          }
+
+          // Check if the error is a sqlx::Error
+          if let Some(sqlx_error) = e.downcast_ref::<sqlx::Error>() {
+            // Now we can handle the sqlx::Error specifically
+            if let sqlx::Error::Io(io_error) = sqlx_error {
+              if io_error.kind() == std::io::ErrorKind::ConnectionReset {
+                attempts += 1;
+                // Wait for a moment before retrying
+                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                continue;
+              }
+            }
+        }
+
+          // If it's a different kind of error, we might want to return it immediately
+          return Err(e);
+        }
+      }
+    }
+  }
+
   pub async fn start_transaction(&self) -> Result<sqlx::Transaction<'_, sqlx::Postgres>> {
     Ok(self.pool.begin().await?)
+  }
+
+  pub async fn start_transaction_with_retry(&self, max_retries: usize) -> Result<sqlx::Transaction<'_, sqlx::Postgres>> {
+    let mut attempts = 0;
+
+    loop {
+      match self.start_transaction().await {
+        Ok(transaction) => return Ok(transaction),
+        Err(e) => {
+          if attempts >= max_retries {
+            return Err(e);
+          }
+
+          // Check if the error is a sqlx::Error
+          if let Some(sqlx_error) = e.downcast_ref::<sqlx::Error>() {
+            // Now we can handle the sqlx::Error specifically
+            if let sqlx::Error::Io(io_error) = sqlx_error {
+              if io_error.kind() == std::io::ErrorKind::ConnectionReset {
+                attempts += 1;
+                // Wait for a moment before retrying
+                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                continue;
+              }
+            }
+        }
+
+          // If it's a different kind of error, we might want to return it immediately
+          return Err(e);
+        }
+      }
+    }
   }
 
   pub async fn commit_transaction(

@@ -15,7 +15,7 @@ pub async fn use_key(ctx: Context<'_>) -> Result<()> {
 
   let guild_id = ctx.guild_id().unwrap();
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   if !DatabaseHandler::unused_key_exists(&mut transaction, &guild_id).await? {
     ctx

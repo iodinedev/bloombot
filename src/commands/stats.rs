@@ -35,7 +35,7 @@ pub async fn user(
   ctx.defer().await?;
 
   let data = ctx.data();
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   let guild_id = ctx.guild_id().unwrap();
 
@@ -140,7 +140,7 @@ pub async fn server(
     Timeframe::Daily => "Days",
   };
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
   let stats = DatabaseHandler::get_guild_stats(&mut transaction, &guild_id, &timeframe).await?;
 

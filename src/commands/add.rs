@@ -20,7 +20,7 @@ pub async fn add(
   let guild_id = ctx.guild_id().unwrap();
   let user_id = ctx.author().id;
 
-  let mut transaction = data.db.start_transaction().await?;
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
   DatabaseHandler::add_minutes(&mut transaction, &guild_id, &user_id, minutes).await?;
 
   let user_sum =
