@@ -17,6 +17,6 @@ jobs:
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag meditation-mind.registry.cpln.io/bloombot
     - name: Login to CPLN
-      run: echo ${{ secrets.SERVICE_ACCOUNT_KEY }} | docker login ORG_NAME.registry.cpln.io -u '<token>' --password-stdin
+      run: echo ${{ secrets.SERVICE_ACCOUNT_KEY }} | docker login meditation-mind.registry.cpln.io -u '<token>' --password-stdin
     - name: Push to CPLN
       run: docker push meditation-mind.registry.cpln.io/bloombot
