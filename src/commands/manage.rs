@@ -4,6 +4,7 @@ use crate::database::DatabaseHandler;
 use crate::pagination::{PageRowRef, Pagination};
 use crate::Context;
 use anyhow::Result;
+use chrono::Datelike;
 use poise::serenity_prelude::{self as serenity, Mentionable};
 
 /// Options for managing users' meditation entries.
@@ -202,16 +203,16 @@ pub async fn update(
   #[description = "The entry to update"] entry_id: String,
   #[description = "The number of minutes for the entry"]
   #[min = 0]
-  minutes: i32,
-  #[description = "The year of the entry"] year: u32,
+  minutes: Option<i32>,
+  #[description = "The year of the entry"] year: Option<i32>,
   #[description = "The month of the entry"]
   #[min = 1]
   #[max = 12]
-  month: u32,
+  month: Option<u32>,
   #[description = "The day of the entry"]
   #[min = 1]
   #[max = 31]
-  day: u32,
+  day: Option<u32>,
   #[description = "The hour of the entry (defaults to 0)"]
   #[min = 0]
   #[max = 23]
@@ -228,16 +229,14 @@ pub async fn update(
     let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
     DatabaseHandler::get_meditation_entry(&mut transaction, &guild_id, &entry_id).await?
-  }
-  .is_some();
+  };
 
-  if !existing_entry {
+  if minutes.is_none() && year.is_none() && month.is_none() && day.is_none() && hour.is_none() && minute.is_none() {
     ctx
       .send(|f| {
         f.embed(|e| {
           e.title("Error")
-            .description(format!("No meditation entry found with ID `{}`.", entry_id))
-            .footer(|f| f.text("Use `/manage list` to see a user's entries."))
+            .description("You must provide at least one option to update the entry.")
             .color(serenity::Color::RED)
         })
         .ephemeral(true)
@@ -246,65 +245,91 @@ pub async fn update(
     return Ok(());
   }
 
-  let date = match chrono::NaiveDate::from_ymd_opt(year as i32, month, day) {
-    Some(date) => date,
+  match existing_entry {
+    Some(existing_entry) => {
+      let minutes = minutes.unwrap_or(existing_entry.meditation_minutes);
+
+      let existing_date = existing_entry.occurred_at;
+      let year = year.unwrap_or(existing_date.year());
+      let month = month.unwrap_or(existing_date.month());
+      let day = day.unwrap_or(existing_date.day());
+
+      let date = match chrono::NaiveDate::from_ymd_opt(year as i32, month, day) {
+        Some(date) => date,
+        None => {
+          ctx
+            .send(|f| {
+              f.embed(|e| {
+                e.title("Error")
+                  .description(format!("Invalid date provided: {}-{}-{}", year, month, day))
+                  .color(serenity::Color::RED)
+              })
+              .ephemeral(true)
+            })
+            .await?;
+          return Ok(());
+        }
+      };
+
+      let time = match chrono::NaiveTime::from_hms_opt(hour.unwrap_or(0), minute.unwrap_or(0), 0) {
+        Some(time) => time,
+        None => {
+          ctx
+            .send(|f| {
+              f.embed(|e| {
+                e.title("Error")
+                  .description(format!(
+                    "Invalid time provided: {}:{}",
+                    hour.unwrap_or(0),
+                    minute.unwrap_or(0)
+                  ))
+                  .color(serenity::Color::RED)
+              })
+              .ephemeral(true)
+            })
+            .await?;
+          return Ok(());
+        }
+      };
+
+      let datetime = chrono::NaiveDateTime::new(date, time).and_utc();
+
+      let data = ctx.data();
+
+      let mut transaction = data.db.start_transaction_with_retry(5).await?;
+
+      DatabaseHandler::update_meditation_entry(&mut transaction, &entry_id, minutes, datetime).await?;
+
+      let success_embed = BloomBotEmbed::new()
+        .title("Success")
+        .description("Meditation entry updated.")
+        .to_owned();
+      commit_and_say(
+        ctx,
+        transaction,
+        MessageType::EmbedOnly(success_embed),
+        true,
+      )
+      .await?;
+
+      Ok(())
+    },
     None => {
       ctx
         .send(|f| {
           f.embed(|e| {
             e.title("Error")
-              .description(format!("Invalid date provided: {}-{}-{}", year, month, day))
+              .description(format!("No meditation entry found with ID `{}`.", entry_id))
+              .footer(|f| f.text("Use `/manage list` to see a user's entries."))
               .color(serenity::Color::RED)
           })
           .ephemeral(true)
         })
         .await?;
-      return Ok(());
+
+      Ok(())
     }
-  };
-
-  let time = match chrono::NaiveTime::from_hms_opt(hour.unwrap_or(0), minute.unwrap_or(0), 0) {
-    Some(time) => time,
-    None => {
-      ctx
-        .send(|f| {
-          f.embed(|e| {
-            e.title("Error")
-              .description(format!(
-                "Invalid time provided: {}:{}",
-                hour.unwrap_or(0),
-                minute.unwrap_or(0)
-              ))
-              .color(serenity::Color::RED)
-          })
-          .ephemeral(true)
-        })
-        .await?;
-      return Ok(());
-    }
-  };
-
-  let datetime = chrono::NaiveDateTime::new(date, time).and_utc();
-
-  let data = ctx.data();
-
-  let mut transaction = data.db.start_transaction_with_retry(5).await?;
-
-  DatabaseHandler::update_meditation_entry(&mut transaction, &entry_id, minutes, datetime).await?;
-
-  let success_embed = BloomBotEmbed::new()
-    .title("Success")
-    .description("Meditation entry updated.")
-    .to_owned();
-  commit_and_say(
-    ctx,
-    transaction,
-    MessageType::EmbedOnly(success_embed),
-    true,
-  )
-  .await?;
-
-  Ok(())
+  }
 }
 
 /// Deletes a meditation entry for the user.
