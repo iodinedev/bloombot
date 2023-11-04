@@ -1,6 +1,6 @@
 use crate::config::{self, CHANNELS, EMOTES};
 use crate::database::DatabaseHandler;
-use anyhow::{Result, Context as AnyhowContext};
+use anyhow::{Context as AnyhowContext, Result};
 use poise::serenity_prelude::Mentionable;
 use poise::serenity_prelude::{ChannelId, Context, CreateEmbed, Reaction, ReactionType, UserId};
 
@@ -44,10 +44,7 @@ async fn check_report(ctx: &Context, user: &UserId, reaction: &Reaction) -> Resu
             m.embed(|e| {
               config::BloomBotEmbed::from(e)
                 .title("Report")
-                .author(|a| {
-                  a.name(message_user.tag())
-                    .icon_url(message_user.face())
-                })
+                .author(|a| a.name(message_user.tag()).icon_url(message_user.face()))
                 .description(message.content.clone())
                 .field("Link", format!("[Go to message]({})", message_link), false)
                 .footer(|f| {
@@ -115,7 +112,7 @@ async fn add_star(ctx: &Context, database: &DatabaseHandler, reaction: &Reaction
               starboard_message.id
             )
           })?;
-          
+
           let mut updated_embed: CreateEmbed = existing_embed.clone().into();
 
           updated_embed.footer(|f| f.text(format!("⭐ Times starred: {}", star_count)));

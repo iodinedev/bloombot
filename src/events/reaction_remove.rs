@@ -1,7 +1,7 @@
 use crate::config::{self, EMOTES};
 use crate::database::DatabaseHandler;
 use anyhow::Result;
-use poise::serenity_prelude::{Context, CreateEmbed, Reaction, ReactionType, ChannelId};
+use poise::serenity_prelude::{ChannelId, Context, CreateEmbed, Reaction, ReactionType};
 
 pub async fn reaction_remove(
   ctx: &Context,

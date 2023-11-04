@@ -31,7 +31,8 @@ pub async fn add(
   let response = match random_quote {
     Some(quote) => {
       // Strip non-alphanumeric characters from the quote
-      let quote = quote.quote
+      let quote = quote
+        .quote
         .chars()
         .filter(|c| c.is_alphanumeric() || c.is_whitespace() || c.is_ascii_punctuation())
         .map(|c| {
@@ -42,9 +43,9 @@ pub async fn add(
           }
         })
         .collect::<String>();
-      
+
       format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:\n*{quote}*")
-    },
+    }
     None => {
       format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:")
     }
@@ -125,9 +126,11 @@ pub async fn add(
           }
         }
         Err(e) => {
-          check.edit(ctx, |f| {
-            f.content(":x: An error occured. Nothing has been saved.")
-          }).await?;
+          check
+            .edit(ctx, |f| {
+              f.content(":x: An error occured. Nothing has been saved.")
+            })
+            .await?;
           return Err(anyhow::anyhow!("Could not send message: {}", e));
         }
       }

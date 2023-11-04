@@ -1,7 +1,7 @@
 use crate::pagination::PageRow;
 use anyhow::{Context, Result};
 use chrono::Utc;
-use futures::{stream::Stream, TryStreamExt, StreamExt};
+use futures::{stream::Stream, StreamExt, TryStreamExt};
 use log::info;
 use poise::serenity_prelude::{self as serenity, Mentionable};
 use ulid::Ulid;
@@ -193,7 +193,10 @@ impl DatabaseHandler {
     Ok(self.pool.acquire().await?)
   }
 
-  pub async fn get_connection_with_retry(&self, max_retries: usize) -> Result<sqlx::pool::PoolConnection<sqlx::Postgres>> {
+  pub async fn get_connection_with_retry(
+    &self,
+    max_retries: usize,
+  ) -> Result<sqlx::pool::PoolConnection<sqlx::Postgres>> {
     let mut attempts = 0;
 
     loop {
@@ -215,7 +218,7 @@ impl DatabaseHandler {
                 continue;
               }
             }
-        }
+          }
 
           // If it's a different kind of error, we might want to return it immediately
           return Err(e);
@@ -228,7 +231,10 @@ impl DatabaseHandler {
     Ok(self.pool.begin().await?)
   }
 
-  pub async fn start_transaction_with_retry(&self, max_retries: usize) -> Result<sqlx::Transaction<'_, sqlx::Postgres>> {
+  pub async fn start_transaction_with_retry(
+    &self,
+    max_retries: usize,
+  ) -> Result<sqlx::Transaction<'_, sqlx::Postgres>> {
     let mut attempts = 0;
 
     loop {
@@ -250,7 +256,7 @@ impl DatabaseHandler {
                 continue;
               }
             }
-        }
+          }
 
           // If it's a different kind of error, we might want to return it immediately
           return Err(e);
@@ -1178,7 +1184,7 @@ impl DatabaseHandler {
   ) -> Result<()> {
     sqlx::query!(
       r#"
-        DELETE FROM quote WHERE quote = $1 AND guild_id = $2
+        DELETE FROM quote WHERE record_id = $1 AND guild_id = $2
       "#,
       quote,
       guild_id.to_string(),
@@ -1331,13 +1337,13 @@ impl DatabaseHandler {
   pub async fn quote_exists(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     guild_id: &serenity::GuildId,
-    quote: &str,
+    quote_id: &str,
   ) -> Result<bool> {
     let row = sqlx::query!(
       r#"
-        SELECT EXISTS(SELECT 1 FROM quote WHERE quote = $1 AND guild_id = $2)
+        SELECT EXISTS(SELECT 1 FROM quote WHERE record_id = $1 AND guild_id = $2)
       "#,
-      quote,
+      quote_id,
       guild_id.to_string(),
     )
     .fetch_one(&mut **transaction)

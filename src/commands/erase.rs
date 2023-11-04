@@ -9,7 +9,8 @@ pub async fn erase(
   ctx: Context<'_>,
   #[description = "The message to delete"] message: serenity::Message,
   #[max_length = 1000]
-  #[description = "The reason for deleting the message"] reason: Option<String>,
+  #[description = "The reason for deleting the message"]
+  reason: Option<String>,
 ) -> Result<()> {
   ctx.defer_ephemeral().await?;
 
@@ -24,7 +25,7 @@ pub async fn erase(
   let mod_confirmation = ctx
     .send(|f| {
       f.content(":white_check_mark: Message deleted. Sending the reason in DMs...".to_string())
-      .ephemeral(true)
+        .ephemeral(true)
     })
     .await?;
 
@@ -43,15 +44,14 @@ pub async fn erase(
   if !message.content.is_empty() {
     // If longer than 1024 - 6 characters for the embed, truncate to 1024 - 3 for "..."
     let content = match message.content.len() > 1018 {
-      true => format!("{}...", message.content.chars().take(1015).collect::<String>()),
+      true => format!(
+        "{}...",
+        message.content.chars().take(1015).collect::<String>()
+      ),
       false => message.content.clone(),
     };
 
-    dm_embed.field(
-      "Message Content",
-      format!("```{}```", content),
-      false,
-    );
+    dm_embed.field("Message Content", format!("```{}```", content), false);
   }
 
   match message
@@ -63,7 +63,7 @@ pub async fn erase(
       mod_confirmation
         .edit(ctx, |f| {
           f.content(":white_check_mark: Message deleted. Sent the reason in DMs.")
-          .ephemeral(true)
+            .ephemeral(true)
         })
         .await?;
     }
@@ -71,7 +71,7 @@ pub async fn erase(
       mod_confirmation
         .edit(ctx, |f| {
           f.content(":white_check_mark: Message deleted. Could not send the reason in DMs.")
-          .ephemeral(true)
+            .ephemeral(true)
         })
         .await?;
     }

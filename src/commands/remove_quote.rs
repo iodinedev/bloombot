@@ -12,7 +12,7 @@ use anyhow::Result;
 )]
 pub async fn remove_quote(
   ctx: Context<'_>,
-  #[description = "The quote to remove"] quote: String,
+  #[description = "The quote ID to remove"] id: String,
 ) -> Result<()> {
   let data = ctx.data();
 
@@ -20,14 +20,14 @@ pub async fn remove_quote(
   let guild_id = ctx.guild_id().unwrap();
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
-  if !DatabaseHandler::quote_exists(&mut transaction, &guild_id, quote.as_str()).await? {
+  if !DatabaseHandler::quote_exists(&mut transaction, &guild_id, id.as_str()).await? {
     ctx
       .send(|f| f.content(":x: Quote does not exist.").ephemeral(true))
       .await?;
     return Ok(());
   }
 
-  DatabaseHandler::remove_quote(&mut transaction, &guild_id, quote.as_str()).await?;
+  DatabaseHandler::remove_quote(&mut transaction, &guild_id, id.as_str()).await?;
 
   commit_and_say(
     ctx,
