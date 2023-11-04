@@ -1267,6 +1267,9 @@ impl DatabaseHandler {
     .fetch_one(&mut **transaction)
     .await?;
 
+    info!("total_data: {:?}", total_data);
+    info!("timeframe_data: {:?}", timeframe_data);
+
     let user_stats = UserStats {
       all_minutes: total_data.total_sum.unwrap_or(0),
       all_count: total_data.total_count.unwrap_or(0).try_into()?,
