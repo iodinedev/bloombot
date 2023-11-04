@@ -102,11 +102,11 @@ async fn add_star(ctx: &Context, database: &DatabaseHandler, reaction: &Reaction
       match star_message {
         Some(star_message) => {
           // Already exists, find the starboard channel
-          let starboard_channel = star_message.starred_channel_id;
+          let starboard_channel = ChannelId(config::CHANNELS.starchannel);
 
           // Get the starboard message
           let mut starboard_message = starboard_channel
-            .message(&ctx, star_message.starred_message_id)
+            .message(&ctx, star_message.board_message_id)
             .await?;
 
           let existing_embed = starboard_message.embeds.get(0).with_context(|| {
