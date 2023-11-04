@@ -36,6 +36,7 @@ pub struct Channels {
   pub commands: u64,
   pub announcement: u64,
   pub logs: u64,
+  pub bloomlogs: u64,
   pub starchannel: u64,
   pub reportchannel: u64,
   pub patreon: u64,
