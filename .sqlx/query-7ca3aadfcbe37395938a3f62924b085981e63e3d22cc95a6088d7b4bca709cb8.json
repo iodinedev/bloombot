@@ -1,16 +1,16 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT COUNT(record_id) AS timeframe_count, SUM(meditation_minutes) AS timeframe_sum\n        FROM meditation\n        WHERE guild_id = $1 AND occurred_at >= $2 AND occurred_at <= $3\n      ",
+  "query": "\n        SELECT COUNT(record_id) AS count, SUM(meditation_minutes) AS sum\n        FROM meditation\n        WHERE guild_id = $1 AND occurred_at >= $2 AND occurred_at <= $3\n      ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "timeframe_count",
+        "name": "count",
         "type_info": "Int8"
       },
       {
         "ordinal": 1,
-        "name": "timeframe_sum",
+        "name": "sum",
         "type_info": "Int8"
       }
     ],
@@ -26,5 +26,5 @@
       null
     ]
   },
-  "hash": "dc436ec6b5c182ed80399b86a6352c4a044b454bb1b6395ff1da8778f3428128"
+  "hash": "7ca3aadfcbe37395938a3f62924b085981e63e3d22cc95a6088d7b4bca709cb8"
 }
