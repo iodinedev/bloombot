@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT EXISTS(SELECT 1 FROM quote WHERE quote = $1 AND guild_id = $2)\n      ",
+  "query": "\n        SELECT EXISTS(SELECT 1 FROM quote WHERE record_id = $1 AND guild_id = $2)\n      ",
   "describe": {
     "columns": [
       {
@@ -19,5 +19,5 @@
       null
     ]
   },
-  "hash": "8f3cdc1bed93f0e232f10785c48501cb186343f6c817c4e81c685ce2a3f278f4"
+  "hash": "77770f56e2ee17dd5579c8e9cf965501ef478d4ee934f24a6134dfc1a07c1d23"
 }

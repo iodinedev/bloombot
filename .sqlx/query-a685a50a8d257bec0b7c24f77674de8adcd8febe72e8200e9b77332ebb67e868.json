@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        DELETE FROM quote WHERE quote = $1 AND guild_id = $2\n      ",
+  "query": "\n        DELETE FROM quote WHERE record_id = $1 AND guild_id = $2\n      ",
   "describe": {
     "columns": [],
     "parameters": {
@@ -11,5 +11,5 @@
     },
     "nullable": []
   },
-  "hash": "5e2cbba35b345c45fbcc1396dde373f91de0caa92683d9c56cb7641ff06c5383"
+  "hash": "a685a50a8d257bec0b7c24f77674de8adcd8febe72e8200e9b77332ebb67e868"
 }
