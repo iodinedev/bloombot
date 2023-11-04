@@ -55,7 +55,7 @@ pub async fn remove_entry(
     })
     .to_owned();
 
-  let log_channel = serenity::ChannelId(CHANNELS.logs);
+  let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
 
   log_channel
     .send_message(ctx, |f| f.set_embed(log_embed))
