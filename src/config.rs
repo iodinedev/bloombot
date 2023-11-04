@@ -49,6 +49,7 @@ pub const CHANNELS: Channels = Channels {
   commands: 837344434676564078,
   announcement: 244917519477899264,
   logs: 441207765357035541,
+  bloomlogs: 1161911290915209297,
   starchannel: 856865368098078720,
   reportchannel: 855894610001395743,
   patreon: 551895169532952578,
