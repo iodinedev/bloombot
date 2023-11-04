@@ -31,13 +31,12 @@ async fn remove_star(ctx: &Context, database: &DatabaseHandler, reaction: &React
           .map(|r| r.count)
           .unwrap_or(0);
 
-        let starred_channel = star_message.starred_channel_id;
         let starboard_channel = ChannelId(config::CHANNELS.starchannel);
 
         if star_count >= config::MIN_STARS {
           // Get the starboard message
-          let mut starboard_message = starred_channel
-            .message(&ctx, star_message.starred_message_id)
+          let mut starboard_message = starboard_channel
+            .message(&ctx, star_message.board_message_id)
             .await?;
 
           let existing_embed = starboard_message.embeds.get(0).unwrap();
