@@ -1240,10 +1240,10 @@ impl DatabaseHandler {
     // Get total count, total sum, and count/sum for timeframe
     let end_time = chrono::Utc::now();
     let start_time = match timeframe {
-      Timeframe::Daily => end_time - chrono::Duration::days(1),
-      Timeframe::Weekly => end_time - chrono::Duration::weeks(1),
-      Timeframe::Monthly => end_time - chrono::Duration::days(30),
-      Timeframe::Yearly => end_time - chrono::Duration::days(365),
+      Timeframe::Daily => end_time - chrono::Duration::days(12),
+      Timeframe::Weekly => end_time - chrono::Duration::weeks(12),
+      Timeframe::Monthly => end_time - chrono::Duration::days(30 * 12),
+      Timeframe::Yearly => end_time - chrono::Duration::days(365 * 12),
     };
 
     let total_data = sqlx::query!(
@@ -1273,9 +1273,6 @@ impl DatabaseHandler {
     .fetch_one(&mut **transaction)
     .await?;
 
-    info!("total_data: {:?}", total_data);
-    info!("timeframe_data: {:?}", timeframe_data);
-
     let user_stats = UserStats {
       all_minutes: total_data.total_sum.unwrap_or(0),
       all_count: total_data.total_count.unwrap_or(0).try_into()?,
@@ -1294,10 +1291,10 @@ impl DatabaseHandler {
     // Get total count, total sum, and count/sum for timeframe
     let end_time = chrono::Utc::now();
     let start_time = match timeframe {
-      Timeframe::Daily => end_time - chrono::Duration::days(1),
-      Timeframe::Weekly => end_time - chrono::Duration::weeks(1),
-      Timeframe::Monthly => end_time - chrono::Duration::days(30),
-      Timeframe::Yearly => end_time - chrono::Duration::days(365),
+      Timeframe::Daily => end_time - chrono::Duration::days(12),
+      Timeframe::Weekly => end_time - chrono::Duration::weeks(12),
+      Timeframe::Monthly => end_time - chrono::Duration::days(30 * 12),
+      Timeframe::Yearly => end_time - chrono::Duration::days(365 * 12),
     };
 
     let total_data = sqlx::query!(
