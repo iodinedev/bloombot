@@ -22,7 +22,6 @@ pub mod quotes;
 pub mod recent;
 pub mod remove_entry;
 pub mod remove_key;
-pub mod remove_quote;
 pub mod stats;
 pub mod streak;
 pub mod suggest;
