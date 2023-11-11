@@ -4,7 +4,7 @@ use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
 /// Add a suggestion to the suggestions channel
-#[poise::command(slash_command, member_cooldown = 3600, guild_only)]
+#[poise::command(slash_command, member_cooldown = 3600, guild_only, ephemeral)]
 pub async fn suggest(
   ctx: Context<'_>,
   #[description = "The suggestion to add"] suggestion: String,
@@ -52,7 +52,6 @@ pub async fn suggest(
       "Your suggestion has been added to <#{}>.",
       channel_id
     ))
-    .ephemeral(true)
     .await?;
 
   Ok(())
