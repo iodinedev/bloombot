@@ -43,21 +43,21 @@ pub async fn suggest(
     .await?;
 
   // Log in staff channel
-  let log_embed = BloomBotEmbed::new()
-    .title("New Suggestion")
-    .description(suggestion)
-    .author(|f| f.name(ctx.author().tag()).icon_url(ctx.author().face()))
-    .footer(|f| {
-      f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-        .text(format!("Suggested by {}", ctx.author()))
-    })
-    .to_owned();
+  // let log_embed = BloomBotEmbed::new()
+  //   .title("New Suggestion")
+  //   .description(suggestion)
+  //   .author(|f| f.name(ctx.author().tag()).icon_url(ctx.author().face()))
+  //   .footer(|f| {
+  //     f.icon_url(ctx.author().avatar_url().unwrap_or_default())
+  //       .text(format!("Suggested by {}", ctx.author()))
+  //   })
+  //   .to_owned();
 
-  let log_channel = serenity::ChannelId(CHANNELS.logs);
+  // let log_channel = serenity::ChannelId(CHANNELS.logs);
 
-  log_channel
-    .send_message(ctx, |f| f.set_embed(log_embed))
-    .await?;
+  // log_channel
+  //   .send_message(ctx, |f| f.set_embed(log_embed))
+  //   .await?;
 
   Ok(())
 }
