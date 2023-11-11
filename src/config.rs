@@ -2,7 +2,7 @@ use poise::serenity_prelude::{self as serenity, Guild, Member, RoleId};
 
 pub const EMBED_COLOR: u32 = 0xFDAC2E;
 pub const TERMS_PER_PAGE: usize = 10;
-pub const MIN_STARS: u64 = 3;
+pub const MIN_STARS: u64 = 5;
 
 /// Sensible defaults for use within our application.
 pub struct BloomBotEmbed {}
