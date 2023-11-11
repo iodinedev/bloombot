@@ -52,7 +52,7 @@ pub async fn suggest(
       "Your suggestion has been added to <#{}>.",
       channel_id
     ))
-    .ephemeral(true))
+    .ephemeral(true)
     .await?;
 
   Ok(())
