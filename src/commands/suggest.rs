@@ -23,21 +23,6 @@ pub async fn suggest(
   suggestion_message.react(ctx, '✅').await?;
   suggestion_message.react(ctx, '❌').await?;
 
-  // Log in staff channel
-  let log_channel = serenity::ChannelId(CHANNELS.logs);
-
-  let suggestion_log = log_channel
-    .send_message(ctx, |f| {
-      f.embed(|e| {
-        BloomBotEmbed::from(e)
-          .title("New Suggestion")
-          .description(suggestion)
-          .author(|f| f.name(ctx.author().tag()).icon_url(ctx.author().face()))
-          .footer(|f| f.text(format!("User ID: {}", ctx.author().id)))
-      })
-    })
-    .await?;
-
   // Start thread for suggestion
   channel_id
     .create_public_thread(ctx, suggestion_message.id, |f| {
@@ -52,6 +37,23 @@ pub async fn suggest(
       "Your suggestion has been added to <#{}>.",
       channel_id
     ))
+    .await?;
+
+  // Log in staff channel
+  let log_embed = BloomBotEmbed::new()
+    .title("New Suggestion")
+    .description(suggestion)
+    .author(|f| f.name(ctx.author().tag()).icon_url(ctx.author().face()))
+    .footer(|f| {
+      f.icon_url(ctx.author().avatar_url().unwrap_or_default())
+        .text(format!("Suggested by {}", ctx.author()))
+    })
+    .to_owned();
+
+  let log_channel = serenity::ChannelId(CHANNELS.logs);
+
+  log_channel
+    .send_message(ctx, |f| f.set_embed(log_embed))
     .await?;
 
   Ok(())
