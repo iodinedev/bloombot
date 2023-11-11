@@ -55,7 +55,7 @@ pub const CHANNELS: Channels = Channels {
   reportchannel: 855894610001395743,
   patreon: 551895169532952578,
   backup: 1069911235224678460,
-  suggestion: 55367637862147688,
+  suggestion: 553676378621476887,
 };
 
 pub struct Emotes<'a> {

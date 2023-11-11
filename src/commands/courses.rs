@@ -116,9 +116,8 @@ pub async fn edit(
   #[description = "Name of the course"] course_name: String,
   #[description = "Update the role that participants of the course are assumed to have"]
   participant_role: Option<serenity::Role>,
-  #[description = "Update the role that graduates of the course are given"] graduate_role: Option<
-    serenity::Role,
-  >,
+  #[description = "Update the role that graduates of the course are given"]
+  graduate_role: Option<serenity::Role>,
 ) -> Result<()> {
   if participant_role.is_none() && graduate_role.is_none() {
     ctx
