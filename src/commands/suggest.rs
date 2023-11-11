@@ -14,7 +14,6 @@ pub async fn suggest(
     .title("New Suggestion")
     .description(&suggestion)
     .author(|f| f.name(ctx.author().tag()).icon_url(ctx.author().face()))
-    })
     .to_owned();
 
   let log_channel = serenity::ChannelId(CHANNELS.logs);
