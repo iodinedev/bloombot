@@ -33,10 +33,13 @@ pub async fn suggest(
     .await?;
 
   ctx
-    .say(format!(
-      "Your suggestion has been added to <#{}>.",
-      channel_id
-    ))
+    .send(|f| {
+      f.content(format!(
+        "Your suggestion has been added to <#{}>.",
+        channel_id
+      ))
+      .ephemeral(true)
+    })
     .await?;
 
   // Log in staff channel
