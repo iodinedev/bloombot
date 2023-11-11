@@ -60,7 +60,6 @@ async fn main() -> Result<()> {
         recent(),
         remove_entry(),
         remove_key(),
-        remove_quote(),
         stats(),
         streak(),
         suggest(),
