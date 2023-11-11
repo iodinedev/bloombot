@@ -4,7 +4,12 @@ use crate::Context;
 use anyhow::Result;
 
 /// Mark that you have completed a course.
-#[poise::command(slash_command, guild_only, hide_in_help)]
+#[poise::command(
+  slash_command,
+  dm_only,
+  hide_in_help,
+  rename = "coursecomplete"
+)]
 pub async fn complete(
   ctx: Context<'_>,
   #[description = "The course you have completed"] course_name: String,

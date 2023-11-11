@@ -93,8 +93,8 @@ pub async fn add(
     &mut transaction,
     &guild_id,
     course_name.as_str(),
-    &graduate_role,
     &participant_role,
+    &graduate_role,
   )
   .await?;
 
