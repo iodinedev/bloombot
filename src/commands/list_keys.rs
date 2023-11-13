@@ -8,7 +8,8 @@ use poise::serenity_prelude as serenity;
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",
-  rename = "listkeys"
+  rename = "listkeys",
+  guild_only
 )]
 pub async fn list_keys(
   ctx: Context<'_>,
