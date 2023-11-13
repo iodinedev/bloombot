@@ -11,7 +11,8 @@ use poise::serenity_prelude as serenity;
 #[poise::command(
   slash_command,
   subcommands("list", "info", "search"),
-  subcommand_required
+  subcommand_required,
+  guild_only
 )]
 pub async fn glossary(_: Context<'_>) -> Result<()> {
   Ok(())
