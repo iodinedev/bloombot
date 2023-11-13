@@ -6,9 +6,9 @@ use anyhow::Result;
 /// Mark that you have completed a course.
 #[poise::command(
   slash_command,
-  dm_only,
+  rename = "coursecomplete",
   hide_in_help,
-  rename = "coursecomplete"
+  guild_only
 )]
 pub async fn complete(
   ctx: Context<'_>,

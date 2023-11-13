@@ -5,7 +5,10 @@ use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
 /// Gets your recent meditation entries
-#[poise::command(slash_command)]
+#[poise::command(
+  slash_command,
+  guild_only
+)]
 pub async fn recent(
   ctx: Context<'_>,
   #[description = "The page to show"] page: Option<usize>,

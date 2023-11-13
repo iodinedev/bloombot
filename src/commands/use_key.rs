@@ -6,7 +6,8 @@ use anyhow::Result;
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",
-  rename = "usekey"
+  rename = "usekey",
+  guild_only
 )]
 pub async fn use_key(ctx: Context<'_>) -> Result<()> {
   ctx.defer_ephemeral().await?;

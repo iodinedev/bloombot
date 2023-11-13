@@ -15,7 +15,12 @@ pub enum StatsType {
 }
 
 /// Gets the stats of the server or a specified user.
-#[poise::command(slash_command, subcommands("user", "server"), subcommand_required)]
+#[poise::command(
+  slash_command,
+  subcommands("user", "server"),
+  subcommand_required,
+  guild_only
+)]
 pub async fn stats(_: Context<'_>) -> Result<()> {
   Ok(())
 }

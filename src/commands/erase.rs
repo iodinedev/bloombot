@@ -4,7 +4,12 @@ use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
 /// Deletes a message.
-#[poise::command(slash_command, required_permissions = "MANAGE_MESSAGES", hide_in_help)]
+#[poise::command(
+  slash_command,
+  required_permissions = "MANAGE_MESSAGES",
+  hide_in_help,
+  guild_only
+)]
 pub async fn erase(
   ctx: Context<'_>,
   #[description = "The message to delete"] message: serenity::Message,
