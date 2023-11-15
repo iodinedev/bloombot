@@ -13,6 +13,7 @@ pub mod courses;
 pub mod erase;
 pub mod glossary;
 pub mod hello;
+pub mod help;
 pub mod list_keys;
 pub mod manage;
 pub mod pick_winner;
