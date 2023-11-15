@@ -81,7 +81,6 @@ impl PageRow for MeditationData {
 }
 
 pub struct QuoteData {
-  pub id: String,
   pub quote: String,
   pub author: Option<String>,
 }
@@ -92,11 +91,7 @@ impl PageRow for QuoteData {
   }
 
   fn body(&self) -> String {
-    format!(
-      "{}\n[`ID: {}`]",
-      self.author.clone().unwrap_or("Anonymous".to_string()),
-      self.id
-    )
+    self.author.clone().unwrap_or("Anonymous".to_string())
   }
 }
 
@@ -550,7 +545,7 @@ impl DatabaseHandler {
   ) -> Result<Vec<QuoteData>> {
     let rows = sqlx::query!(
       r#"
-        SELECT record_id, quote, author FROM quote WHERE guild_id = $1
+        SELECT quote, author FROM quote WHERE guild_id = $1
       "#,
       guild_id.to_string(),
     )
@@ -560,7 +555,6 @@ impl DatabaseHandler {
     let quotes = rows
       .into_iter()
       .map(|row| QuoteData {
-        id: row.record_id,
         quote: row.quote,
         author: row.author,
       })
@@ -1129,7 +1123,7 @@ impl DatabaseHandler {
   ) -> Result<Option<QuoteData>> {
     let row = sqlx::query!(
       r#"
-        SELECT record_id, quote, author FROM quote WHERE guild_id = $1 ORDER BY RANDOM() LIMIT 1
+        SELECT quote, author FROM quote WHERE guild_id = $1 ORDER BY RANDOM() LIMIT 1
       "#,
       guild_id.to_string(),
     )
@@ -1138,7 +1132,6 @@ impl DatabaseHandler {
 
     let quote = match row {
       Some(row) => Some(QuoteData {
-        id: row.record_id,
         quote: row.quote,
         author: row.author,
       }),
