@@ -22,7 +22,9 @@ pub async fn course(_: Context<'_>) -> Result<()> {
   Ok(())
 }
 
-/// Adds a course and relevant graduate role to the database.
+/// Add a course and its associated graduate role to the database
+/// 
+/// Adds a course and its associated graduate role to the database.
 #[poise::command(slash_command)]
 pub async fn add(
   ctx: Context<'_>,
@@ -113,7 +115,9 @@ pub async fn add(
   Ok(())
 }
 
-/// Updates an existing course's roles.
+/// Update the roles for an existing course
+/// 
+/// Updates the roles for an existing course.
 #[poise::command(slash_command)]
 pub async fn edit(
   ctx: Context<'_>,
@@ -147,7 +151,9 @@ pub async fn edit(
   Ok(())
 }
 
-/// Lists all the courses in the guild.
+/// List all courses
+/// 
+/// Lists all courses in the database.
 #[poise::command(slash_command)]
 pub async fn list(
   ctx: Context<'_>,
@@ -229,6 +235,8 @@ pub async fn list(
   Ok(())
 }
 
+/// Remove a course from the database
+/// 
 /// Removes a course from the database.
 #[poise::command(slash_command)]
 pub async fn remove(

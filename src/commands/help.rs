@@ -1,14 +1,15 @@
 use crate::Context;
 use anyhow::Result;
 
-/// Show help menu
+/// Show the help menu
 /// 
 /// Shows the help menu.
 #[poise::command(slash_command)]
 pub async fn help(
 	ctx: Context<'_>,
 	#[description = "Specific command to show help about"]
-	#[autocomplete = "poise::builtins::autocomplete_command"]
+	// Disabling autocomplete until menu is displayed dynamically based on permissions.
+	// #[autocomplete = "poise::builtins::autocomplete_command"]
 	command: Option<String>,
 ) -> Result<()> {
 
