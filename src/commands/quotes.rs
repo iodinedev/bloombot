@@ -24,6 +24,8 @@ pub async fn quotes(_: Context<'_>) -> Result<()> {
   Ok(())
 }
 
+/// Add a quote to the database
+/// 
 /// Adds a quote to the database.
 #[poise::command(slash_command)]
 pub async fn add(
@@ -56,6 +58,8 @@ pub async fn add(
   Ok(())
 }
 
+/// Remove a quote from the database
+/// 
 /// Removes a quote from the database.
 #[poise::command(slash_command)]
 pub async fn remove(
@@ -88,6 +92,8 @@ pub async fn remove(
   Ok(())
 }
 
+/// List all quotes in the database
+/// 
 /// Lists all quotes in the database.
 #[poise::command(slash_command)]
 pub async fn list(
