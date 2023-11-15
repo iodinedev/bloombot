@@ -7,7 +7,11 @@ use log::info;
 use pgvector;
 use poise::serenity_prelude as serenity;
 
-/// The glossary command.
+/// Glossary commands
+/// 
+/// Commands for interacting with the glossary.
+/// 
+/// Get `info` on a glossary entry, see a `list` of entries, or `search` for a relevant entry.
 #[poise::command(
   slash_command,
   subcommands("list", "info", "search"),

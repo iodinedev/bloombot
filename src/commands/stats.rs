@@ -14,7 +14,11 @@ pub enum StatsType {
   MeditationCount,
 }
 
-/// Gets the stats of the server or a specified user.
+/// See the stats for the server or a specified user
+/// 
+/// Shows the stats for the whole server or a specified user.
+/// 
+/// Defaults to daily minutes for the server or yourself. Optionally specify the user, type (minutes or session count), and/or timeframe (daily, weekly, monthly, or yearly).
 #[poise::command(
   slash_command,
   subcommands("user", "server"),

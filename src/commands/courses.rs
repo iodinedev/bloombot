@@ -5,7 +5,11 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-/// Commands for managing courses.
+/// Commands for managing courses
+/// 
+/// Commands to add, edit, list, or remove courses.
+/// 
+/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",

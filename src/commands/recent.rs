@@ -4,7 +4,11 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-/// Gets your recent meditation entries
+/// See your recent meditation entries
+/// 
+/// Displays a list of your recent meditation entries.
+/// 
+/// Use this command to retrieve the ID used to remove an entry.
 #[poise::command(
   slash_command,
   guild_only

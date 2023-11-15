@@ -6,7 +6,13 @@ use anyhow::Result;
 use log::error;
 use poise::serenity_prelude::{self as serenity, Mentionable};
 
-/// Adds minutes to your meditation time.
+/// Add minutes to your meditation time
+/// 
+/// Adds a specified number of minutes to your meditation time. You can add minutes each time you meditate or add the combined minutes for multiple sessions.
+/// 
+/// You may wish to add large amounts of time on occasion, e.g., after a silent retreat. Time tracking is based on the honor system and members are welcome to track any legitimate time spent practicing.
+/// 
+/// Vanity roles are purely cosmetic, so there is nothing to be gained from cheating. Furthermore, exceedingly large false entries will skew the server stats, which is unfair to other members. Please be considerate.
 #[poise::command(slash_command, guild_only)]
 pub async fn add(
   ctx: Context<'_>,

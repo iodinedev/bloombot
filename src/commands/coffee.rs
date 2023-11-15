@@ -3,7 +3,11 @@ use anyhow::Result;
 use rand::Rng;
 use std::sync::Arc;
 
-/// I will choose either ☕ or ⚰️. (My version of Russian Roulette)
+/// Are you feeling lucky?
+/// 
+/// I will choose either ☕ or ⚰️.
+/// 
+/// (My version of Russian roulette)
 #[poise::command(slash_command)]
 pub async fn coffee(ctx: Context<'_>) -> Result<()> {
   let data = ctx.data();
