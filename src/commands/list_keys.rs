@@ -4,11 +4,16 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
+/// List all Playne keys in the database
+/// 
 /// Lists all Playne keys in the database.
+/// 
+/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",
   rename = "listkeys",
+  hide_in_help,
   guild_only
 )]
 pub async fn list_keys(

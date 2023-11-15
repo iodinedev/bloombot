@@ -5,14 +5,19 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-/// Manage the list of quotes.
+/// Commands for managing quotes
+/// 
+/// Commands to list, add, or remove quotes.
 ///
-/// These quotes are both used for the `/quote` command and for motivation messages when a user runs `/add`
+/// These quotes are used both for the `/quote` command and for motivational messages when a user runs `/add`.
+/// 
+/// Required `Manage Roles` permissions.
 #[poise::command(
   slash_command,
   required_permissions = "MANAGE_ROLES",
   subcommands("list", "add", "remove"),
   subcommand_required,
+  hide_in_help,
   guild_only
 )]
 pub async fn quotes(_: Context<'_>) -> Result<()> {

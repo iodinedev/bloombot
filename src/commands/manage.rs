@@ -7,12 +7,17 @@ use anyhow::Result;
 use chrono::Datelike;
 use poise::serenity_prelude::{self as serenity, Mentionable};
 
-/// Options for managing users' meditation entries.
+/// Commands for managing meditation entries
+/// 
+/// Commands to create, list, update, or delete meditation entries for a user, or completely reset a user's data.
+/// 
+/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   subcommands("create", "list", "update", "delete", "reset"),
   subcommand_required,
   required_permissions = "ADMINISTRATOR",
+  hide_in_help,
   guild_only
 )]
 pub async fn manage(_: Context<'_>) -> Result<()> {

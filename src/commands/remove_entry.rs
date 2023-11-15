@@ -5,7 +5,11 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-/// Removes one of your meditation entries
+/// Remove one of your meditation entries
+/// 
+/// Removes one of your meditation entries.
+/// 
+/// Use `/recent` to retrieve the ID for the entry you wish to remove.
 #[poise::command(
   slash_command,
   rename = "remove",

@@ -84,11 +84,17 @@ pub async fn term_not_found(
   Ok(())
 }
 
+/// Commands for managing glossary entries
+/// 
+/// Commands to add, remove, or edit glossary entries.
+/// 
+/// Requires `Manage Roles` permissions.
 #[poise::command(
   slash_command,
   required_permissions = "MANAGE_ROLES",
   subcommands("add", "remove", "edit"),
   subcommand_required,
+  hide_in_help,
   guild_only
 )]
 pub async fn terms(_: poise::Context<'_, AppData, AppError>) -> Result<()> {

@@ -2,6 +2,8 @@ use crate::Context;
 use anyhow::Result;
 
 /// Show help menu
+/// 
+/// Shows the help menu.
 #[poise::command(slash_command)]
 pub async fn help(
 	ctx: Context<'_>,

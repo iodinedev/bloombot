@@ -3,7 +3,11 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-/// Deletes a message.
+/// Delete a message
+/// 
+/// Deletes a message and notifies the user via DM with an optional reason.
+/// 
+/// Requires `Manage Messages` permissions.
 #[poise::command(
   slash_command,
   required_permissions = "MANAGE_MESSAGES",

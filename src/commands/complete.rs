@@ -3,7 +3,11 @@ use crate::database::DatabaseHandler;
 use crate::Context;
 use anyhow::Result;
 
-/// Mark that you have completed a course.
+/// Indicate that you have completed a course
+/// 
+/// Indicates that you have completed a course.
+/// 
+/// Marks the specified course as complete and awards the graduate role for that course.
 #[poise::command(
   slash_command,
   rename = "coursecomplete",

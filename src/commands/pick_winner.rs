@@ -170,14 +170,20 @@ async fn finalize_winner(
   Ok(())
 }
 
-/// Picks the winner for the month and gives them an unused key.
+/// Pick a winner for the monthly meditation challenge
+/// 
+/// Picks the winner for the monthly meditation challenge and allows them to claim an unused Playne key.
 ///
-/// Finds a user who has the meditation challenger role and has more than 0 minutes in the specified month.
-/// If there are multiple users who meet this criteria, one is chosen at random.
+/// Finds a user who meets the following criteria:
+/// - Has the `@meditation challengers` role
+/// - Has tracked at least 30 minutes during the specified month
+/// - Has at least 8 sessions during the specified month
+/// If multiple users meet this criteria, one is chosen at random.
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",
   rename = "pickwinner",
+  hide_in_help,
   guild_only
 )]
 pub async fn pick_winner(

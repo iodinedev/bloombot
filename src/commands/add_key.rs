@@ -3,11 +3,16 @@ use crate::database::DatabaseHandler;
 use crate::Context;
 use anyhow::Result;
 
+/// Add a Playne key to the database
+/// 
 /// Adds a Playne key to the database.
+/// 
+/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",
   rename = "addkey",
+  hide_in_help,
   guild_only
 )]
 pub async fn add_key(
