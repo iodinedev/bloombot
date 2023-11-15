@@ -1,7 +1,7 @@
 use anyhow::{Context as ErrorContext, Error, Result};
 use commands::{
   add::add, add_key::add_key, coffee::coffee, complete::complete, courses::course,
-  erase::erase, glossary::glossary, hello::hello, list_keys::list_keys,
+  erase::erase, glossary::glossary, hello::hello, help::help, list_keys::list_keys,
   manage::manage, pick_winner::pick_winner, ping::ping, quote::quote, quotes::quotes,
   recent::recent, remove_entry::remove_entry, remove_key::remove_key, stats::stats,
   streak::streak, suggest::suggest, terms::terms, use_key::use_key,
@@ -51,6 +51,7 @@ async fn main() -> Result<()> {
         erase(),
         glossary(),
         hello(),
+        help(),
         list_keys(),
         manage(),
         pick_winner(),
