@@ -1,9 +1,23 @@
 use crate::commands::{commit_and_say, MessageType};
 use crate::database::DatabaseHandler;
 use crate::pagination::{PageRowRef, Pagination};
-use crate::Context;
+use crate::{Context, Data as AppData, Error as AppError};
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
+use poise::Modal;
+
+#[derive(Debug, Modal)]
+#[name = "Add a new quote"]
+struct AddQuoteModal {
+  #[name = "Quote text"]
+  #[placeholder = "Input quote text here"]
+  #[paragraph]
+  #[max_length = 300]
+  quote: String,
+  #[name = "Author's name"]
+  #[placeholder = "Defaults to \"Anonymous\""]
+  author: Option<String>,
+}
 
 /// Commands for managing quotes
 /// 
@@ -20,7 +34,7 @@ use poise::serenity_prelude as serenity;
   hide_in_help,
   guild_only
 )]
-pub async fn quotes(_: Context<'_>) -> Result<()> {
+pub async fn quotes(_: poise::Context<'_, AppData, AppError>) -> Result<()> {
   Ok(())
 }
 
@@ -28,32 +42,46 @@ pub async fn quotes(_: Context<'_>) -> Result<()> {
 /// 
 /// Adds a quote to the database.
 #[poise::command(slash_command)]
-pub async fn add(
-  ctx: Context<'_>,
-  #[description = "The quote to add"] quote: String,
-  #[description = "The author of the quote [defaults to 'Anonymous']"] author: Option<String>,
-) -> Result<()> {
-  let data = ctx.data();
+pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Result<()> {
+  use poise::Modal as _;
 
-  // We unwrap here, because we know that the command is guild-only.
-  let guild_id = ctx.guild_id().unwrap();
+  let quote_data = AddQuoteModal::execute(ctx).await?;
 
-  let mut transaction = data.db.start_transaction_with_retry(5).await?;
-  DatabaseHandler::add_quote(
-    &mut transaction,
-    &guild_id,
-    quote.as_str(),
-    author.as_deref(),
-  )
-  .await?;
+  match quote_data {
+    Some(quote_data) => {
+      let mut transaction = ctx.data().db.start_transaction_with_retry(5).await?;
 
-  commit_and_say(
-    ctx,
-    transaction,
-    MessageType::TextOnly(":white_check_mark: Quote has been added.".to_string()),
-    true,
-  )
-  .await?;
+      // We unwrap here, because we know that the command is guild-only.
+      let guild_id = ctx.guild_id().unwrap();
+
+      // let aliases = match quote_data.aliases {
+      //   Some(aliases) => aliases.split(",").map(|s| s.trim().to_string()).collect(),
+      //   None => Vec::new(),
+      // };
+
+      DatabaseHandler::add_quote(
+        &mut transaction,
+        &guild_id,
+        quote_data.quote.as_str(),
+        quote_data.author.as_deref(),
+      )
+      .await?;
+
+      commit_and_say(
+        poise::Context::Application(ctx),
+        transaction,
+        MessageType::TextOnly(format!(":white_check_mark: Quote has been added.")),
+        true,
+      )
+      .await?;
+    }
+    None => {
+      ctx
+        .send(|f| f.content(":x: No data was provided.").ephemeral(true))
+        .await?;
+      return Ok(());
+    }
+  }
 
   Ok(())
 }
