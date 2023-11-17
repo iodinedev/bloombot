@@ -122,27 +122,7 @@ pub async fn add(
         Ok(_) => {
           if confirm {
             match DatabaseHandler::commit_transaction(transaction).await {
-              Ok(_) => {
-                // Log large add in Bloom logs channel
-                let log_embed = BloomBotEmbed::new()
-                  .title("Large Meditation Entry Added")
-                  .description(format!(
-                    "**User**: {}\n**Time**: {} minutes",
-                    ctx.author(),
-                    minutes
-                  ))
-                  .footer(|f| {
-                    f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-                      .text(format!("Added by {}", ctx.author()))
-                  })
-                  .to_owned();
-
-                let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
-
-                log_channel
-                  .send_message(ctx, |f| f.set_embed(log_embed))
-                  .await?;
-              }
+              Ok(_) => {}
               Err(e) => {
                 check.edit(ctx, |f| f
                   .content(":bangbang: A fatal error occured while trying to save your changes. Nothing has been saved.")).await?;
@@ -159,6 +139,28 @@ pub async fn add(
             .await?;
           return Err(anyhow::anyhow!("Could not send message: {}", e));
         }
+      }
+
+      if confirm {
+        // Log large add in Bloom logs channel
+        let log_embed = BloomBotEmbed::new()
+          .title("Large Meditation Entry Added")
+          .description(format!(
+            "**User**: {}\n**Time**: {} minutes",
+          ctx.author(),
+            minutes
+          ))
+          .footer(|f| {
+            f.icon_url(ctx.author().avatar_url().unwrap_or_default())
+              .text(format!("Added by {}", ctx.author()))
+          })
+          .to_owned();
+
+        let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+
+        log_channel
+          .send_message(ctx, |f| f.set_embed(log_embed))
+          .await?;
       }
 
       return Ok(());
