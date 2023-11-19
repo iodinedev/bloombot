@@ -1,15 +1,20 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT quote, author FROM quote WHERE guild_id = $1\n      ",
+  "query": "\n        SELECT record_id, quote, author FROM quote WHERE guild_id = $1\n      ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "quote",
+        "name": "record_id",
         "type_info": "Text"
       },
       {
         "ordinal": 1,
+        "name": "quote",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
         "name": "author",
         "type_info": "Text"
       }
@@ -21,8 +26,9 @@
     },
     "nullable": [
       false,
+      false,
       true
     ]
   },
-  "hash": "32fe5249908196734816fb622615830b8230bba29e3db2393e00c2e9e7f45633"
+  "hash": "7d38433907a3109b3ca33a3f4c25863e12098f3557fada3d959a8910bafcc473"
 }
