@@ -34,6 +34,8 @@ pub async fn list_keys(
 
   let mut current_page = page.unwrap_or(0);
 
+  if current_page > 0 { current_page = current_page - 1 }
+
   let keys = DatabaseHandler::get_all_steam_keys(&mut transaction, &guild_id).await?;
   let keys: Vec<PageRowRef> = keys.iter().map(|key| key as PageRowRef).collect();
   drop(transaction);

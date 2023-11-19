@@ -142,6 +142,8 @@ pub async fn list(
 
   let mut current_page = page.unwrap_or(0);
 
+  if current_page > 0 { current_page = current_page - 1 }
+
   let entries =
     DatabaseHandler::get_user_meditation_entries(&mut transaction, &guild_id, &user.id).await?;
   drop(transaction);
