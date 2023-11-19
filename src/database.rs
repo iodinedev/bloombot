@@ -88,14 +88,14 @@ pub struct QuoteData {
 
 impl PageRow for QuoteData {
   fn title(&self) -> String {
-    self.quote.clone()
+    format!("`ID: {}`", self.id)
   }
 
   fn body(&self) -> String {
     format!(
-      "{}\n[`ID: {}`]",
-      self.author.clone().unwrap_or("Anonymous".to_string()),
-      self.id
+      "```{}``` `{}`",
+      self.quote.clone(),
+      self.author.clone().unwrap_or("Anonymous".to_string())
     )
   }
 }

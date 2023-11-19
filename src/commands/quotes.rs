@@ -210,6 +210,8 @@ pub async fn list(
 
   let mut current_page = page.unwrap_or(0);
 
+  if current_page > 0 { current_page = current_page - 1 }
+
   let quotes = DatabaseHandler::get_all_quotes(&mut transaction, &guild_id).await?;
   let quotes: Vec<PageRowRef> = quotes.iter().map(|quote| quote as PageRowRef).collect();
   drop(transaction);
