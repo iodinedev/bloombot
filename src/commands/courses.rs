@@ -173,6 +173,8 @@ pub async fn list(
 
   let mut current_page = page.unwrap_or(0);
 
+  if current_page > 0 { current_page = current_page - 1 }
+
   let courses = DatabaseHandler::get_all_courses(&mut transaction, &guild_id).await?;
   let courses: Vec<PageRowRef> = courses.iter().map(|course| course as _).collect();
   drop(transaction);
