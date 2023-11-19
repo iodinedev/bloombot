@@ -569,6 +569,53 @@ impl DatabaseHandler {
     Ok(quotes)
   }
 
+  pub async fn get_quote(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    quote_id: &str,
+  ) -> Result<Option<QuoteData>> {
+    let row = sqlx::query!(
+      r#"
+        SELECT record_id, quote, author FROM quote WHERE record_id = $1 AND guild_id = $2
+      "#,
+      quote_id,
+      guild_id.to_string(),
+    )
+    .fetch_optional(&mut **transaction)
+    .await?;
+
+    let quote = match row {
+      Some(row) => Some(QuoteData {
+        id: row.record_id,
+        quote: row.quote,
+        author: row.author,
+      }),
+      None => None,
+    };
+
+    Ok(quote)
+  }
+
+  pub async fn edit_quote(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    quote_id: &str,
+    quote: &str,
+    author: Option<&str>,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+        UPDATE quote SET quote = $1, author = $2 WHERE record_id = $3
+      "#,
+      quote,
+      author,
+      quote_id,
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
+  }
+
   pub async fn get_random_motivation(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     guild_id: &serenity::GuildId,

@@ -19,6 +19,17 @@ struct AddQuoteModal {
   author: Option<String>,
 }
 
+#[derive(Debug, Modal)]
+#[name = "Edit a quote"]
+struct EditQuoteModal {
+  #[name = "Quote text"]
+  #[paragraph]
+  #[max_length = 300]
+  quote: String,
+  #[name = "Author's name"]
+  author: Option<String>,
+}
+
 /// Commands for managing quotes
 /// 
 /// Commands to list, add, or remove quotes.
@@ -29,7 +40,7 @@ struct AddQuoteModal {
 #[poise::command(
   slash_command,
   required_permissions = "MANAGE_ROLES",
-  subcommands("list", "add", "remove"),
+  subcommands("list", "add", "edit", "remove"),
   subcommand_required,
   hide_in_help,
   guild_only
@@ -54,11 +65,6 @@ pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Resul
       // We unwrap here, because we know that the command is guild-only.
       let guild_id = ctx.guild_id().unwrap();
 
-      // let aliases = match quote_data.aliases {
-      //   Some(aliases) => aliases.split(",").map(|s| s.trim().to_string()).collect(),
-      //   None => Vec::new(),
-      // };
-
       DatabaseHandler::add_quote(
         &mut transaction,
         &guild_id,
@@ -71,6 +77,68 @@ pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Resul
         poise::Context::Application(ctx),
         transaction,
         MessageType::TextOnly(format!(":white_check_mark: Quote has been added.")),
+        true,
+      )
+      .await?;
+    }
+    None => {
+      ctx
+        .send(|f| f.content(":x: No data was provided.").ephemeral(true))
+        .await?;
+      return Ok(());
+    }
+  }
+
+  Ok(())
+}
+
+/// Edit an existing quote
+/// 
+/// Edits an existing quote using a modal.
+#[poise::command(slash_command)]
+pub async fn edit(
+  ctx: poise::ApplicationContext<'_, AppData, AppError>,
+  #[description = "ID of the quote to edit"] quote_id: String,
+) -> Result<()> {
+  let mut transaction = ctx.data().db.start_transaction_with_retry(5).await?;
+
+  // We unwrap here, because we know that the command is guild-only.
+  let guild_id = ctx.guild_id().unwrap();
+
+  let existing_quote =
+    DatabaseHandler::get_quote(&mut transaction, &guild_id, quote_id.as_str()).await?;
+
+  if existing_quote.is_none() {
+    ctx.send(|f| f.content(":x: Invalid quote ID.").ephemeral(true))
+    .await?;
+    return Ok(());
+  }
+
+  let existing_quote = existing_quote.unwrap();
+
+  let defaults = EditQuoteModal {
+    quote: existing_quote.quote,
+    author: existing_quote.author,
+  };
+
+  let quote_data = EditQuoteModal::execute_with_defaults(ctx, defaults).await?;
+
+  match quote_data {
+    Some(quote_data) => {
+      let mut transaction = ctx.data().db.start_transaction_with_retry(5).await?;
+
+      DatabaseHandler::edit_quote(
+        &mut transaction,
+        &existing_quote.id,
+        quote_data.quote.as_str(),
+        quote_data.author.as_deref(),
+      )
+      .await?;
+
+      commit_and_say(
+        poise::Context::Application(ctx),
+        transaction,
+        MessageType::TextOnly(format!(":white_check_mark: Quote has been edited.")),
         true,
       )
       .await?;
