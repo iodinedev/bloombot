@@ -93,7 +93,7 @@ impl PageRow for QuoteData {
 
   fn body(&self) -> String {
     format!(
-      "### {}\n{}",
+      "{}\n― {}",
       self.quote.clone(),
       self.author.clone().unwrap_or("Anonymous".to_string())
     )
