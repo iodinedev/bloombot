@@ -43,8 +43,8 @@ pub async fn guild_member_update(
               crate::config::BloomBotEmbed::from(e)
                 .title(":tada: New Donator :tada:")
                 .description(format!(
-                  "Please welcome {} as a new donator.\n\nThank you for your generosity! It help keeps this community alive <:loveit:579017125809881089>",
-                  new.user.tag()
+                  "Please welcome <@{}> as a new donator.\n\nThank you for your generosity! It help keeps this community alive <:loveit:579017125809881089>",
+                  new.user.id
                 ))
             })
           })
@@ -55,13 +55,13 @@ pub async fn guild_member_update(
 
         welcome_channel
           .send_message(&ctx, |m| {
-            m.content(format!("Please give {} a warm welcome, <@&{}>!", new.user.tag(), config::ROLES.welcome_team))
+            m.content(format!("Please give <@{}> a warm welcome, <@&{}>!", new.user.id, config::ROLES.welcome_team))
               .embed(|e| {
                 config::BloomBotEmbed::from(e)
                   .title(":tada: A new member has arrived! :tada:")
                   .description(format!(
-                    "Welcome to the Meditation Mind community, {}!\n\nCheck out <id:customize> to grab some roles and customize your community experience.\n\nWe're glad you've joined us! <:aww:578864572979478558>",
-                    new.user.tag()
+                    "Welcome to the Meditation Mind community, <@{}>!\n\nCheck out <id:customize> to grab some roles and customize your community experience.\n\nWe're glad you've joined us! <:aww:578864572979478558>",
+                    new.user.id
                   ))
                   .thumbnail("https://meditationmind.org/wp-content/uploads/2020/04/Webp.net-resizeimage-1.png")
             })

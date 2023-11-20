@@ -12,7 +12,7 @@ pub async fn guild_member_removal(ctx: &Context, user: &User) -> Result<()> {
           .title("Member Left")
           .description(format!(
             "We wish you well on your future endeavors {}. :pray:",
-            user.tag()
+            user.name
           ))
       })
     })
