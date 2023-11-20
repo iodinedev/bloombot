@@ -3,7 +3,8 @@ use anyhow::Result;
 use poise::serenity_prelude::{self as serenity, Context, Member};
 
 enum UpdateType {
-  BecameDonator,
+  BecamePatreonDonator,
+  BecameKofiDonator,
   StoppedPending,
 }
 
@@ -12,8 +13,10 @@ impl UpdateType {
     let patreon_role = serenity::RoleId(config::ROLES.patreon);
     let kofi_role = serenity::RoleId(config::ROLES.kofi);
 
-    if (!old.roles.contains(&patreon_role) && !old.roles.contains(&kofi_role)) && (new.roles.contains(&patreon_role) || new.roles.contains(&kofi_role)) {
-      Some(Self::BecameDonator)
+    if !old.roles.contains(&patreon_role) && new.roles.contains(&patreon_role) {
+      Some(Self::BecamePatreonDonator)
+    } else if !old.roles.contains(&kofi_role) && new.roles.contains(&kofi_role) {
+      Some(Self::BecameKofiDonator)
     } else if old.pending && !new.pending {
       Some(Self::StoppedPending)
     } else {
@@ -34,7 +37,7 @@ pub async fn guild_member_update(
 
   if let Some(update_type) = UpdateType::get_type(old, new) {
     match update_type {
-      UpdateType::BecameDonator => {
+      UpdateType::BecamePatreonDonator => {
         let donator_channel = serenity::ChannelId(config::CHANNELS.donators);
 
         donator_channel
@@ -43,7 +46,23 @@ pub async fn guild_member_update(
               crate::config::BloomBotEmbed::from(e)
                 .title(":tada: New Donator :tada:")
                 .description(format!(
-                  "Please welcome <@{}> as a new donator.\n\nThank you for your generosity! It helps keep this community alive <:loveit:579017125809881089>",
+                  "Please welcome <@{}> as a new donator on Patreon.\n\nThank you for your generosity! It helps keep this community alive <:loveit:579017125809881089>",
+                  new.user.id
+                ))
+            })
+          })
+          .await?;
+      }
+      UpdateType::BecameKofiDonator => {
+        let donator_channel = serenity::ChannelId(config::CHANNELS.donators);
+
+        donator_channel
+          .send_message(&ctx, |m| {
+            m.embed(|e| {
+              crate::config::BloomBotEmbed::from(e)
+                .title(":tada: New Donator :tada:")
+                .description(format!(
+                  "Please welcome <@{}> as a new donator on Ko-fi.\n\nThank you for your generosity! It helps keep this community alive <:loveit:579017125809881089>",
                   new.user.id
                 ))
             })
