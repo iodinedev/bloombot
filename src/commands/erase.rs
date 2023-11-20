@@ -98,9 +98,18 @@ pub async fn erase(
   }
 
   if !message.content.is_empty() {
+    // If longer than 1024 - 6 characters for the embed, truncate to 1024 - 3 for "..."
+    let content = match message.content.len() > 1018 {
+      true => format!(
+        "{}...",
+        message.content.chars().take(1015).collect::<String>()
+      ),
+      false => message.content.clone(),
+    };
+
     log_embed.field(
       "Message Content",
-      format!("```{}```", message.content),
+      format!("```{}```", content),
       false,
     );
   }
