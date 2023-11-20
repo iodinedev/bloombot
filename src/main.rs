@@ -78,7 +78,7 @@ async fn main() -> Result<()> {
       ..Default::default()
     })
     .token(token)
-    .intents(serenity::GatewayIntents::non_privileged())
+    .intents(serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::GUILD_MEMBERS)
     .setup(|ctx, _ready, framework| {
       Box::pin(async move {
         if let Ok(test_guild) = test_guild {
@@ -177,9 +177,9 @@ async fn event_handler(
   let database = &data.db;
 
   match event {
-    Event::GuildMemberAddition { new_member } => {
-      events::guild_member_addition(ctx, new_member).await?;
-    }
+    // Event::GuildMemberAddition { new_member } => {
+    //   events::guild_member_addition(ctx, new_member).await?;
+    // }
     Event::GuildMemberRemoval { user, .. } => {
       events::guild_member_removal(ctx, user).await?;
     }

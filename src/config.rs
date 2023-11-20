@@ -21,13 +21,17 @@ impl BloomBotEmbed {
 }
 
 pub struct Roles {
+  pub welcome_team: u64,
   pub meditation_challenger: u64,
   pub patreon: u64,
+  pub kofi: u64,
 }
 
 pub const ROLES: Roles = Roles {
+  welcome_team: 828291690917265418,
   meditation_challenger: 796821826369617970,
   patreon: 543900027928444935,
+  kofi: 1083219974509826048,
 };
 
 pub struct Channels {
@@ -39,7 +43,7 @@ pub struct Channels {
   pub bloomlogs: u64,
   pub starchannel: u64,
   pub reportchannel: u64,
-  pub patreon: u64,
+  pub donators: u64,
   pub backup: u64,
   pub suggestion: u64,
 }
@@ -53,7 +57,7 @@ pub const CHANNELS: Channels = Channels {
   bloomlogs: 1161911290915209297,
   starchannel: 856865368098078720,
   reportchannel: 855894610001395743,
-  patreon: 551895169532952578,
+  donators: 551895169532952578,
   backup: 1069911235224678460,
   suggestion: 553676378621476887,
 };
