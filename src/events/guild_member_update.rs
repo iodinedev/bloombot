@@ -43,7 +43,7 @@ pub async fn guild_member_update(
               crate::config::BloomBotEmbed::from(e)
                 .title(":tada: New Donator :tada:")
                 .description(format!(
-                  "Please welcome <@{}> as a new donator.\n\nThank you for your generosity! It help keeps this community alive <:loveit:579017125809881089>",
+                  "Please welcome <@{}> as a new donator.\n\nThank you for your generosity! It helps keep this community alive <:loveit:579017125809881089>",
                   new.user.id
                 ))
             })
