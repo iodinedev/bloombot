@@ -10,6 +10,7 @@ use anyhow::Result;
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",
+  default_member_permissions = "ADMINISTRATOR",
   rename = "usekey",
   hide_in_help,
   guild_only

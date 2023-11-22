@@ -40,6 +40,7 @@ struct EditQuoteModal {
 #[poise::command(
   slash_command,
   required_permissions = "MANAGE_ROLES",
+  default_member_permissions = "MANAGE_ROLES",
   subcommands("list", "add", "edit", "remove"),
   subcommand_required,
   hide_in_help,

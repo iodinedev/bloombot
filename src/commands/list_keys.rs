@@ -12,6 +12,7 @@ use poise::serenity_prelude as serenity;
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",
+  default_member_permissions = "ADMINISTRATOR",
   rename = "listkeys",
   hide_in_help,
   guild_only

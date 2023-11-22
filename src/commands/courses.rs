@@ -13,6 +13,7 @@ use poise::serenity_prelude as serenity;
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",
+  default_member_permissions = "ADMINISTRATOR",
   subcommands("add", "remove", "edit", "list"),
   subcommand_required,
   hide_in_help,
