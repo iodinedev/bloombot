@@ -11,6 +11,7 @@ use poise::serenity_prelude as serenity;
 #[poise::command(
   slash_command,
   required_permissions = "MANAGE_MESSAGES",
+  default_member_permissions = "MANAGE_MESSAGES",
   hide_in_help,
   guild_only
 )]
@@ -61,6 +62,10 @@ pub async fn erase(
     };
 
     dm_embed.field("Message Content", format!("```{}```", content), false);
+
+    dm_embed.footer(|f| f.text(
+      "If you have any questions or concerns regarding this action, please contact a moderator. Replies sent to Bloom are not viewable by staff."
+    ));
   }
 
   match message

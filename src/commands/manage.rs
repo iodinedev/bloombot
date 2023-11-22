@@ -17,6 +17,7 @@ use poise::serenity_prelude::{self as serenity, Mentionable};
   subcommands("create", "list", "update", "delete", "reset"),
   subcommand_required,
   required_permissions = "ADMINISTRATOR",
+  default_member_permissions = "ADMINISTRATOR",
   hide_in_help,
   guild_only
 )]

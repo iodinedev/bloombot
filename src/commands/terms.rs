@@ -92,6 +92,7 @@ pub async fn term_not_found(
 #[poise::command(
   slash_command,
   required_permissions = "MANAGE_ROLES",
+  default_member_permissions = "MANAGE_ROLES",
   subcommands("add", "remove", "edit"),
   subcommand_required,
   hide_in_help,
