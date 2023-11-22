@@ -182,6 +182,7 @@ async fn finalize_winner(
 #[poise::command(
   slash_command,
   required_permissions = "BAN_MEMBERS",
+  default_member_permissions = "BAN_MEMBERS",
   rename = "pickwinner",
   hide_in_help,
   guild_only
