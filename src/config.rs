@@ -2,7 +2,7 @@ use poise::serenity_prelude::{self as serenity, Guild, Member, RoleId};
 
 pub const EMBED_COLOR: u32 = 0xFDAC2E;
 pub const TERMS_PER_PAGE: usize = 10;
-pub const MIN_STARS: u64 = 3;
+pub const MIN_STARS: u64 = 5;
 
 /// Sensible defaults for use within our application.
 pub struct BloomBotEmbed {}
@@ -21,12 +21,14 @@ impl BloomBotEmbed {
 }
 
 pub struct Roles {
+  pub welcome_team: u64,
   pub meditation_challenger: u64,
   pub patreon: u64,
   pub kofi: u64,
 }
 
 pub const ROLES: Roles = Roles {
+  welcome_team: 828291690917265418,
   meditation_challenger: 796821826369617970,
   patreon: 543900027928444935,
   kofi: 1083219974509826048,
@@ -38,9 +40,10 @@ pub struct Channels {
   pub commands: u64,
   pub announcement: u64,
   pub logs: u64,
+  pub bloomlogs: u64,
   pub starchannel: u64,
   pub reportchannel: u64,
-  pub patreon: u64,
+  pub donators: u64,
   pub backup: u64,
   pub suggestion: u64,
 }
@@ -51,11 +54,12 @@ pub const CHANNELS: Channels = Channels {
   commands: 837344434676564078,
   announcement: 244917519477899264,
   logs: 441207765357035541,
+  bloomlogs: 1161911290915209297,
   starchannel: 856865368098078720,
   reportchannel: 855894610001395743,
-  patreon: 551895169532952578,
+  donators: 551895169532952578,
   backup: 1069911235224678460,
-  suggestion: 55367637862147688,
+  suggestion: 553676378621476887,
 };
 
 pub struct Emotes<'a> {
