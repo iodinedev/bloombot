@@ -26,7 +26,8 @@ pub struct Roles {
 }
 
 pub const ROLES: Roles = Roles {
-  meditation_challenger: 796821826369617970,
+  // meditation_challenger: 796821826369617970,
+  meditation_challenger: 791491167618334732,
   patreon: 543900027928444935,
 };
 
@@ -47,7 +48,8 @@ pub const CHANNELS: Channels = Channels {
   welcome: 493402917001494539,
   meditation: 440556997364940801,
   commands: 837344434676564078,
-  announcement: 244917519477899264,
+  // announcement: 244917519477899264,
+  announcement: 819707523225354260,
   logs: 441207765357035541,
   starchannel: 856865368098078720,
   reportchannel: 855894610001395743,

@@ -26,6 +26,7 @@ async fn finalize_winner(
   reserved_key: String,
   ctx: Context<'_>,
   winner: serenity::Member,
+  minutes: i64,
   selected_date: chrono::DateTime<chrono::Utc>,
 ) -> Result<()> {
   let now = chrono::Utc::now();
@@ -36,7 +37,7 @@ async fn finalize_winner(
       "**Monthly hall-of-fame member**",
       format!(
         "**{}** is our server member of the month, with a meditation time of **{}** minutes!\nYou're doing great, keep at it!",
-        winner.user, 0
+        winner.user, minutes
       ),
       false,
     )
@@ -79,12 +80,12 @@ async fn finalize_winner(
       f.set_embed(dm_embed).components(|c| {
         c.create_action_row(|a| {
           a.create_button(|b| {
-            b.custom_id("redeem")
+            b.custom_id(redeem_id.clone())
               .label("Redeem")
               .style(serenity::ButtonStyle::Success)
           })
           .create_button(|b| {
-            b.custom_id("cancel")
+            b.custom_id(cancel_id.clone())
               .label("Cancel")
               .style(serenity::ButtonStyle::Danger)
           })
@@ -101,6 +102,9 @@ async fn finalize_winner(
       return Ok(());
     }
   };
+
+  ctx.send(|f| f.content(format!(":white_check_mark: Sent DM to {} and sent announcement!", winner.user)))
+    .await?;
 
   // Loop through incoming interactions with the buttons
   while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
@@ -238,15 +242,7 @@ pub async fn pick_winner(
     }
   };
 
-  let end_date = match chrono::NaiveDate::from_ymd_opt(year, month + 1, 1) {
-    Some(date) => date,
-    None => {
-      ctx
-        .send(|f| f.content("Invalid date.").ephemeral(true))
-        .await?;
-      return Ok(());
-    }
-  };
+  let end_date = start_date + chrono::Months::new(1);
 
   let time = chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap();
 
@@ -298,9 +294,17 @@ pub async fn pick_winner(
       }
     };
 
+    let minutes = DatabaseHandler::get_user_meditation_sum(
+      &mut transaction,
+      &guild_id,
+      &member.user.id,
+    )
+    .await?;
+
     DatabaseHandler::commit_transaction(transaction).await?;
 
-    finalize_winner(reserved_key, ctx, member, start_datetime).await?;
+    finalize_winner(reserved_key, ctx, member, minutes, start_datetime).await?;
+
     return Ok(());
   }
 
