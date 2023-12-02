@@ -23,11 +23,13 @@ impl BloomBotEmbed {
 pub struct Roles {
   pub meditation_challenger: u64,
   pub patreon: u64,
+  pub kofi: u64,
 }
 
 pub const ROLES: Roles = Roles {
   meditation_challenger: 796821826369617970,
   patreon: 543900027928444935,
+  kofi: 1083219974509826048,
 };
 
 pub struct Channels {
