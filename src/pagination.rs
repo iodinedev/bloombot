@@ -125,7 +125,7 @@ impl PaginationPage<'_> {
     embed.description(format!(
       "Showing entries {} to {}.",
       (self.page_number * TERMS_PER_PAGE) + 1,
-      self.entries.len()
+      (self.page_number * TERMS_PER_PAGE) + self.entries.len()
     ));
 
     let fields: Vec<(String, String, bool)> = self

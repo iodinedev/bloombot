@@ -1,10 +1,10 @@
 use anyhow::{Context as ErrorContext, Error, Result};
 use commands::{
-  add::add, add_key::add_key, coffee::coffee, complete::complete, courses::course, erase::erase,
-  glossary::glossary, hello::hello, list_keys::list_keys, manage::manage, pick_winner::pick_winner,
-  ping::ping, quote::quote, quotes::quotes, recent::recent, remove_entry::remove_entry,
-  remove_key::remove_key, remove_quote::remove_quote, stats::stats, streak::streak,
-  suggest::suggest, terms::terms, use_key::use_key,
+  add::add, add_key::add_key, coffee::coffee, complete::complete, courses::course,
+  erase::erase, glossary::glossary, hello::hello, help::help, list_keys::list_keys,
+  manage::manage, pick_winner::pick_winner, ping::ping, quote::quote, quotes::quotes,
+  recent::recent, remove_entry::remove_entry, remove_key::remove_key, stats::stats,
+  streak::streak, suggest::suggest, terms::terms, use_key::use_key,
 };
 use dotenv::dotenv;
 use log::{error, info};
@@ -51,6 +51,7 @@ async fn main() -> Result<()> {
         erase(),
         glossary(),
         hello(),
+        help(),
         list_keys(),
         manage(),
         pick_winner(),
@@ -60,7 +61,6 @@ async fn main() -> Result<()> {
         recent(),
         remove_entry(),
         remove_key(),
-        remove_quote(),
         stats(),
         streak(),
         suggest(),
@@ -78,7 +78,7 @@ async fn main() -> Result<()> {
       ..Default::default()
     })
     .token(token)
-    .intents(serenity::GatewayIntents::non_privileged())
+    .intents(serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::GUILD_MEMBERS)
     .setup(|ctx, _ready, framework| {
       Box::pin(async move {
         if let Ok(test_guild) = test_guild {
@@ -177,9 +177,9 @@ async fn event_handler(
   let database = &data.db;
 
   match event {
-    Event::GuildMemberAddition { new_member } => {
-      events::guild_member_addition(ctx, new_member).await?;
-    }
+    // Event::GuildMemberAddition { new_member } => {
+    //   events::guild_member_addition(ctx, new_member).await?;
+    // }
     Event::GuildMemberRemoval { user, .. } => {
       events::guild_member_removal(ctx, user).await?;
     }

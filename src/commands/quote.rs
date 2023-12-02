@@ -3,8 +3,14 @@ use crate::database::DatabaseHandler;
 use crate::Context;
 use anyhow::Result;
 
-/// Gets a motivational quote.
-#[poise::command(slash_command, member_cooldown = 1200)]
+/// Get a meditation/mindfulness quote
+/// 
+/// Get a random meditation/mindfulness quote.
+#[poise::command(
+  slash_command,
+  member_cooldown = 1200,
+  guild_only
+)]
 pub async fn quote(ctx: Context<'_>) -> Result<()> {
   let data = ctx.data();
 

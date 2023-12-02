@@ -81,17 +81,22 @@ impl PageRow for MeditationData {
 }
 
 pub struct QuoteData {
+  pub id: String,
   pub quote: String,
   pub author: Option<String>,
 }
 
 impl PageRow for QuoteData {
   fn title(&self) -> String {
-    self.quote.clone()
+    format!("`ID: {}`", self.id)
   }
 
   fn body(&self) -> String {
-    self.author.clone().unwrap_or("Anonymous".to_string())
+    format!(
+      "{}\n― {}",
+      self.quote.clone(),
+      self.author.clone().unwrap_or("Anonymous".to_string())
+    )
   }
 }
 
@@ -545,7 +550,7 @@ impl DatabaseHandler {
   ) -> Result<Vec<QuoteData>> {
     let rows = sqlx::query!(
       r#"
-        SELECT quote, author FROM quote WHERE guild_id = $1
+        SELECT record_id, quote, author FROM quote WHERE guild_id = $1
       "#,
       guild_id.to_string(),
     )
@@ -555,12 +560,60 @@ impl DatabaseHandler {
     let quotes = rows
       .into_iter()
       .map(|row| QuoteData {
+        id: row.record_id,
         quote: row.quote,
         author: row.author,
       })
       .collect();
 
     Ok(quotes)
+  }
+
+  pub async fn get_quote(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    quote_id: &str,
+  ) -> Result<Option<QuoteData>> {
+    let row = sqlx::query!(
+      r#"
+        SELECT record_id, quote, author FROM quote WHERE record_id = $1 AND guild_id = $2
+      "#,
+      quote_id,
+      guild_id.to_string(),
+    )
+    .fetch_optional(&mut **transaction)
+    .await?;
+
+    let quote = match row {
+      Some(row) => Some(QuoteData {
+        id: row.record_id,
+        quote: row.quote,
+        author: row.author,
+      }),
+      None => None,
+    };
+
+    Ok(quote)
+  }
+
+  pub async fn edit_quote(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    quote_id: &str,
+    quote: &str,
+    author: Option<&str>,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+        UPDATE quote SET quote = $1, author = $2 WHERE record_id = $3
+      "#,
+      quote,
+      author,
+      quote_id,
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
   }
 
   pub async fn get_random_motivation(
@@ -1123,7 +1176,7 @@ impl DatabaseHandler {
   ) -> Result<Option<QuoteData>> {
     let row = sqlx::query!(
       r#"
-        SELECT quote, author FROM quote WHERE guild_id = $1 ORDER BY RANDOM() LIMIT 1
+        SELECT record_id, quote, author FROM quote WHERE guild_id = $1 ORDER BY RANDOM() LIMIT 1
       "#,
       guild_id.to_string(),
     )
@@ -1132,6 +1185,7 @@ impl DatabaseHandler {
 
     let quote = match row {
       Some(row) => Some(QuoteData {
+        id: row.record_id,
         quote: row.quote,
         author: row.author,
       }),

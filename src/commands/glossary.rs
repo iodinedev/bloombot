@@ -7,17 +7,24 @@ use log::info;
 use pgvector;
 use poise::serenity_prelude as serenity;
 
-/// The glossary command.
+/// Glossary commands
+/// 
+/// Commands for interacting with the glossary.
+/// 
+/// Get `info` on a glossary entry, see a `list` of entries, or `search` for a relevant entry.
 #[poise::command(
   slash_command,
   subcommands("list", "info", "search"),
-  subcommand_required
+  subcommand_required,
+  guild_only
 )]
 pub async fn glossary(_: Context<'_>) -> Result<()> {
   Ok(())
 }
 
-/// Shows a list of all glossary terms.
+/// See a list of all glossary entries
+/// 
+/// Shows a list of all glossary entries.
 #[poise::command(slash_command)]
 pub async fn list(
   ctx: Context<'_>,
@@ -36,6 +43,8 @@ pub async fn list(
   let next_button_id = format!("{}next", ctx_id);
 
   let mut current_page = page.unwrap_or(0);
+
+  if current_page > 0 { current_page = current_page - 1 }
 
   let entries = DatabaseHandler::get_all_glossary_terms(&mut transaction, &guild_id).await?;
   let entries: Vec<PageRowRef> = entries.iter().map(|entry| entry as _).collect();
@@ -98,7 +107,9 @@ pub async fn list(
   Ok(())
 }
 
-/// Shows information about a glossary term.
+/// See information about a glossary entry
+/// 
+/// Shows information about a glossary entry.
 #[poise::command(slash_command)]
 pub async fn info(
   ctx: Context<'_>,
@@ -175,13 +186,15 @@ pub async fn info(
   Ok(())
 }
 
-/// Search glossary terms using keywords or phrases; our AI will find the closest matches.
+/// Search glossary entries using keywords or phrases
 ///
-/// For instance, let's assume that there is an entry with the following information:
+/// Searches glossary entries using keywords or phrases, leveraging AI to find the closest matches.
+/// 
+/// For example, let us assume that there is an entry with the following information:
 /// Term Name: `Hello`
 /// Definition: `An interjection used to express a greeting, answer a telephone, or attract attention.`
 ///
-/// You may search for `greeting` or `answer and attract attention` or something similar, and the AI will find the closest match.
+/// If you search for `greeting` or `answer and attract attention`, the AI will present the term as a match.
 #[poise::command(slash_command)]
 pub async fn search(
   ctx: Context<'_>,

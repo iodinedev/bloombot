@@ -3,11 +3,17 @@ use crate::database::DatabaseHandler;
 use crate::Context;
 use anyhow::Result;
 
+/// Remove a Playne key from the database
+/// 
 /// Removes a Playne key from the database.
+/// 
+/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",
+  default_member_permissions = "ADMINISTRATOR",
   rename = "removekey",
+  hide_in_help,
   guild_only
 )]
 pub async fn remove_key(

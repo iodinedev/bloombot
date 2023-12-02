@@ -5,10 +5,15 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-/// Commands for managing courses.
+/// Commands for managing courses
+/// 
+/// Commands to add, edit, list, or remove courses.
+/// 
+/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",
+  default_member_permissions = "ADMINISTRATOR",
   subcommands("add", "remove", "edit", "list"),
   subcommand_required,
   hide_in_help,
@@ -18,7 +23,9 @@ pub async fn course(_: Context<'_>) -> Result<()> {
   Ok(())
 }
 
-/// Adds a course and relevant graduate role to the database.
+/// Add a course and its associated graduate role to the database
+/// 
+/// Adds a course and its associated graduate role to the database.
 #[poise::command(slash_command)]
 pub async fn add(
   ctx: Context<'_>,
@@ -93,8 +100,8 @@ pub async fn add(
     &mut transaction,
     &guild_id,
     course_name.as_str(),
-    &graduate_role,
     &participant_role,
+    &graduate_role,
   )
   .await?;
 
@@ -109,16 +116,17 @@ pub async fn add(
   Ok(())
 }
 
-/// Updates an existing course's roles.
+/// Update the roles for an existing course
+/// 
+/// Updates the roles for an existing course.
 #[poise::command(slash_command)]
 pub async fn edit(
   ctx: Context<'_>,
   #[description = "Name of the course"] course_name: String,
   #[description = "Update the role that participants of the course are assumed to have"]
   participant_role: Option<serenity::Role>,
-  #[description = "Update the role that graduates of the course are given"] graduate_role: Option<
-    serenity::Role,
-  >,
+  #[description = "Update the role that graduates of the course are given"]
+  graduate_role: Option<serenity::Role>,
 ) -> Result<()> {
   if participant_role.is_none() && graduate_role.is_none() {
     ctx
@@ -144,7 +152,9 @@ pub async fn edit(
   Ok(())
 }
 
-/// Lists all the courses in the guild.
+/// List all courses
+/// 
+/// Lists all courses in the database.
 #[poise::command(slash_command)]
 pub async fn list(
   ctx: Context<'_>,
@@ -163,6 +173,8 @@ pub async fn list(
   let next_button_id = format!("{}next", ctx_id);
 
   let mut current_page = page.unwrap_or(0);
+
+  if current_page > 0 { current_page = current_page - 1 }
 
   let courses = DatabaseHandler::get_all_courses(&mut transaction, &guild_id).await?;
   let courses: Vec<PageRowRef> = courses.iter().map(|course| course as _).collect();
@@ -226,6 +238,8 @@ pub async fn list(
   Ok(())
 }
 
+/// Remove a course from the database
+/// 
 /// Removes a course from the database.
 #[poise::command(slash_command)]
 pub async fn remove(

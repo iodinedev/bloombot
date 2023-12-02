@@ -3,16 +3,20 @@ use anyhow::Result;
 use poise::serenity_prelude::{self as serenity, Context, Member};
 
 enum UpdateType {
-  BecamePatron,
+  BecamePatreonDonator,
+  BecameKofiDonator,
   StoppedPending,
 }
 
 impl UpdateType {
   fn get_type(old: &Member, new: &Member) -> Option<Self> {
-    let patron_role = serenity::RoleId(config::ROLES.patreon);
+    let patreon_role = serenity::RoleId(config::ROLES.patreon);
+    let kofi_role = serenity::RoleId(config::ROLES.kofi);
 
-    if !old.roles.contains(&patron_role) && new.roles.contains(&patron_role) {
-      Some(Self::BecamePatron)
+    if !old.roles.contains(&patreon_role) && new.roles.contains(&patreon_role) {
+      Some(Self::BecamePatreonDonator)
+    } else if !old.roles.contains(&kofi_role) && new.roles.contains(&kofi_role) {
+      Some(Self::BecameKofiDonator)
     } else if old.pending && !new.pending {
       Some(Self::StoppedPending)
     } else {
@@ -33,17 +37,33 @@ pub async fn guild_member_update(
 
   if let Some(update_type) = UpdateType::get_type(old, new) {
     match update_type {
-      UpdateType::BecamePatron => {
-        let patron_channel = serenity::ChannelId(config::CHANNELS.patreon);
+      UpdateType::BecamePatreonDonator => {
+        let donator_channel = serenity::ChannelId(config::CHANNELS.donators);
 
-        patron_channel
+        donator_channel
           .send_message(&ctx, |m| {
             m.embed(|e| {
               crate::config::BloomBotEmbed::from(e)
-                .title("New Patron")
+                .title(":tada: New Donator :tada:")
                 .description(format!(
-                  "Please welcome {} as a new Patron.\n\nThank you for your generosity, it help keeps this server running!",
-                  new.user.tag()
+                  "Please welcome <@{}> as a new donator on Patreon.\n\nThank you for your generosity! It helps keep this community alive <:loveit:579017125809881089>",
+                  new.user.id
+                ))
+            })
+          })
+          .await?;
+      }
+      UpdateType::BecameKofiDonator => {
+        let donator_channel = serenity::ChannelId(config::CHANNELS.donators);
+
+        donator_channel
+          .send_message(&ctx, |m| {
+            m.embed(|e| {
+              crate::config::BloomBotEmbed::from(e)
+                .title(":tada: New Donator :tada:")
+                .description(format!(
+                  "Please welcome <@{}> as a new donator on Ko-fi.\n\nThank you for your generosity! It helps keep this community alive <:loveit:579017125809881089>",
+                  new.user.id
                 ))
             })
           })
@@ -54,13 +74,15 @@ pub async fn guild_member_update(
 
         welcome_channel
           .send_message(&ctx, |m| {
-            m.embed(|e| {
-              config::BloomBotEmbed::from(e)
-                .title("New Member")
-                .description(format!(
-                  ":tada: **A new member has arrived!** :tada:\nPlease welcome {} to the Meditation Mind Discord <@&828291690917265418>!\nWe're glad you've joined us. <:aww:578864572979478558>",
-                  new.user.tag()
-                ))
+            m.content(format!("Please give <@{}> a warm welcome, <@&{}>!", new.user.id, config::ROLES.welcome_team))
+              .embed(|e| {
+                config::BloomBotEmbed::from(e)
+                  .title(":tada: A new member has arrived! :tada:")
+                  .description(format!(
+                    "Welcome to the Meditation Mind community, <@{}>!\n\nCheck out <id:customize> to grab some roles and customize your community experience.\n\nWe're glad you've joined us! <:aww:578864572979478558>",
+                    new.user.id
+                  ))
+                  .thumbnail("https://meditationmind.org/wp-content/uploads/2020/04/Webp.net-resizeimage-1.png")
             })
           })
           .await?;

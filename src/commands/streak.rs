@@ -3,7 +3,11 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-/// Shows your current meditation streak
+/// See your current meditation streak
+/// 
+/// Shows your current meditation streak.
+/// 
+/// Can also be used to check another member's streak.
 #[poise::command(slash_command, guild_only)]
 pub async fn streak(
   ctx: Context<'_>,

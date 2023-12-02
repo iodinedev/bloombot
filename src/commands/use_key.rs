@@ -2,11 +2,18 @@ use crate::database::DatabaseHandler;
 use crate::Context;
 use anyhow::Result;
 
-/// Selects an unused Steam key from the database, returning it and marking it as used.
+/// Retrieve a Playne key
+/// 
+/// Selects an unused Playne key from the database, returning it and marking it as used.
+/// 
+/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",
-  rename = "usekey"
+  default_member_permissions = "ADMINISTRATOR",
+  rename = "usekey",
+  hide_in_help,
+  guild_only
 )]
 pub async fn use_key(ctx: Context<'_>) -> Result<()> {
   ctx.defer_ephemeral().await?;

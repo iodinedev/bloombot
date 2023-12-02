@@ -7,18 +7,26 @@ use anyhow::Result;
 use chrono::Datelike;
 use poise::serenity_prelude::{self as serenity, Mentionable};
 
-/// Options for managing users' meditation entries.
+/// Commands for managing meditation entries
+/// 
+/// Commands to create, list, update, or delete meditation entries for a user, or completely reset a user's data.
+/// 
+/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   subcommands("create", "list", "update", "delete", "reset"),
   subcommand_required,
   required_permissions = "ADMINISTRATOR",
+  default_member_permissions = "ADMINISTRATOR",
+  hide_in_help,
   guild_only
 )]
 pub async fn manage(_: Context<'_>) -> Result<()> {
   Ok(())
 }
 
+/// Create a new meditation entry for a user. Note that all times are in UTC.
+/// 
 /// Creates a new meditation entry for the user. Note that all times are in UTC.
 #[poise::command(slash_command)]
 pub async fn create(
@@ -114,7 +122,9 @@ pub async fn create(
   Ok(())
 }
 
-/// Lists all meditation entries for the user.
+/// List all meditation entries for a user
+/// 
+/// Lists all meditation entries for a user.
 #[poise::command(slash_command)]
 pub async fn list(
   ctx: Context<'_>,
@@ -132,6 +142,8 @@ pub async fn list(
   let next_button_id = format!("{}next", ctx_id);
 
   let mut current_page = page.unwrap_or(0);
+
+  if current_page > 0 { current_page = current_page - 1 }
 
   let entries =
     DatabaseHandler::get_user_meditation_entries(&mut transaction, &guild_id, &user.id).await?;
@@ -196,7 +208,9 @@ pub async fn list(
   Ok(())
 }
 
-/// Updates a meditation entry for the user. Note that all times are in UTC.
+/// Update a meditation entry for a user. Note that all times are in UTC.
+/// 
+/// Updates a meditation entry for a user. Note that all times are in UTC.
 #[poise::command(slash_command)]
 pub async fn update(
   ctx: Context<'_>,
@@ -332,6 +346,8 @@ pub async fn update(
   }
 }
 
+/// Delete a meditation entry for a user
+/// 
 /// Deletes a meditation entry for the user.
 #[poise::command(slash_command)]
 pub async fn delete(
@@ -384,7 +400,9 @@ pub async fn delete(
   Ok(())
 }
 
-/// Resets all meditation entries for the user.
+/// Reset all meditation entries for a user
+/// 
+/// Resets all meditation entries for a user.
 #[poise::command(slash_command)]
 pub async fn reset(
   ctx: Context<'_>,

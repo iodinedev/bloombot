@@ -1,12 +1,18 @@
 use crate::commands::{commit_and_say, MessageType};
-use crate::config::{StreakRoles, TimeSumRoles};
+use crate::config::{StreakRoles, TimeSumRoles, BloomBotEmbed, CHANNELS};
 use crate::database::DatabaseHandler;
 use crate::Context;
 use anyhow::Result;
 use log::error;
 use poise::serenity_prelude::{self as serenity, Mentionable};
 
-/// Adds minutes to your meditation time.
+/// Add minutes to your meditation time
+/// 
+/// Adds a specified number of minutes to your meditation time. You can add minutes each time you meditate or add the combined minutes for multiple sessions.
+/// 
+/// You may wish to add large amounts of time on occasion, e.g., after a silent retreat. Time tracking is based on the honor system and members are welcome to track any legitimate time spent practicing.
+/// 
+/// Vanity roles are purely cosmetic, so there is nothing to be gained from cheating. Furthermore, exceedingly large false entries will skew the server stats, which is unfair to other members. Please be considerate.
 #[poise::command(slash_command, guild_only)]
 pub async fn add(
   ctx: Context<'_>,
@@ -133,6 +139,28 @@ pub async fn add(
             .await?;
           return Err(anyhow::anyhow!("Could not send message: {}", e));
         }
+      }
+
+      if confirm {
+        // Log large add in Bloom logs channel
+        let log_embed = BloomBotEmbed::new()
+          .title("Large Meditation Entry Added")
+          .description(format!(
+            "**User**: {}\n**Time**: {} minutes",
+          ctx.author(),
+            minutes
+          ))
+          .footer(|f| {
+            f.icon_url(ctx.author().avatar_url().unwrap_or_default())
+              .text(format!("Added by {}", ctx.author()))
+          })
+          .to_owned();
+
+        let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+
+        log_channel
+          .send_message(ctx, |f| f.set_embed(log_embed))
+          .await?;
       }
 
       return Ok(());

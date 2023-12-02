@@ -4,11 +4,18 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
+/// List all Playne keys in the database
+/// 
 /// Lists all Playne keys in the database.
+/// 
+/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   required_permissions = "ADMINISTRATOR",
-  rename = "listkeys"
+  default_member_permissions = "ADMINISTRATOR",
+  rename = "listkeys",
+  hide_in_help,
+  guild_only
 )]
 pub async fn list_keys(
   ctx: Context<'_>,
@@ -27,6 +34,8 @@ pub async fn list_keys(
   let next_button_id = format!("{}next", ctx_id);
 
   let mut current_page = page.unwrap_or(0);
+
+  if current_page > 0 { current_page = current_page - 1 }
 
   let keys = DatabaseHandler::get_all_steam_keys(&mut transaction, &guild_id).await?;
   let keys: Vec<PageRowRef> = keys.iter().map(|key| key as PageRowRef).collect();

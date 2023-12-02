@@ -3,8 +3,18 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-/// Deletes a message.
-#[poise::command(slash_command, required_permissions = "MANAGE_MESSAGES", hide_in_help)]
+/// Delete a message
+/// 
+/// Deletes a message and notifies the user via DM with an optional reason.
+/// 
+/// Requires `Manage Messages` permissions.
+#[poise::command(
+  slash_command,
+  required_permissions = "MANAGE_MESSAGES",
+  default_member_permissions = "MANAGE_MESSAGES",
+  hide_in_help,
+  guild_only
+)]
 pub async fn erase(
   ctx: Context<'_>,
   #[description = "The message to delete"] message: serenity::Message,
@@ -52,6 +62,10 @@ pub async fn erase(
     };
 
     dm_embed.field("Message Content", format!("```{}```", content), false);
+
+    dm_embed.footer(|f| f.text(
+      "If you have any questions or concerns regarding this action, please contact a moderator. Replies sent to Bloom are not viewable by staff."
+    ));
   }
 
   match message
@@ -89,9 +103,18 @@ pub async fn erase(
   }
 
   if !message.content.is_empty() {
+    // If longer than 1024 - 6 characters for the embed, truncate to 1024 - 3 for "..."
+    let content = match message.content.len() > 1018 {
+      true => format!(
+        "{}...",
+        message.content.chars().take(1015).collect::<String>()
+      ),
+      false => message.content.clone(),
+    };
+
     log_embed.field(
       "Message Content",
-      format!("```{}```", message.content),
+      format!("```{}```", content),
       false,
     );
   }

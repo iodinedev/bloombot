@@ -11,8 +11,8 @@ pub async fn guild_member_removal(ctx: &Context, user: &User) -> Result<()> {
         config::BloomBotEmbed::from(e)
           .title("Member Left")
           .description(format!(
-            "We wish you well on your future endeavors {}. :pray:",
-            user.tag()
+            "We wish you well on your future endeavors, {} :pray:",
+            user.name
           ))
       })
     })

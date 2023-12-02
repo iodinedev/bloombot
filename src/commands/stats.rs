@@ -14,13 +14,26 @@ pub enum StatsType {
   MeditationCount,
 }
 
-/// Gets the stats of the server or a specified user.
-#[poise::command(slash_command, subcommands("user", "server"), subcommand_required)]
+/// Show the stats for the server or a specified user
+/// 
+/// Shows the stats for the whole server or a specified user.
+/// 
+/// Defaults to daily minutes for the server or yourself. Optionally specify the user, type (minutes or session count), and/or timeframe (daily, weekly, monthly, or yearly).
+#[poise::command(
+  slash_command,
+  subcommands("user", "server"),
+  subcommand_required,
+  guild_only
+)]
 pub async fn stats(_: Context<'_>) -> Result<()> {
   Ok(())
 }
 
-/// Gets the stats of a specified user.
+/// Show the stats for a specified user
+/// 
+/// Shows the stats for a specified user.
+/// 
+/// Defaults to daily minutes for yourself. Optionally specify the user, type (minutes or session count), and/or timeframe (daily, weekly, monthly, or yearly).
 #[poise::command(slash_command)]
 pub async fn user(
   ctx: Context<'_>,
@@ -115,7 +128,11 @@ pub async fn user(
   Ok(())
 }
 
-/// Gets the stats of the current guild.
+/// Show the stats for the server
+/// 
+/// Shows the stats for the whole server.
+/// 
+/// Defaults to daily minutes for yourself. Optionally specify the user, type (minutes or session count), and/or timeframe (daily, weekly, monthly, or yearly).
 #[poise::command(slash_command)]
 pub async fn server(
   ctx: Context<'_>,

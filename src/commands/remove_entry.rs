@@ -5,8 +5,16 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-/// Removes one of your meditation entries
-#[poise::command(slash_command, rename = "remove")]
+/// Remove one of your meditation entries
+/// 
+/// Removes one of your meditation entries.
+/// 
+/// Use `/recent` to retrieve the ID for the entry you wish to remove.
+#[poise::command(
+  slash_command,
+  rename = "remove",
+  guild_only
+)]
 pub async fn remove_entry(
   ctx: Context<'_>,
   #[description = "The ID of the entry to remove"] id: String,
@@ -55,7 +63,7 @@ pub async fn remove_entry(
     })
     .to_owned();
 
-  let log_channel = serenity::ChannelId(CHANNELS.logs);
+  let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
 
   log_channel
     .send_message(ctx, |f| f.set_embed(log_embed))

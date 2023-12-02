@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE quote SET quote = $1, author = $2 WHERE record_id = $3\n      ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1355f743275dc63bf723e2adc0514868ae4e537ca15e39298e481578c919af1d"
+}

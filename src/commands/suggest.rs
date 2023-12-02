@@ -3,22 +3,37 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-/// Add a suggestion to the suggestions channel
+/// Submit a server suggestion anonymously
+/// 
+/// Submits an anonymous suggestion to the server suggestions channel, with voting reactions and a thread for discussion.
+/// 
+/// *Note: Suggestions are posted anonymously, but server staff will be able to see who created a suggestion.*
 #[poise::command(slash_command, member_cooldown = 3600, guild_only)]
 pub async fn suggest(
   ctx: Context<'_>,
   #[description = "The suggestion to add"] suggestion: String,
 ) -> Result<()> {
+  // Log suggestion in staff channel
+  let log_embed = BloomBotEmbed::new()
+    .title("New Suggestion")
+    .description(&suggestion)
+    .author(|f| f.name(ctx.author().tag()).icon_url(ctx.author().face()))
+    .to_owned();
+
+  let log_channel = serenity::ChannelId(CHANNELS.logs);
+
+  log_channel
+    .send_message(ctx, |f| f.set_embed(log_embed))
+    .await?;
+
+  // Post suggestion and reactions
   let channel_id = serenity::ChannelId(CHANNELS.suggestion);
 
   let suggestion_message = channel_id
     .send_message(ctx, |f| {
       f.embed(|e| {
         BloomBotEmbed::from(e)
-          .title("Suggestion")
           .description(suggestion)
-          .author(|f| f.name(ctx.author().tag()).icon_url(ctx.author().face()))
-          .footer(|f| f.text(format!("User ID: {}", ctx.author().id)))
       })
     })
     .await?;
@@ -36,10 +51,13 @@ pub async fn suggest(
     .await?;
 
   ctx
-    .say(format!(
-      "Your suggestion has been added to <#{}>.",
-      channel_id
-    ))
+    .send(|f| {
+      f.content(format!(
+        "Your suggestion has been added to <#{}>.",
+        channel_id
+      ))
+      .ephemeral(true)
+    })
     .await?;
 
   Ok(())

@@ -3,8 +3,17 @@ use crate::database::DatabaseHandler;
 use crate::Context;
 use anyhow::Result;
 
-/// Mark that you have completed a course.
-#[poise::command(slash_command, guild_only, hide_in_help)]
+/// Indicate that you have completed a course
+/// 
+/// Indicates that you have completed a course.
+/// 
+/// Marks the specified course as complete and awards the graduate role for that course.
+#[poise::command(
+  slash_command,
+  rename = "coursecomplete",
+  hide_in_help,
+  guild_only
+)]
 pub async fn complete(
   ctx: Context<'_>,
   #[description = "The course you have completed"] course_name: String,
