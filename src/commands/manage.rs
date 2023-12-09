@@ -1,5 +1,5 @@
 use crate::commands::{commit_and_say, MessageType};
-use crate::config::BloomBotEmbed;
+use crate::config::{BloomBotEmbed, CHANNELS};
 use crate::database::DatabaseHandler;
 use crate::pagination::{PageRowRef, Pagination};
 use crate::Context;
@@ -354,7 +354,7 @@ pub async fn delete(
   ctx: Context<'_>,
   #[description = "The entry to delete"] entry_id: String,
 ) -> Result<()> {
-  let existing_entry = {
+  /* let existing_entry = {
     let data = ctx.data();
     let guild_id = ctx.guild_id().unwrap();
 
@@ -377,11 +377,31 @@ pub async fn delete(
       })
       .await?;
     return Ok(());
-  }
+  } */
 
   let data = ctx.data();
+  let guild_id = ctx.guild_id().unwrap();
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
+
+  let entry =
+    match DatabaseHandler::get_meditation_entry(&mut transaction, &guild_id, &entry_id).await? {
+      Some(entry) => entry,
+      None => {
+        ctx
+          .send(|f| {
+            f.embed(|e| {
+              e.title("Error")
+                .description(format!("No meditation entry found with ID `{}`.", entry_id))
+                .footer(|f| f.text("Use `/manage list` to see a user's entries."))
+                .color(serenity::Color::RED)
+            })
+            .ephemeral(true)
+          })
+          .await?;
+        return Ok(());
+      }
+    };
 
   DatabaseHandler::delete_meditation_entry(&mut transaction, &entry_id).await?;
 
@@ -389,6 +409,7 @@ pub async fn delete(
     .title("Success")
     .description("Meditation entry deleted.")
     .to_owned();
+  
   commit_and_say(
     ctx,
     transaction,
@@ -396,6 +417,27 @@ pub async fn delete(
     true,
   )
   .await?;
+
+  let log_embed = BloomBotEmbed::new()
+    .title("Meditation Entry Deleted")
+    .description(format!(
+      "**User**: <@{}>\n**ID**: {}\n**Date**: {}\n**Time**: {} minutes",
+      entry.user_id,
+      entry.id,
+      entry.occurred_at.format("%B %d, %Y"),
+      entry.meditation_minutes
+    ))
+    .footer(|f| {
+      f.icon_url(ctx.author().avatar_url().unwrap_or_default())
+        .text(format!("Deleted by {}", ctx.author()))
+    })
+    .to_owned();
+
+  let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+
+  log_channel
+    .send_message(ctx, |f| f.set_embed(log_embed))
+    .await?;
 
   Ok(())
 }
