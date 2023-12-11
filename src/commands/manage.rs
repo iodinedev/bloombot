@@ -16,8 +16,8 @@ use poise::serenity_prelude::{self as serenity, Mentionable};
   slash_command,
   subcommands("create", "list", "update", "delete", "reset"),
   subcommand_required,
-  required_permissions = "ADMINISTRATOR",
-  default_member_permissions = "ADMINISTRATOR",
+  required_permissions = "BAN_MEMBERS",
+  default_member_permissions = "BAN_MEMBERS",
   hide_in_help,
   guild_only
 )]
@@ -111,6 +111,7 @@ pub async fn create(
     .title("Success")
     .description(format!("Meditation entry created for {}.", user.mention()))
     .to_owned();
+
   commit_and_say(
     ctx,
     transaction,
@@ -118,6 +119,26 @@ pub async fn create(
     true,
   )
   .await?;
+
+  let log_embed = BloomBotEmbed::new()
+    .title("Meditation Entry Created")
+    .description(format!(
+      "**User**: <@{}>\n**Date**: {}\n**Time**: {} minutes",
+      user.id,
+      datetime.format("%B %d, %Y"),
+      minutes
+    ))
+    .footer(|f| {
+      f.icon_url(ctx.author().avatar_url().unwrap_or_default())
+        .text(format!("Created by {}", ctx.author()))
+    })
+    .to_owned();
+
+  let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+
+  log_channel
+    .send_message(ctx, |f| f.set_embed(log_embed))
+    .await?;
 
   Ok(())
 }
@@ -326,6 +347,33 @@ pub async fn update(
       )
       .await?;
 
+      let log_embed = BloomBotEmbed::new()
+        .title("Meditation Entry Updated")
+        .description(format!(
+          "**User**: <@{}>\n**ID**: {}\n\n
+          __**Before:**__\n
+          **Date**: {}\n**Time**: {} minutes\n\n
+          __**After:**__\n
+          **Date**: {}\n**Time**: {} minutes",
+          existing_entry.user_id,
+          entry_id,
+          existing_date.format("%B %d, %Y"),
+          existing_entry.meditation_minutes,
+          datetime.format("%B %d, %Y"),
+          minutes
+        ))
+        .footer(|f| {
+          f.icon_url(ctx.author().avatar_url().unwrap_or_default())
+            .text(format!("Updated by {}", ctx.author()))
+        })
+        .to_owned();
+
+      let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+
+      log_channel
+        .send_message(ctx, |f| f.set_embed(log_embed))
+        .await?;
+
       Ok(())
     },
     None => {
@@ -517,6 +565,25 @@ pub async fn reset(
       {
         Ok(_) => {
           DatabaseHandler::commit_transaction(transaction).await?;
+
+          let log_embed = BloomBotEmbed::new()
+            .title("Meditation Entries Reset")
+            .description(format!(
+              "**User**: <@{}>",
+              user.id
+            ))
+            .footer(|f| {
+              f.icon_url(ctx.author().avatar_url().unwrap_or_default())
+                .text(format!("Reset by {}", ctx.author()))
+            })
+            .to_owned();
+        
+          let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+        
+          log_channel
+            .send_message(ctx, |f| f.set_embed(log_embed))
+            .await?;
+          
           return Ok(());
         }
         Err(e) => {
