@@ -350,11 +350,7 @@ pub async fn update(
       let log_embed = BloomBotEmbed::new()
         .title("Meditation Entry Updated")
         .description(format!(
-          "**User**: <@{}>\n**ID**: {}\n\n
-          __**Before:**__\n
-          **Date**: {}\n**Time**: {} minutes\n\n
-          __**After:**__\n
-          **Date**: {}\n**Time**: {} minutes",
+          "**User**: <@{}>\n**ID**: {}\n\n__**Before:**__\n**Date**: {}\n**Time**: {} minutes\n\n__**After:**__\n**Date**: {}\n**Time**: {} minutes",
           existing_entry.user_id,
           entry_id,
           existing_date.format("%B %d, %Y"),
