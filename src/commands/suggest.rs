@@ -40,10 +40,14 @@ pub async fn suggest(
   // Start thread for suggestion
   channel_id
     .create_public_thread(ctx, suggestion_message.id, |f| {
-      f.name(format!(
-          "Discussion: {}...",
-          suggestion.chars().take(80).collect::<String>()
-        ))
+      f.name(
+          if suggestion.chars().count() > 85 {
+            format!("Discussion: {}...",
+            suggestion.chars().take(85).collect::<String>())
+          } else {
+            format!("Discussion: {}", suggestion)
+          }
+        )
         .auto_archive_duration(1440)
         .kind(serenity::ChannelType::PublicThread)
     })
