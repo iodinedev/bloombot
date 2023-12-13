@@ -468,6 +468,54 @@ impl DatabaseHandler {
     user_id_stream
   }
 
+  pub async fn get_winner_candidate_meditation_sum(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+    start_date: chrono::DateTime<Utc>,
+    end_date: chrono::DateTime<Utc>,
+  ) -> Result<i64> {
+    let row = sqlx::query!(
+      r#"
+        SELECT SUM(meditation_minutes) AS winner_candidate_total FROM meditation WHERE user_id = $1 AND guild_id = $2 AND occurred_at >= $3 AND occurred_at <= $4
+      "#,
+      user_id.to_string(),
+      guild_id.to_string(),
+      start_date,
+      end_date,
+    )
+    .fetch_one(&mut **transaction)
+    .await?;
+
+    let winner_candidate_total = row.winner_candidate_total.unwrap();
+
+    Ok(winner_candidate_total)
+  }
+
+  pub async fn get_winner_candidate_meditation_count(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+    start_date: chrono::DateTime<Utc>,
+    end_date: chrono::DateTime<Utc>,
+  ) -> Result<u64> {
+    let row = sqlx::query!(
+      r#"
+        SELECT COUNT(record_id) AS winner_candidate_total FROM meditation WHERE user_id = $1 AND guild_id = $2 AND occurred_at >= $3 AND occurred_at <= $4
+      "#,
+      user_id.to_string(),
+      guild_id.to_string(),
+      start_date,
+      end_date,
+    )
+    .fetch_one(&mut **transaction)
+    .await?;
+
+    let winner_candidate_total = row.winner_candidate_total.unwrap();
+
+    Ok(winner_candidate_total.try_into().unwrap())
+  }
+
   pub async fn get_user_meditation_sum(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     guild_id: &serenity::GuildId,
@@ -495,7 +543,7 @@ impl DatabaseHandler {
   ) -> Result<u64> {
     let row = sqlx::query!(
       r#"
-        SELECT SUM(meditation_minutes) AS user_total FROM meditation WHERE user_id = $1 AND guild_id = $2
+        SELECT COUNT(record_id) AS user_total FROM meditation WHERE user_id = $1 AND guild_id = $2
       "#,
       user_id.to_string(),
       guild_id.to_string(),

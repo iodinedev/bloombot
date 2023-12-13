@@ -285,6 +285,29 @@ pub async fn pick_winner(
       continue;
     }
 
+    let challenge_minutes = DatabaseHandler::get_winner_candidate_meditation_sum(
+      &mut transaction,
+      &guild_id,
+      &member.user.id,
+      start_datetime,
+      end_datetime,
+    )
+    .await?;
+
+    let challenge_count = DatabaseHandler::get_winner_candidate_meditation_count(
+      &mut transaction,
+      &guild_id,
+      &member.user.id,
+      start_datetime,
+      end_datetime,
+    )
+    .await?;
+    
+    // Make sure user has at least 30 minutes and 8 sessions during the challenge period
+    if challenge_minutes < 30 || challenge_count < 8 {
+      continue;
+    }
+
     let reserved_key = match DatabaseHandler::reserve_key(
       &mut transaction,
       &guild_id,
@@ -301,16 +324,9 @@ pub async fn pick_winner(
       }
     };
 
-    let minutes = DatabaseHandler::get_user_meditation_sum(
-      &mut transaction,
-      &guild_id,
-      &member.user.id,
-    )
-    .await?;
-
     DatabaseHandler::commit_transaction(transaction).await?;
 
-    finalize_winner(reserved_key, ctx, member, minutes, start_datetime).await?;
+    finalize_winner(reserved_key, ctx, member, challenge_minutes, start_datetime).await?;
 
     return Ok(());
   }

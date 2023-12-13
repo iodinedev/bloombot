@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT SUM(meditation_minutes) AS winner_candidate_total FROM meditation WHERE user_id = $1 AND guild_id = $2 AND occurred_at >= $3 AND occurred_at <= $4\n      ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "winner_candidate_total",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "5f931e3164a37cf620dfb176ff91fd4bdaadc753294f1e6b09424a3a2489ce1c"
+}
