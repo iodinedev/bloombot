@@ -160,6 +160,23 @@ async fn error_handler(error: poise::FrameworkError<'_, Data, Error>) {
 
       error!("\tUser: {}#{}", user.name, user.discriminator);
     }
+    poise::FrameworkError::ArgumentParse { error, input, ctx } => {
+      let response = if let Some(input) = input {
+        format!(
+          "**Cannot parse `{}` as argument: {}**",
+          input, error
+        )
+      } else {
+        format!("**{}**", error)
+      };
+
+      match ctx.send(|f| f.content(response).ephemeral(true)).await {
+        Ok(_) => {}
+        Err(e) => {
+          error!("While handling error, could not send message: {}", e);
+        }
+      };
+    }
     error => {
       if let Err(e) = poise::builtins::on_error(error).await {
         println!("Error while handling error: {}", e)
