@@ -27,10 +27,23 @@ pub async fn erase(
   let channel_id = message.channel_id;
   let message_id = message.id;
 
-  ctx
-    .http()
-    .delete_message(channel_id.into(), message_id.into())
-    .await?;
+  // ctx
+  //   .http()
+  //   .delete_message(channel_id.into(), message_id.into())
+  //   .await?;
+
+  // Add error handling for invalid message ID argument
+  match ctx.http().delete_message(channel_id.into(), message_id.into()).await {
+    Ok(_) => {}
+    Err(e) => {
+      ctx.send(|f| {
+        f.content(":x: Message could not be erased. Please check the message ID and try again.")
+          .ephemeral(true)
+      })
+      .await?;
+      return Err(anyhow::anyhow!("Could not erase message:\n{}", e));
+    }
+  }
 
   let mod_confirmation = ctx
     .send(|f| {
