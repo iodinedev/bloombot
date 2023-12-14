@@ -2,11 +2,98 @@ use crate::commands::{commit_and_say, MessageType};
 use crate::config::{StreakRoles, TimeSumRoles, BloomBotEmbed, CHANNELS};
 use crate::database::DatabaseHandler;
 use crate::Context;
+use chrono::Duration;
 use anyhow::Result;
 use log::error;
 use poise::serenity_prelude::{self as serenity, Mentionable};
 
-/// Add minutes to your meditation time
+#[derive(poise::ChoiceParameter)]
+pub enum OffsetChoices {
+  #[name = "UTC-12 (BIT)"]
+  UTCMinus12,
+  #[name = "UTC-11 (NUT, SST)"]
+  UTCMinus11,
+  #[name = "UTC-10 (CKT, HAST, HST, TAHT)"]
+  UTCMinus10,
+  #[name = "UTC-09:30 (MART, MIT)"]
+  UTCMinus9_30,
+  #[name = "UTC-09 (AKST, GAMT, GIT, HADT)"]
+  UTCMinus9,
+  #[name = "UTC-08 (AKDT, CIST, PST)"]
+  UTCMinus8,
+  #[name = "UTC-07 (MST, PDT)"]
+  UTCMinus7,
+  #[name = "UTC-06 (CST, EAST, GALT, MDT)"]
+  UTCMinus6,
+  #[name = "UTC-05 (ACT, CDT, COT, CST, EASST, ECT, EST, PET)"]
+  UTCMinus5,
+  #[name = "UTC-04:30 (VET)"]
+  UTCMinus4_30,
+  #[name = "UTC-04 (AMT, AST, BOT, CDT, CLT, COST, ECT, EDT, FKT, GYT, PYT)"]
+  UTCMinus4,
+  #[name = "UTC-03:30 (NST, NT)"]
+  UTCMinus3_30,
+  #[name = "UTC-03 (ADT, AMST, ART, BRT, CLST, FKST, GFT, PMST, PYST, ROTT, SRT, UYT)"]
+  UTCMinus3,
+  #[name = "UTC-02:30 (NDT)"]
+  UTCMinus2_30,
+  #[name = "UTC-02 (BRST, FNT, GST, PMDT, UYST)"]
+  UTCMinus2,
+  #[name = "UTC-01 (AZOST, CVT, EGT)"]
+  UTCMinus1,
+  #[name = "UTC (GMT, IBST, WET, Z)"]
+  UTC,
+  #[name = "UTC+01 (BST, CET, IST, WAT, WEST)"]
+  UTCPlus1,
+  #[name = "UTC+02 (CAT, CEST, EET, IST, SAST, WAST)"]
+  UTCPlus2,
+  #[name = "UTC+03 (AST, EAT, EEST, FET, IDT, IOT, MSK, USZ1)"]
+  UTCPlus3,
+  #[name = "UTC+03:30 (IRST)"]
+  UTCPlus3_30,
+  #[name = "UTC+04 (AMT, AZT, GET, GST, MUT, RET, SAMT, SCT, VOLT)"]
+  UTCPlus4,
+  #[name = "UTC+04:30 (AFT, IRDT)"]
+  UTCPlus4_30,
+  #[name = "UTC+05 (HMT, MAWT, MVT, ORAT, PKT, TFT, TJT, TMT, UZT, YEKT)"]
+  UTCPlus5,
+  #[name = "UTC+05:30 (IST, SLST)"]
+  UTCPlus5_30,
+  #[name = "UTC+05:45 (NPT)"]
+  UTCPlus5_45,
+  #[name = "UTC+06 (BDT, BIOT, BST, BTT, KGT, OMST, VOST)"]
+  UTCPlus6,
+  #[name = "UTC+06:30 (CCT, MMT, MST)"]
+  UTCPlus6_30,
+  #[name = "UTC+07 (CXT, DAVT, HOVT, ICT, KRAT, THA, WIT)"]
+  UTCPlus7,
+  #[name = "UTC+08 (ACT, AWST, BDT, CHOT, CIT, CST, CT, HKT, IRKT, MST, MYT, PST, SGT, SST, ULAT, WST)"]
+  UTCPlus8,
+  #[name = "UTC+08:45 (CWST)"]
+  UTCPlus8_45,
+  #[name = "UTC+09 (AWDT, EIT, JST, KST, TLT, YAKT)"]
+  UTCPlus9,
+  #[name = "UTC+09:30 (ACST, CST)"]
+  UTCPlus9_30,
+  #[name = "UTC+10 (AEST, ChST, CHUT, DDUT, EST, PGT, VLAT)"]
+  UTCPlus10,
+  #[name = "UTC+10:30 (ACDT, CST, LHST)"]
+  UTCPlus10_30,
+  #[name = "UTC+11 (AEDT, BST, KOST, LHST, MIST, NCT, PONT, SAKT, SBT, SRET, VUT, NFT)"]
+  UTCPlus11,
+  #[name = "UTC+12 (FJT, GILT, MAGT, MHT, NZST, PETT, TVT, WAKT)"]
+  UTCPlus12,
+  #[name = "UTC+12:45 (CHAST)"]
+  UTCPlus12_45,
+  #[name = "UTC+13 (NZDT, PHOT, TKT, TOT)"]
+  UTCPlus13,
+  #[name = "UTC+13:45 (CHADT)"]
+  UTCPlus13_45,
+  #[name = "UTC+14 (LINT)"]
+  UTCPlus14,
+}
+
+/// Add minutes to your meditation time, with optional UTC offset
 /// 
 /// Adds a specified number of minutes to your meditation time. You can add minutes each time you meditate or add the combined minutes for multiple sessions.
 /// 
@@ -19,6 +106,8 @@ pub async fn add(
   #[description = "Number of minutes to add"]
   #[min = 1]
   minutes: i32,
+  #[description = "Local time zone offset from UTC"]
+  offset: Option<OffsetChoices>,
 ) -> Result<()> {
   let data = ctx.data();
 
@@ -27,7 +116,60 @@ pub async fn add(
   let user_id = ctx.author().id;
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
-  DatabaseHandler::add_minutes(&mut transaction, &guild_id, &user_id, minutes).await?;
+
+  let minutes_difference = match offset {
+    Some(offset) => match offset {
+      OffsetChoices::UTCMinus12 => -720,
+      OffsetChoices::UTCMinus11 => -660,
+      OffsetChoices::UTCMinus10 => -600,
+      OffsetChoices::UTCMinus9_30 => -570,
+      OffsetChoices::UTCMinus9 => -540,
+      OffsetChoices::UTCMinus8 => -480,
+      OffsetChoices::UTCMinus7 => -420,
+      OffsetChoices::UTCMinus6 => -360,
+      OffsetChoices::UTCMinus5 => -300,
+      OffsetChoices::UTCMinus4_30 => -270,
+      OffsetChoices::UTCMinus4 => -240,
+      OffsetChoices::UTCMinus3_30 => -210,
+      OffsetChoices::UTCMinus3 => -180,
+      OffsetChoices::UTCMinus2_30 => -150,
+      OffsetChoices::UTCMinus2 => -120,
+      OffsetChoices::UTCMinus1 => -60,
+      OffsetChoices::UTC => 0,
+      OffsetChoices::UTCPlus1 => 60,
+      OffsetChoices::UTCPlus2 => 120,
+      OffsetChoices::UTCPlus3 => 180,
+      OffsetChoices::UTCPlus3_30 => 210,
+      OffsetChoices::UTCPlus4 => 240,
+      OffsetChoices::UTCPlus4_30 => 270,
+      OffsetChoices::UTCPlus5 => 300,
+      OffsetChoices::UTCPlus5_30 => 330,
+      OffsetChoices::UTCPlus5_45 => 345,
+      OffsetChoices::UTCPlus6 => 360,
+      OffsetChoices::UTCPlus6_30 => 390,
+      OffsetChoices::UTCPlus7 => 420,
+      OffsetChoices::UTCPlus8 => 480,
+      OffsetChoices::UTCPlus8_45 => 525,
+      OffsetChoices::UTCPlus9 => 540,
+      OffsetChoices::UTCPlus9_30 => 570,
+      OffsetChoices::UTCPlus10 => 600,
+      OffsetChoices::UTCPlus10_30 => 630,
+      OffsetChoices::UTCPlus11 => 660,
+      OffsetChoices::UTCPlus12 => 720,
+      OffsetChoices::UTCPlus12_45 => 765,
+      OffsetChoices::UTCPlus13 => 780,
+      OffsetChoices::UTCPlus13_45 => 825,
+      OffsetChoices::UTCPlus14 => 840,
+    },
+    None => 0
+  };
+
+  if minutes_difference != 0 {
+    let adjusted_datetime = chrono::Utc::now() + Duration::minutes(minutes_difference);
+    DatabaseHandler::create_meditation_entry(&mut transaction, &guild_id, &user_id, minutes, adjusted_datetime).await?;
+  } else {
+    DatabaseHandler::add_minutes(&mut transaction, &guild_id, &user_id, minutes).await?;
+  }
 
   let user_sum =
     DatabaseHandler::get_user_meditation_sum(&mut transaction, &guild_id, &user_id).await?;
