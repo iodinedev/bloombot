@@ -2,12 +2,12 @@ use crate::commands::{commit_and_say, MessageType};
 use crate::config::{StreakRoles, TimeSumRoles, BloomBotEmbed, CHANNELS};
 use crate::database::DatabaseHandler;
 use crate::Context;
-use chrono::Duration;
+//use chrono::Duration;
 use anyhow::Result;
 use log::error;
 use poise::serenity_prelude::{self as serenity, Mentionable};
 
-#[derive(poise::ChoiceParameter)]
+/*#[derive(poise::ChoiceParameter)]
 pub enum OffsetChoices {
   #[name = "UTC-12 (BIT)"]
   UTCMinus12,
@@ -91,7 +91,7 @@ pub enum OffsetChoices {
   UTCPlus13_45,
   #[name = "UTC+14 (LINT)"]
   UTCPlus14,
-}
+}*/
 
 /// Add minutes to your meditation time, with optional UTC offset
 /// 
@@ -106,8 +106,8 @@ pub async fn add(
   #[description = "Number of minutes to add"]
   #[min = 1]
   minutes: i32,
-  #[description = "Local time zone offset from UTC"]
-  offset: Option<OffsetChoices>,
+  //#[description = "Local time zone offset from UTC"]
+  //offset: Option<OffsetChoices>,
 ) -> Result<()> {
   let data = ctx.data();
 
@@ -117,7 +117,7 @@ pub async fn add(
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
-  let minutes_difference = match offset {
+  /*let minutes_difference = match offset {
     Some(offset) => match offset {
       OffsetChoices::UTCMinus12 => -720,
       OffsetChoices::UTCMinus11 => -660,
@@ -162,14 +162,14 @@ pub async fn add(
       OffsetChoices::UTCPlus14 => 840,
     },
     None => 0
-  };
+  };*/
 
-  if minutes_difference != 0 {
-    let adjusted_datetime = chrono::Utc::now() + Duration::minutes(minutes_difference);
-    DatabaseHandler::create_meditation_entry(&mut transaction, &guild_id, &user_id, minutes, adjusted_datetime).await?;
-  } else {
+  //if minutes_difference != 0 {
+  //  let adjusted_datetime = chrono::Utc::now() + Duration::minutes(minutes_difference);
+  //  DatabaseHandler::create_meditation_entry(&mut transaction, &guild_id, &user_id, minutes, adjusted_datetime).await?;
+  //} else {
     DatabaseHandler::add_minutes(&mut transaction, &guild_id, &user_id, minutes).await?;
-  }
+  //}
 
   let user_sum =
     DatabaseHandler::get_user_meditation_sum(&mut transaction, &guild_id, &user_id).await?;
