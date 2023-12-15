@@ -147,6 +147,13 @@ impl PageRow for CourseData {
   }
 }
 
+pub struct ExtendedCourseData {
+  pub course_name: String,
+  pub participant_role: serenity::RoleId,
+  pub graduate_role: serenity::RoleId,
+  pub guild_id: serenity::GuildId,
+}
+
 #[derive(Debug)]
 pub struct Term {
   pub id: String,
@@ -1052,6 +1059,34 @@ impl DatabaseHandler {
     };
 
     Ok(course_data)
+  }
+
+  pub async fn get_course_in_dm(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    course_name: &str,
+  ) -> Result<Option<ExtendedCourseData>> {
+    let row = sqlx::query!(
+      r#"
+        SELECT course_name, participant_role, graduate_role, guild_id
+        FROM course
+        WHERE LOWER(course_name) = LOWER($1)
+      "#,
+      course_name,
+    )
+    .fetch_optional(&mut **transaction)
+    .await?;
+
+    let extended_course_data = match row {
+      Some(row) => Some(ExtendedCourseData {
+        course_name: row.course_name,
+        participant_role: serenity::RoleId(row.participant_role.parse::<u64>()?),
+        graduate_role: serenity::RoleId(row.graduate_role.parse::<u64>()?),
+        guild_id: serenity::GuildId(row.guild_id.expect("guild_id should not be empty in course database").parse::<u64>().unwrap()),
+      }),
+      None => None,
+    };
+
+    Ok(extended_course_data)
   }
 
   pub async fn get_possible_course(

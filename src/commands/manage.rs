@@ -4,7 +4,7 @@ use crate::database::DatabaseHandler;
 use crate::pagination::{PageRowRef, Pagination};
 use crate::Context;
 use anyhow::Result;
-use chrono::Datelike;
+use chrono::{Datelike, Timelike};
 use poise::serenity_prelude::{self as serenity, Mentionable};
 
 /// Commands for managing meditation entries
@@ -293,6 +293,8 @@ pub async fn update(
       let year = year.unwrap_or(existing_date.year());
       let month = month.unwrap_or(existing_date.month());
       let day = day.unwrap_or(existing_date.day());
+      let hour = hour.unwrap_or(existing_date.hour());
+      let minute = minute.unwrap_or(existing_date.minute());
 
       let date = match chrono::NaiveDate::from_ymd_opt(year as i32, month, day) {
         Some(date) => date,
@@ -311,7 +313,7 @@ pub async fn update(
         }
       };
 
-      let time = match chrono::NaiveTime::from_hms_opt(hour.unwrap_or(0), minute.unwrap_or(0), 0) {
+      let time = match chrono::NaiveTime::from_hms_opt(hour, minute, 0) {
         Some(time) => time,
         None => {
           ctx
@@ -320,8 +322,8 @@ pub async fn update(
                 e.title("Error")
                   .description(format!(
                     "Invalid time provided: {}:{}",
-                    hour.unwrap_or(0),
-                    minute.unwrap_or(0)
+                    hour,
+                    minute
                   ))
                   .color(serenity::Color::RED)
               })
@@ -411,31 +413,6 @@ pub async fn delete(
   ctx: Context<'_>,
   #[description = "The entry to delete"] entry_id: String,
 ) -> Result<()> {
-  /* let existing_entry = {
-    let data = ctx.data();
-    let guild_id = ctx.guild_id().unwrap();
-
-    let mut transaction = data.db.start_transaction_with_retry(5).await?;
-
-    DatabaseHandler::get_meditation_entry(&mut transaction, &guild_id, &entry_id).await?
-  }
-  .is_some();
-
-  if !existing_entry {
-    ctx
-      .send(|f| {
-        f.embed(|e| {
-          e.title("Error")
-            .description(format!("No meditation entry found with ID `{}`.", entry_id))
-            .footer(|f| f.text("Use `/manage list` to see a user's entries."))
-            .color(serenity::Color::RED)
-        })
-        .ephemeral(true)
-      })
-      .await?;
-    return Ok(());
-  } */
-
   let data = ctx.data();
   let guild_id = ctx.guild_id().unwrap();
 

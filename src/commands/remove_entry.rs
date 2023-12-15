@@ -51,7 +51,7 @@ pub async fn remove_entry(
   let log_embed = BloomBotEmbed::new()
     .title("Meditation Entry Removed")
     .description(format!(
-      "**User**: {}\n**ID**: {}\n**Date**: {}\n**Time**: {} minutes",
+      "**User**: {}\n**ID**: {}\n**Date**: {}\n**Time**: {} minute(s)",
       ctx.author(),
       entry.id,
       entry.occurred_at.format("%B %d, %Y"),
