@@ -108,8 +108,13 @@ pub async fn create(
   .await?;
 
   let success_embed = BloomBotEmbed::new()
-    .title("Success")
-    .description(format!("Meditation entry created for {}.", user.mention()))
+    .title("Meditation Entry Created")
+    .description(format!(
+      "**User**: <@{}>\n**Date**: {}\n**Time**: {} minute(s)",
+      user.id,
+      datetime.format("%B %d, %Y"),
+      minutes
+    ))
     .to_owned();
 
   commit_and_say(
@@ -123,7 +128,7 @@ pub async fn create(
   let log_embed = BloomBotEmbed::new()
     .title("Meditation Entry Created")
     .description(format!(
-      "**User**: <@{}>\n**Date**: {}\n**Time**: {} minutes",
+      "**User**: <@{}>\n**Date**: {}\n**Time**: {} minute(s)",
       user.id,
       datetime.format("%B %d, %Y"),
       minutes
@@ -336,8 +341,16 @@ pub async fn update(
       DatabaseHandler::update_meditation_entry(&mut transaction, &entry_id, minutes, datetime).await?;
 
       let success_embed = BloomBotEmbed::new()
-        .title("Success")
-        .description("Meditation entry updated.")
+        .title("Meditation Entry Updated")
+        .description(format!(
+          "**User**: <@{}>\n**ID**: {}\n\n**Before:** {} minute(s) on {}\n**After:** {} minute(s) on {}",
+          existing_entry.user_id,
+          entry_id,
+          existing_entry.meditation_minutes,
+          existing_date.format("%B %d, %Y at %l:%M %P"),
+          minutes,
+          datetime.format("%B %d, %Y at %l:%M %P")
+        ))
         .to_owned();
       commit_and_say(
         ctx,
@@ -350,12 +363,12 @@ pub async fn update(
       let log_embed = BloomBotEmbed::new()
         .title("Meditation Entry Updated")
         .description(format!(
-          "**User**: <@{}>\n**ID**: {}\n\n__**Before:**__\n**Date**: {}\n**Time**: {} minutes\n\n__**After:**__\n**Date**: {}\n**Time**: {} minutes",
+          "**User**: <@{}>\n**ID**: {}\n\n__**Before**__\n**Date**: {}\n**Time**: {} minute(s)\n\n__**After**__\n**Date**: {}\n**Time**: {} minute(s)",
           existing_entry.user_id,
           entry_id,
-          existing_date.format("%B %d, %Y"),
+          existing_date.format("%B %d, %Y at %l:%M %P"),
           existing_entry.meditation_minutes,
-          datetime.format("%B %d, %Y"),
+          datetime.format("%B %d, %Y at %l:%M %P"),
           minutes
         ))
         .footer(|f| {
@@ -450,8 +463,14 @@ pub async fn delete(
   DatabaseHandler::delete_meditation_entry(&mut transaction, &entry_id).await?;
 
   let success_embed = BloomBotEmbed::new()
-    .title("Success")
-    .description("Meditation entry deleted.")
+    .title("Meditation Entry Deleted")
+    .description(format!(
+      "**User**: <@{}>\n**ID**: {}\n**Date**: {}\n**Time**: {} minute(s)",
+      entry.user_id,
+      entry.id,
+      entry.occurred_at.format("%B %d, %Y"),
+      entry.meditation_minutes
+    ))
     .to_owned();
   
   commit_and_say(
@@ -465,7 +484,7 @@ pub async fn delete(
   let log_embed = BloomBotEmbed::new()
     .title("Meditation Entry Deleted")
     .description(format!(
-      "**User**: <@{}>\n**ID**: {}\n**Date**: {}\n**Time**: {} minutes",
+      "**User**: <@{}>\n**ID**: {}\n**Date**: {}\n**Time**: {} minute(s)",
       entry.user_id,
       entry.id,
       entry.occurred_at.format("%B %d, %Y"),

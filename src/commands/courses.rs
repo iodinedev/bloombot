@@ -128,6 +128,8 @@ pub async fn edit(
   #[description = "Update the role that graduates of the course are given"]
   graduate_role: Option<serenity::Role>,
 ) -> Result<()> {
+  ctx.defer_ephemeral().await?;
+  
   if participant_role.is_none() && graduate_role.is_none() {
     ctx
       .send(|f| f.content(":x: No changes were provided.").ephemeral(true))
@@ -144,10 +146,81 @@ pub async fn edit(
   let course =
     DatabaseHandler::get_course(&mut transaction, &guild_id, course_name.as_str()).await?;
 
+  // Verify that the course exists
   if course.is_none() {
     course_not_found(ctx, &mut transaction, guild_id, course_name).await?;
     return Ok(());
   }
+  
+  let course = course.unwrap();
+  
+  let participant_role = match participant_role {
+    Some(participant_role) => {
+      if !participant_role.guild_id.eq(&guild_id) {
+        ctx
+          .say(":x: The participant role must be in the same guild as the command.")
+          .await?;
+        return Ok(());
+      }
+      if participant_role.managed {
+        ctx
+          .say(":x: The participant role must not be a bot role.")
+          .await?;
+        return Ok(());
+      }
+      if participant_role.permissions.administrator() {
+        ctx
+          .say(":x: The participant role must not be an administrator role.")
+          .await?;
+        return Ok(());
+      }
+      participant_role.id.to_string()
+    },
+    None => course.participant_role.to_string()
+  };
+
+  let graduate_role = match graduate_role {
+    Some(graduate_role) => {
+      if !graduate_role.guild_id.eq(&guild_id) {
+        ctx
+          .say(":x: The graduate role must be in the same guild as the command.")
+          .await?;
+        return Ok(());
+      }
+      if graduate_role.managed {
+        ctx
+          .say(":x: The graduate role must not be a bot role.")
+          .await?;
+        return Ok(());
+      }
+      if graduate_role.permissions.administrator() {
+        ctx
+          .say(":x: The graduate role must not be an administrator role.")
+          .await?;
+        return Ok(());
+      }
+      graduate_role.id.to_string()
+    },
+    None => course.graduate_role.to_string()
+  };
+
+  // Verify that the roles are not the same
+  if participant_role == graduate_role {
+    ctx
+      .say(":x: The participant role and the graduate role must not be the same.")
+      .await?;
+    return Ok(());
+  }
+
+  DatabaseHandler::update_course(&mut transaction, course_name.as_str(), participant_role, graduate_role).await?;
+
+  commit_and_say(
+    ctx,
+    transaction,
+    MessageType::TextOnly(":white_check_mark: Course roles have been updated.".to_string()),
+    true,
+  )
+  .await?;
 
   Ok(())
 }

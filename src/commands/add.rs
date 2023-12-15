@@ -199,10 +199,15 @@ pub async fn add(
       let quote = quote
         .quote
         .chars()
-        .filter(|c| c.is_alphanumeric() || c.is_whitespace() || c.is_ascii_punctuation())
+        //.filter(|c| c.is_alphanumeric() || c.is_whitespace() || c.is_ascii_punctuation() || matches!(c, '’' | '‘' | '“' | '”' | '—' | '…' | 'ā'))
+        .filter(|c| !matches!(c, '*'))
         .map(|c| {
           if c.is_ascii_punctuation() {
-            format!("\\{c}")
+            if matches!(c, '_' | '~') {
+              c.to_string()
+            } else {
+              format!("\\{c}")
+            }
           } else {
             c.to_string()
           }

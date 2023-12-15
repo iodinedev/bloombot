@@ -773,6 +773,26 @@ impl DatabaseHandler {
     Ok(())
   }
 
+  pub async fn update_course(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    course_name: &str,
+    participant_role: String,
+    graduate_role: String,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+        UPDATE course SET participant_role = $1, graduate_role = $2 WHERE LOWER(course_name) = LOWER($3)
+      "#,
+      participant_role,
+      graduate_role,
+      course_name,
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
+  }
+
   pub async fn steam_key_exists(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     guild_id: &serenity::GuildId,
