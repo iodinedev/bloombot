@@ -52,15 +52,16 @@ async fn check_report(ctx: &Context, user: &UserId, reaction: &Reaction) -> Resu
 
         report_channel_id
           .send_message(&ctx, |m| {
-            m.content(format!("<@&{}> **Message Reported (Reaction)**", ROLES.staff))
+            m.content(format!("<@&{}> Message Reported", ROLES.staff))
               .embed(|e| {
                 config::BloomBotEmbed::from(e)
-                  .author(|a| a.name(message_user.tag()).icon_url(message_user.face()))
+                  .author(|a| a.name(format!("{}", &message_user.name)).icon_url(message_user.face()))
                   .description(message_content)
                   .field("Link", format!("[Go to message]({})", message_link), false)
                   .footer(|f| {
                     f.text(format!(
-                      "Reported in #{} by {} ({})",
+                      "Author ID: {}\nReported via reaction in #{} by {} ({})",
+                      &message_user.id,
                       message_channel_name,
                       reporting_user.name,
                       user

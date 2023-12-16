@@ -36,15 +36,16 @@ pub async fn report_message(
 
   report_channel_id
     .send_message(&ctx, |m| {
-      m.content(format!("<@&{}> **Message Reported (Context Menu)**", ROLES.staff))
+      m.content(format!("<@&{}> Message Reported", ROLES.staff))
         .embed(|e| {
           BloomBotEmbed::from(e)
-            .author(|a| a.name(message_user.tag()).icon_url(message_user.face()))
+            .author(|a| a.name(format!("{}", &message_user.name)).icon_url(message_user.face()))
             .description(message_content)
             .field("Link", format!("[Go to message]({})", message_link), false)
             .footer(|f| {
               f.text(format!(
-                "Reported in #{} by {} ({})",
+                "Author ID: {}\nReported via context menu in #{} by {} ({})",
+                &message_user.id,
                 message_channel_name,
                 reporting_user.name,
                 reporting_user.id
