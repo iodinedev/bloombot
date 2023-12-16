@@ -121,7 +121,7 @@ pub async fn erase(
 
   log_embed.footer(|f| {
     f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-      .text(format!("Deleted by {}", ctx.author()))
+      .text(format!("Deleted by {} ({})", ctx.author().name, ctx.author().id))
   });
 
   let log_channel = serenity::ChannelId(CHANNELS.logs);

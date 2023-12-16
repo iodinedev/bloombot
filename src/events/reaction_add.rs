@@ -1,7 +1,6 @@
-use crate::config::{self, CHANNELS, EMOTES};
+use crate::config::{self, CHANNELS, ROLES, EMOTES};
 use crate::database::DatabaseHandler;
 use anyhow::{Context as AnyhowContext, Result};
-use poise::serenity_prelude::Mentionable;
 use poise::serenity_prelude::{ChannelId, Context, CreateEmbed, Reaction, ReactionType, UserId};
 
 pub async fn reaction_add(
@@ -38,30 +37,41 @@ async fn check_report(ctx: &Context, user: &UserId, reaction: &Reaction) -> Resu
         let message = reaction.message(&ctx).await?;
         let message_link = message.link().clone();
         let message_user = message.author;
+        let message_channel_name = message.channel_id.to_channel(&ctx).await.unwrap().guild().unwrap().name;
+        let reporting_user = reaction.user(&ctx).await?;
+
+        let message_content = match message.content.is_empty() {
+          true => {
+            match message.attachments.first() {
+              Some(attachment) => format!("**Attachment**\n{}", attachment.url.clone()),
+              None => message.content.clone()
+            }
+          },
+          false => message.content.clone()
+        };
 
         report_channel_id
-          .send_message(ctx, |m| {
-            m.embed(|e| {
-              config::BloomBotEmbed::from(e)
-                .title("Report")
-                .author(|a| a.name(message_user.tag()).icon_url(message_user.face()))
-                .description(message.content.clone())
-                .field("Link", format!("[Go to message]({})", message_link), false)
-                .footer(|f| {
-                  f.text(format!(
-                    "Reported in <#{}> by {}",
-                    message.channel_id,
-                    user.mention()
-                  ))
-                })
-                .timestamp(message.timestamp)
-            })
+          .send_message(&ctx, |m| {
+            m.content(format!("<@&{}> **Message Reported (Reaction)**", ROLES.staff))
+              .embed(|e| {
+                config::BloomBotEmbed::from(e)
+                  .author(|a| a.name(message_user.tag()).icon_url(message_user.face()))
+                  .description(message_content)
+                  .field("Link", format!("[Go to message]({})", message_link), false)
+                  .footer(|f| {
+                    f.text(format!(
+                      "Reported in #{} by {} ({})",
+                      message_channel_name,
+                      reporting_user.name,
+                      user
+                    ))
+                  })
+                  .timestamp(message.timestamp)
+              })
           })
           .await?;
 
-        reaction
-          .user(&ctx)
-          .await?
+        reporting_user
           .dm(&ctx, |m| {
             m.embed(|e| {
               config::BloomBotEmbed::from(e)
