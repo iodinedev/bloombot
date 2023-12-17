@@ -53,6 +53,11 @@ pub async fn user(
   let guild_id = ctx.guild_id().unwrap();
 
   let user = user.unwrap_or_else(|| ctx.author().clone());
+  let user_nick_or_name = match user.nick_in(&ctx, guild_id).await {
+    Some(nick) => nick,
+    None => user.name.clone()
+  };
+
   let stats_type = stats_type.unwrap_or(StatsType::MeditationMinutes);
   let timeframe = timeframe.unwrap_or(Timeframe::Daily);
 
@@ -68,9 +73,9 @@ pub async fn user(
 
   let mut embed = BloomBotEmbed::new();
   let embed = embed
-    .title(format!("Stats for {}", user.tag()))
+    .title(format!("Stats for {}", user_nick_or_name))
     .author(|f| {
-      f.name(format!("{}'s Stats", user.tag()))
+      f.name(format!("{}'s Stats", user_nick_or_name))
         .icon_url(user.face())
     });
 

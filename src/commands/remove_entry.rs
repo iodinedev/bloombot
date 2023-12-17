@@ -59,7 +59,7 @@ pub async fn remove_entry(
     ))
     .footer(|f| {
       f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-        .text(format!("Removed by {}", ctx.author()))
+        .text(format!("Removed by {} ({})", ctx.author().name, ctx.author().id))
     })
     .to_owned();
 

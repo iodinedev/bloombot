@@ -135,7 +135,7 @@ pub async fn create(
     ))
     .footer(|f| {
       f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-        .text(format!("Created by {}", ctx.author()))
+        .text(format!("Created by {} ({})", ctx.author().name, ctx.author().id))
     })
     .to_owned();
 
@@ -375,7 +375,7 @@ pub async fn update(
         ))
         .footer(|f| {
           f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-            .text(format!("Updated by {}", ctx.author()))
+            .text(format!("Updated by {} ({})", ctx.author().name, ctx.author().id))
         })
         .to_owned();
 
@@ -469,7 +469,7 @@ pub async fn delete(
     ))
     .footer(|f| {
       f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-        .text(format!("Deleted by {}", ctx.author()))
+        .text(format!("Deleted by {} ({})", ctx.author().name, ctx.author().id))
     })
     .to_owned();
 
@@ -566,7 +566,7 @@ pub async fn reset(
             ))
             .footer(|f| {
               f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-                .text(format!("Reset by {}", ctx.author()))
+                .text(format!("Reset by {} ({})", ctx.author().name, ctx.author().id))
             })
             .to_owned();
         

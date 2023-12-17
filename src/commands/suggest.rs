@@ -17,7 +17,10 @@ pub async fn suggest(
   let log_embed = BloomBotEmbed::new()
     .title("New Suggestion")
     .description(&suggestion)
-    .author(|f| f.name(ctx.author().tag()).icon_url(ctx.author().face()))
+    .author(|a| a.name(&ctx.author().name).icon_url(ctx.author().face()))
+    .footer (|f| {
+      f.text(format!("Author ID: {}", &ctx.author().id))
+    })
     .to_owned();
 
   let log_channel = serenity::ChannelId(CHANNELS.logs);

@@ -3,6 +3,14 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
+#[derive(poise::ChoiceParameter)]
+pub enum Privacy {
+  #[name = "private"]
+  Private,
+  #[name = "public"]
+  Public,
+}
+
 /// See your current meditation streak
 /// 
 /// Shows your current meditation streak.
@@ -12,8 +20,17 @@ use poise::serenity_prelude as serenity;
 pub async fn streak(
   ctx: Context<'_>,
   #[description = "The user to check the streak of"] user: Option<serenity::User>,
+  #[description = "Set visibility of response (default is public)"] privacy: Option<Privacy>,
 ) -> Result<()> {
   let data = ctx.data();
+
+  let privacy = match privacy {
+    Some(privacy) => match privacy {
+      Privacy::Private => true,
+      Privacy::Public => false
+    },
+    None => false
+  };
 
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
@@ -33,15 +50,19 @@ pub async fn streak(
           "{}'s current meditation streak is {} days.",
           user.name, streak
         ))
+        .ephemeral(privacy)
         .allowed_mentions(|f| f.empty_parse())
       })
       .await?;
   } else {
     ctx
-      .say(format!(
-        "Your current meditation streak is {} days.",
-        streak
-      ))
+      .send(|f| {
+        f.content(format!(
+          "Your current meditation streak is {} days.",
+          streak
+        ))
+        .ephemeral(privacy)
+      })
       .await?;
   }
 

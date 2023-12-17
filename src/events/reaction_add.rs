@@ -162,10 +162,17 @@ async fn create_star_message(
 ) -> Result<()> {
   if star_count >= config::MIN_STARS {
     let starred_message = reaction.message(&ctx).await?;
+    let author_nick_or_name = match reaction.guild_id {
+      Some(guild_id) => match starred_message.author.nick_in(&ctx, guild_id).await {
+        Some(nick) => nick,
+        None => starred_message.author.name.clone()
+      },
+      None => starred_message.author.name.clone()
+    };
 
     let mut embed = config::BloomBotEmbed::new()
       .author(|a| {
-        a.name(starred_message.author.tag())
+        a.name(author_nick_or_name)
           .icon_url(starred_message.author.face())
       })
       .description(starred_message.content.clone())
