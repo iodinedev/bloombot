@@ -8,7 +8,7 @@ use anyhow::Result;
 /// Get a random meditation/mindfulness quote.
 #[poise::command(
   slash_command,
-  category = "Informative",
+  category = "Informational",
   member_cooldown = 300,
   guild_only
 )]

@@ -14,7 +14,7 @@ pub enum StatsType {
   MeditationCount,
 }
 
-/// Show the stats for the server or a specified user
+/// Show stats for the server or a user
 /// 
 /// Shows the stats for the whole server or a specified user.
 /// 

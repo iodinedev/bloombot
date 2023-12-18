@@ -3,7 +3,7 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-/// Delete a message
+/// Delete a message and notify the user
 /// 
 /// Deletes a message and notifies the user via DM with an optional reason.
 /// 

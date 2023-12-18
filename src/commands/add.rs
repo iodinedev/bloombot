@@ -95,7 +95,7 @@ pub enum PlusOffsetChoices {
   UTCPlus14,
 }
 
-/// Add minutes to your meditation time, with optional UTC offset
+/// Add a meditation entry, with optional UTC offset
 /// 
 /// Adds a specified number of minutes to your meditation time. You can add minutes each time you meditate or add the combined minutes for multiple sessions.
 /// 

@@ -97,7 +97,7 @@ async fn help_single_command<U, E>(
     });
 
     let reply = if let Some(command) = command {
-		if staff || command.required_permissions.is_empty() {
+		if (staff || command.required_permissions.is_empty()) && command.category.unwrap_or_default() != "Secret" {
 			match command.help_text {
 				Some(f) => f(),
 				None => command
@@ -128,6 +128,9 @@ async fn help_all_commands<U, E>(
 		if !staff && !cmd.required_permissions.is_empty() {
 			continue;
 		}
+        if cmd.category.unwrap_or_default() == "Secret" {
+            continue;
+        }
         categories
             .get_or_insert_with(cmd.category, Vec::new)
             .push(cmd);
@@ -184,53 +187,7 @@ async fn help_all_commands<U, E>(
 			(category_name.unwrap_or("Commands"), category_content, false)
 		});
 
-    /*let mut menu = String::from("```\n");
-    for (category_name, commands) in categories {
-        menu += category_name.unwrap_or("Commands");
-        menu += ":\n";
-        for command in commands {
-            if command.hide_in_help {
-                continue;
-            }
-
-            let prefix = if command.slash_action.is_some() {
-                String::from("/")
-            } else if command.prefix_action.is_some() {
-                let options = &ctx.framework().options().prefix_options;
-
-                match &options.prefix {
-                    Some(fixed_prefix) => fixed_prefix.clone(),
-                    None => match options.dynamic_prefix {
-                        Some(dynamic_prefix_callback) => {
-                            match dynamic_prefix_callback(poise::PartialContext::from(ctx)).await {
-                                Ok(Some(dynamic_prefix)) => dynamic_prefix,
-                                // `String::new()` defaults to "" which is what we want
-                                Err(_) | Ok(None) => String::new(),
-                            }
-                        }
-                        None => String::new(),
-                    },
-                }
-            } else {
-                // This is not a prefix or slash command, i.e. probably a context menu only command
-                // which we will only show later
-                continue;
-            };
-
-            let total_command_name_length = prefix.chars().count() + command.name.chars().count();
-            let padding = 12_usize.saturating_sub(total_command_name_length) + 1;
-            let _ = writeln!(
-                menu,
-                "  {}{}{}{}",
-                prefix,
-                command.name,
-                " ".repeat(padding),
-                command.description.as_deref().unwrap_or("")
-            );
-        }
-    }
-
-    if config.show_context_menu_commands {
+    /*if config.show_context_menu_commands {
         menu += "\nContext menu commands:\n";
 
         for command in &ctx.framework().options().commands {
@@ -242,11 +199,7 @@ async fn help_all_commands<U, E>(
             let name = command.context_menu_name.unwrap_or(&command.name);
             let _ = writeln!(menu, "  {} (on {})", name, kind);
         }
-    }
-
-    menu += "\n";
-    menu += config.extra_text_at_bottom;
-    menu += "\n```";*/
+    }*/
 
 	ctx.send(|f| f
 		.embed(|f| f
@@ -277,7 +230,7 @@ pub async fn help_menu<U, E>(
 /// Show the help menu
 /// 
 /// Shows the help menu.
-#[poise::command(slash_command)]
+#[poise::command(slash_command, category = "Utilities")]
 pub async fn help(
 	ctx: Context<'_>,
 	#[description = "Specific command to show help about"]

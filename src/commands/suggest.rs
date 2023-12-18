@@ -3,7 +3,7 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-/// Submit a server suggestion anonymously
+/// Submit an anonymous server suggestion
 /// 
 /// Submits an anonymous suggestion to the server suggestions channel, with voting reactions and a thread for discussion.
 /// 

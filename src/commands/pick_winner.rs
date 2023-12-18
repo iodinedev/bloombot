@@ -174,7 +174,7 @@ async fn finalize_winner(
   Ok(())
 }
 
-/// Pick a winner for the monthly meditation challenge
+/// Pick a winner for the monthly challenge
 /// 
 /// Picks the winner for the monthly meditation challenge and allows them to claim an unused Playne key.
 ///

@@ -14,7 +14,7 @@ use poise::serenity_prelude as serenity;
 /// Get `info` on a glossary entry, see a `list` of entries, or `search` for a relevant entry.
 #[poise::command(
   slash_command,
-  category = "Informative",
+  category = "Informational",
   subcommands("list", "info", "search"),
   subcommand_required,
   guild_only

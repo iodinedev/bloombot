@@ -11,6 +11,7 @@ use poise::serenity_prelude as serenity;
 /// Marks the specified course as complete, removing the participant role and awarding the graduate role for that course.
 #[poise::command(
   slash_command,
+  category = "Secret",
   rename = "coursecomplete",
   hide_in_help,
   dm_only
