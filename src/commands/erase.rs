@@ -12,7 +12,8 @@ use poise::serenity_prelude as serenity;
   slash_command,
   required_permissions = "MANAGE_MESSAGES",
   default_member_permissions = "MANAGE_MESSAGES",
-  hide_in_help,
+  category = "Moderator Commands",
+  //hide_in_help,
   guild_only
 )]
 pub async fn erase(

@@ -16,7 +16,7 @@ pub enum Privacy {
 /// Shows your current meditation streak.
 /// 
 /// Can also be used to check another member's streak.
-#[poise::command(slash_command, guild_only)]
+#[poise::command(slash_command, category = "Meditation Tracking", guild_only)]
 pub async fn streak(
   ctx: Context<'_>,
   #[description = "The user to check the streak of"] user: Option<serenity::User>,

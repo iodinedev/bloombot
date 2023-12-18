@@ -12,6 +12,7 @@ use poise::serenity_prelude as serenity;
 /// Use `/recent` to retrieve the ID for the entry you wish to remove.
 #[poise::command(
   slash_command,
+  category = "Meditation Tracking",
   rename = "remove",
   guild_only
 )]

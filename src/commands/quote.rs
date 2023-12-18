@@ -8,7 +8,8 @@ use anyhow::Result;
 /// Get a random meditation/mindfulness quote.
 #[poise::command(
   slash_command,
-  member_cooldown = 1200,
+  category = "Informative",
+  member_cooldown = 300,
   guild_only
 )]
 pub async fn quote(ctx: Context<'_>) -> Result<()> {

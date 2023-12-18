@@ -21,6 +21,7 @@ pub enum StatsType {
 /// Defaults to daily minutes for the server or yourself. Optionally specify the user, type (minutes or session count), and/or timeframe (daily, weekly, monthly, or yearly).
 #[poise::command(
   slash_command,
+  category = "Meditation Tracking",
   subcommands("user", "server"),
   subcommand_required,
   guild_only

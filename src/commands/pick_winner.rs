@@ -185,10 +185,11 @@ async fn finalize_winner(
 /// If multiple users meet this criteria, one is chosen at random.
 #[poise::command(
   slash_command,
-  required_permissions = "BAN_MEMBERS",
-  default_member_permissions = "BAN_MEMBERS",
+  required_permissions = "ADMINISTRATOR",
+  default_member_permissions = "ADMINISTRATOR",
+  category = "Admin Commands",
   rename = "pickwinner",
-  hide_in_help,
+  //hide_in_help,
   guild_only
 )]
 pub async fn pick_winner(

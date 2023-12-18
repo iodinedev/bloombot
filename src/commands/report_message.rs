@@ -5,8 +5,7 @@ use poise::serenity_prelude as serenity;
 
 /// Reports a message to server staff
 /// 
-/// To use, right-click the message that you want to report,
-/// then go to "Apps" > "Report Message".
+/// To use, right-click the message that you want to report, then go to "Apps" > "Report Message".
 #[poise::command(
   ephemeral,
 	context_menu_command = "Report Message",

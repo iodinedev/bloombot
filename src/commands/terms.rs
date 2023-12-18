@@ -93,9 +93,10 @@ pub async fn term_not_found(
   slash_command,
   required_permissions = "MANAGE_ROLES",
   default_member_permissions = "MANAGE_ROLES",
+  category = "Moderator Commands",
   subcommands("add", "remove", "edit"),
   subcommand_required,
-  hide_in_help,
+  //hide_in_help,
   guild_only
 )]
 pub async fn terms(_: poise::Context<'_, AppData, AppError>) -> Result<()> {

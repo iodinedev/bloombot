@@ -4,7 +4,7 @@ use anyhow::Result;
 /// Check the bot's latency
 /// 
 /// Replies with the bot's latency.
-#[poise::command(slash_command)]
+#[poise::command(slash_command, category = "Utilities")]
 pub async fn ping(ctx: Context<'_>) -> Result<()> {
   let response = ctx.send(|f| f.content("Getting latency...")).await?;
 

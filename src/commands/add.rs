@@ -102,7 +102,7 @@ pub enum PlusOffsetChoices {
 /// You may wish to add large amounts of time on occasion, e.g., after a silent retreat. Time tracking is based on the honor system and members are welcome to track any legitimate time spent practicing.
 /// 
 /// Vanity roles are purely cosmetic, so there is nothing to be gained from cheating. Furthermore, exceedingly large false entries will skew the server stats, which is unfair to other members. Please be considerate.
-#[poise::command(slash_command, guild_only)]
+#[poise::command(slash_command, category = "Meditation Tracking", guild_only)]
 pub async fn add(
   ctx: Context<'_>,
   #[description = "Number of minutes to add"]

@@ -11,6 +11,7 @@ use poise::serenity_prelude as serenity;
 /// Use this command to retrieve the ID used to remove an entry.
 #[poise::command(
   slash_command,
+  category = "Meditation Tracking",
   guild_only
 )]
 pub async fn recent(

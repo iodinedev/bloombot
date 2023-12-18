@@ -11,8 +11,9 @@ use anyhow::Result;
   slash_command,
   required_permissions = "ADMINISTRATOR",
   default_member_permissions = "ADMINISTRATOR",
+  category = "Admin Commands",
   rename = "usekey",
-  hide_in_help,
+  //hide_in_help,
   guild_only
 )]
 pub async fn use_key(ctx: Context<'_>) -> Result<()> {

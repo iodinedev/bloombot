@@ -18,7 +18,8 @@ use poise::serenity_prelude::{self as serenity, Mentionable};
   subcommand_required,
   required_permissions = "BAN_MEMBERS",
   default_member_permissions = "BAN_MEMBERS",
-  hide_in_help,
+  category = "Moderator Commands",
+  //hide_in_help,
   guild_only
 )]
 pub async fn manage(_: Context<'_>) -> Result<()> {

@@ -8,7 +8,7 @@ use std::sync::Arc;
 /// I will choose either ☕ or ⚰️.
 /// 
 /// (My version of Russian roulette)
-#[poise::command(slash_command)]
+#[poise::command(slash_command, category = "Utilities")]
 pub async fn coffee(ctx: Context<'_>) -> Result<()> {
   let data = ctx.data();
 

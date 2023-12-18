@@ -6,7 +6,7 @@ use anyhow::Result;
 /// Says hello to Bloom.
 /// 
 /// Don't worry - Bloom is friendly :)
-#[poise::command(slash_command)]
+#[poise::command(slash_command, category = "Utilities")]
 pub async fn hello(ctx: Context<'_>) -> Result<()> {
   ctx.say("Hello, friend!").await?;
 

@@ -13,8 +13,9 @@ use poise::serenity_prelude as serenity;
   slash_command,
   required_permissions = "ADMINISTRATOR",
   default_member_permissions = "ADMINISTRATOR",
+  category = "Admin Commands",
   rename = "listkeys",
-  hide_in_help,
+  //hide_in_help,
   guild_only
 )]
 pub async fn list_keys(

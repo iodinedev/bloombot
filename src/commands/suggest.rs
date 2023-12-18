@@ -8,7 +8,7 @@ use poise::serenity_prelude as serenity;
 /// Submits an anonymous suggestion to the server suggestions channel, with voting reactions and a thread for discussion.
 /// 
 /// *Note: Suggestions are posted anonymously, but server staff will be able to see who created a suggestion.*
-#[poise::command(slash_command, member_cooldown = 3600, guild_only)]
+#[poise::command(slash_command, category = "Utilities", member_cooldown = 3600, guild_only)]
 pub async fn suggest(
   ctx: Context<'_>,
   #[description = "The suggestion to add"] suggestion: String,
