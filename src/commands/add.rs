@@ -299,9 +299,18 @@ pub async fn add(
           b.kind(serenity::InteractionResponseType::UpdateMessage)
             .interaction_response_data(|f| {
               if confirm {
-                f.content(response)
-                  .ephemeral(privacy)
-                  .set_components(serenity::CreateComponents(Vec::new()))
+                match privacy {
+                  true => {
+                    f.content(format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:"))
+                    .ephemeral(privacy)
+                    .set_components(serenity::CreateComponents(Vec::new()))
+                  },
+                  false => {
+                    f.content(&response)
+                    .ephemeral(privacy)
+                    .set_components(serenity::CreateComponents(Vec::new()))
+                  }
+                }
               } else {
                 f.content("Cancelled.")
                   .ephemeral(privacy)
@@ -333,6 +342,10 @@ pub async fn add(
             .await?;
           return Err(anyhow::anyhow!("Could not send message: {}", e));
         }
+      }
+
+      if confirm && privacy {
+        ctx.channel_id().send_message(ctx, |f| f.content(response)).await?;
       }
 
       if confirm {

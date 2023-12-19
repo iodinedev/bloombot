@@ -141,7 +141,7 @@ pub async fn user(
 
   ctx
     .send(|f| {
-      f.attachment(serenity::AttachmentType::Path(&file_path));
+      f.attachment(serenity::AttachmentType::Path(&file_path)).ephemeral(privacy);
       f.embeds = vec![embed.to_owned()];
 
       f.ephemeral(privacy)
