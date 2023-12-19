@@ -95,6 +95,14 @@ pub enum PlusOffsetChoices {
   UTCPlus14,
 }
 
+#[derive(poise::ChoiceParameter)]
+pub enum Privacy {
+  #[name = "private"]
+  Private,
+  #[name = "public"]
+  Public,
+}
+
 /// Add a meditation entry, with optional UTC offset
 /// 
 /// Adds a specified number of minutes to your meditation time. You can add minutes each time you meditate or add the combined minutes for multiple sessions.
@@ -114,8 +122,17 @@ pub async fn add(
   #[description = "Specify a UTC offset for an Eastern Hemisphere time zone"]
   #[rename = "eastern_hemisphere_offset"]
   plus_offset: Option<PlusOffsetChoices>,
+  #[description = "Set visibility of response (Defaults to public)"] privacy: Option<Privacy>,
 ) -> Result<()> {
   let data = ctx.data();
+
+  let privacy = match privacy {
+    Some(privacy) => match privacy {
+      Privacy::Private => true,
+      Privacy::Public => false
+    },
+    None => false
+  };
 
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
@@ -213,11 +230,19 @@ pub async fn add(
           }
         })
         .collect::<String>();
-
-      format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:\n*{quote}*")
+      
+      if privacy {
+        format!("Someone just added **{minutes} minutes** to their meditation time! :tada:\n*{quote}*")
+      } else {
+        format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:\n*{quote}*")
+      }
     }
     None => {
-      format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:")
+      if privacy {
+        format!("Someone just added **{minutes} minutes** to their meditation time! :tada:")
+      } else {
+        format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:")
+      }
     }
   };
 
@@ -233,6 +258,7 @@ pub async fn add(
           "Are you sure you want to add **{}** minutes to your meditation time?",
           minutes
         ))
+        .ephemeral(privacy)
         .components(|c| {
           c.create_action_row(|a| {
             a.create_button(|b| {
@@ -274,9 +300,11 @@ pub async fn add(
             .interaction_response_data(|f| {
               if confirm {
                 f.content(response)
+                  .ephemeral(privacy)
                   .set_components(serenity::CreateComponents(Vec::new()))
               } else {
                 f.content("Cancelled.")
+                  .ephemeral(privacy)
                   .set_components(serenity::CreateComponents(Vec::new()))
               }
             })
@@ -289,7 +317,8 @@ pub async fn add(
               Ok(_) => {}
               Err(e) => {
                 check.edit(ctx, |f| f
-                  .content(":bangbang: A fatal error occured while trying to save your changes. Nothing has been saved.")).await?;
+                  .content(":bangbang: A fatal error occured while trying to save your changes. Nothing has been saved.")
+                  .ephemeral(privacy)).await?;
                 return Err(anyhow::anyhow!("Could not send message: {}", e));
               }
             }
@@ -299,6 +328,7 @@ pub async fn add(
           check
             .edit(ctx, |f| {
               f.content(":x: An error occured. Nothing has been saved.")
+                .ephemeral(privacy)
             })
             .await?;
           return Err(anyhow::anyhow!("Could not send message: {}", e));
@@ -335,7 +365,14 @@ pub async fn add(
     DatabaseHandler::get_guild_meditation_count(&mut transaction, &guild_id).await?;
   let guild_sum = DatabaseHandler::get_guild_meditation_sum(&mut transaction, &guild_id).await?;
 
-  commit_and_say(ctx, transaction, MessageType::TextOnly(response), false).await?;
+  if privacy {
+    let private_response = format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:");
+    commit_and_say(ctx, transaction, MessageType::TextOnly(private_response), true).await?;
+
+    ctx.channel_id().send_message(ctx, |f| f.content(response)).await?;
+  } else {
+    commit_and_say(ctx, transaction, MessageType::TextOnly(response), false).await?;
+  }
 
   if guild_count % 10 == 0 {
     let time_in_hours = guild_sum / 60;
@@ -361,7 +398,8 @@ pub async fn add(
             error!("Error removing role: {}", err);
             ctx.send(|f| f
               .content(":x: An error occured while updating your time roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
-              .allowed_mentions(|f| f.empty_parse())).await?;
+              .allowed_mentions(|f| f.empty_parse())
+              .ephemeral(privacy)).await?;
 
             return Ok(());
           }
@@ -374,7 +412,8 @@ pub async fn add(
           error!("Error adding role: {}", err);
           ctx.send(|f| f
             .content(":x: An error occured while updating your time roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
-            .allowed_mentions(|f| f.empty_parse())).await?;
+            .allowed_mentions(|f| f.empty_parse())
+            .ephemeral(privacy)).await?;
 
           return Ok(());
         }
@@ -382,7 +421,8 @@ pub async fn add(
 
       ctx.send(|f| f
         .content(format!(":tada: Congrats to {}, your hard work is paying off! Your total meditation minutes have given you the <@&{}> role!", member.mention(), updated_time_role.to_role_id()))
-        .allowed_mentions(|f| f.empty_parse())).await?;
+        .allowed_mentions(|f| f.empty_parse())
+        .ephemeral(privacy)).await?;
     }
   }
 
@@ -396,7 +436,8 @@ pub async fn add(
 
             ctx.send(|f| f
               .content(":x: An error occured while updating your streak roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
-              .allowed_mentions(|f| f.empty_parse())).await?;
+              .allowed_mentions(|f| f.empty_parse())
+              .ephemeral(privacy)).await?;
 
             return Ok(());
           }
@@ -410,7 +451,8 @@ pub async fn add(
 
           ctx.send(|f| f
             .content(":x: An error occured while updating your streak roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
-            .allowed_mentions(|f| f.empty_parse())).await?;
+            .allowed_mentions(|f| f.empty_parse())
+            .ephemeral(privacy)).await?;
 
           return Ok(());
         }
@@ -418,7 +460,8 @@ pub async fn add(
 
       ctx.send(|f| f
         .content(format!(":tada: Congrats to {}, your hard work is paying off! Your current streak is {}, giving you the <@&{}> role!", member.mention(), user_streak, updated_streak_role.to_role_id()))
-        .allowed_mentions(|f| f.empty_parse())).await?;
+        .allowed_mentions(|f| f.empty_parse())
+        .ephemeral(privacy)).await?;
     }
   }
 

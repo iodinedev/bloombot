@@ -11,7 +11,7 @@ use poise::serenity_prelude::{self as serenity, Mentionable};
 /// 
 /// Commands to create, list, update, or delete meditation entries for a user, or completely reset a user's data.
 /// 
-/// Requires `Administrator` permissions.
+/// Requires `Ban Members` permissions.
 #[poise::command(
   slash_command,
   subcommands("create", "list", "update", "delete", "reset"),

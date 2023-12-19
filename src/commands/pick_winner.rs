@@ -64,10 +64,10 @@ async fn finalize_winner(
       ))
     }).to_owned();
 
-  let announement_channel = serenity::ChannelId(CHANNELS.announcement);
+  let announcement_channel = serenity::ChannelId(CHANNELS.announcement);
   let dm_channel = winner.user.create_dm_channel(ctx).await?;
 
-  announement_channel
+  announcement_channel
     .send_message(ctx, |f| f.set_embed(announcement_embed))
     .await?;
 

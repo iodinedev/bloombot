@@ -14,6 +14,14 @@ pub enum StatsType {
   MeditationCount,
 }
 
+#[derive(poise::ChoiceParameter)]
+pub enum Privacy {
+  #[name = "private"]
+  Private,
+  #[name = "public"]
+  Public,
+}
+
 /// Show stats for the server or a user
 /// 
 /// Shows the stats for the whole server or a specified user.
@@ -38,15 +46,24 @@ pub async fn stats(_: Context<'_>) -> Result<()> {
 #[poise::command(slash_command)]
 pub async fn user(
   ctx: Context<'_>,
-  #[description = "The user to get the stats of. (Defaults to you)"] user: Option<serenity::User>,
-  #[description = "The type of stats to get. (Defaults to minutes)"]
+  #[description = "The user to get the stats of (Defaults to you)"] user: Option<serenity::User>,
+  #[description = "The type of stats to get (Defaults to minutes)"]
   #[rename = "type"]
   stats_type: Option<StatsType>,
-  #[description = "The timeframe to get the stats for. (Defaults to daily)"] timeframe: Option<
+  #[description = "The timeframe to get the stats for (Defaults to daily)"] timeframe: Option<
     Timeframe,
   >,
+  #[description = "Set visibility of response (Defaults to public)"] privacy: Option<Privacy>,
 ) -> Result<()> {
   ctx.defer().await?;
+
+  let privacy = match privacy {
+    Some(privacy) => match privacy {
+      Privacy::Private => true,
+      Privacy::Public => false
+    },
+    None => false
+  };
 
   let data = ctx.data();
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
@@ -127,7 +144,7 @@ pub async fn user(
       f.attachment(serenity::AttachmentType::Path(&file_path));
       f.embeds = vec![embed.to_owned()];
 
-      f
+      f.ephemeral(privacy)
     })
     .await?;
 
@@ -142,8 +159,8 @@ pub async fn user(
 #[poise::command(slash_command)]
 pub async fn server(
   ctx: Context<'_>,
-  #[description = "The type of stats to get. (Defaults to minutes)"] stats_type: Option<StatsType>,
-  #[description = "The timeframe to get the stats for. (Defaults to daily)"] timeframe: Option<
+  #[description = "The type of stats to get (Defaults to minutes)"] stats_type: Option<StatsType>,
+  #[description = "The timeframe to get the stats for (Defaults to daily)"] timeframe: Option<
     Timeframe,
   >,
 ) -> Result<()> {

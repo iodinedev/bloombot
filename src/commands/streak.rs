@@ -20,7 +20,7 @@ pub enum Privacy {
 pub async fn streak(
   ctx: Context<'_>,
   #[description = "The user to check the streak of"] user: Option<serenity::User>,
-  #[description = "Set visibility of response (default is public)"] privacy: Option<Privacy>,
+  #[description = "Set visibility of response (Default is public)"] privacy: Option<Privacy>,
 ) -> Result<()> {
   let data = ctx.data();
 
