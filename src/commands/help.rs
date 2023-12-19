@@ -158,7 +158,7 @@ async fn help_all_commands<U, E>(
         if cmd.category.unwrap_or_default() == config.secret_category {
             continue;
         }
-        if !config.show_context_menu_commands && cmd.context_menu_action.is_some() {
+        if cmd.context_menu_action.is_some() {
             continue;
         }
         categories
@@ -195,37 +195,62 @@ async fn help_all_commands<U, E>(
 		});
 
     if config.show_context_menu_commands {
+        let mut context_categories = OrderedMap::<Option<&str>, Vec<&poise::Command<U, E>>>::new();
+        for cmd in &ctx.framework().options().commands {
+            if cmd.context_menu_action.is_none() || cmd.hide_in_help {
+                continue;
+            }
+                context_categories
+                    .get_or_insert_with(cmd.category, Vec::new)
+                    .push(cmd);
+            }
+
         let mut category_content = String::from("```");
 
-        for command in &ctx.framework().options().commands {
-            let kind = match command.context_menu_action {
-                Some(poise::ContextMenuCommandAction::User(_)) => "user",
-                Some(poise::ContextMenuCommandAction::Message(_)) => "message",
-                None => continue,
-            };
-            let name = command.context_menu_name.unwrap_or(&command.name);
-            let _ = writeln!(
-                category_content,
-                "{} (on {})\n>> {}",
-                name,
-                kind,
-                command.description.as_deref().unwrap_or("")
-            );
+        for (_, commands) in context_categories {
+            for command in commands {
+                let kind = match command.context_menu_action {
+                    Some(poise::ContextMenuCommandAction::User(_)) => "user",
+                    Some(poise::ContextMenuCommandAction::Message(_)) => "message",
+                    None => continue,
+                };
+                let name = command.context_menu_name.unwrap_or(&command.name);
+                let _ = writeln!(
+                    category_content,
+                    "{} (on {})\n>> {}",
+                    name,
+                    kind,
+                    command.description.as_deref().unwrap_or("")
+                );
+            }
         }
 
         category_content += "```";
 
-        ctx.send(|f| f
-            .embed(|f|f
-                .fields(fields)
-                .field("Context Menu Commands", category_content, false)
-                .footer(|f| {
-                    f.text(format!("{}", config.extra_text_at_bottom))
-                })
+        if category_content != "``````" {
+            ctx.send(|f| f
+                .embed(|f|f
+                    .fields(fields)
+                    .field("Context Menu Commands", category_content, false)
+                    .footer(|f| {
+                        f.text(format!("{}", config.extra_text_at_bottom))
+                    })
+                )
+                .ephemeral(config.ephemeral)
             )
-            .ephemeral(config.ephemeral)
-        )
-        .await?;
+            .await?;
+        } else {
+            ctx.send(|f| f
+                .embed(|f|f
+                    .fields(fields)
+                    .footer(|f| {
+                        f.text(format!("{}", config.extra_text_at_bottom))
+                    })
+                )
+                .ephemeral(config.ephemeral)
+            )
+            .await?;
+        };
     } else {
         ctx.send(|f| f
             .embed(|f|f
