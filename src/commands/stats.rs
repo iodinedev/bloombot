@@ -55,8 +55,6 @@ pub async fn user(
   >,
   #[description = "Set visibility of response (Defaults to public)"] privacy: Option<Privacy>,
 ) -> Result<()> {
-  ctx.defer().await?;
-
   let privacy = match privacy {
     Some(privacy) => match privacy {
       Privacy::Private => true,
@@ -64,6 +62,12 @@ pub async fn user(
     },
     None => false
   };
+
+  if privacy {
+    ctx.defer_ephemeral().await?;
+  } else {
+    ctx.defer().await?;
+  }
 
   let data = ctx.data();
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
@@ -141,10 +145,10 @@ pub async fn user(
 
   ctx
     .send(|f| {
-      f.attachment(serenity::AttachmentType::Path(&file_path)).ephemeral(privacy);
+      f.attachment(serenity::AttachmentType::Path(&file_path));
       f.embeds = vec![embed.to_owned()];
 
-      f.ephemeral(privacy)
+      f
     })
     .await?;
 
