@@ -9,6 +9,7 @@ use poise::serenity_prelude as serenity;
 #[poise::command(
   ephemeral,
 	context_menu_command = "Report Message",
+  category = "Context Menu Commands",
 	hide_in_help,
   guild_only
 )]

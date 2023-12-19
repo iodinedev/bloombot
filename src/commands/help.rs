@@ -12,6 +12,8 @@ pub struct HelpConfiguration<'a> {
     pub ephemeral: bool,
     /// Whether to list context menu commands as well
     pub show_context_menu_commands: bool,
+    /// Optionally specify a secret category to completely prevent from being accessible via the command
+    pub secret_category: &'a str,
 }
 
 impl Default for HelpConfiguration<'_> {
@@ -20,6 +22,7 @@ impl Default for HelpConfiguration<'_> {
             extra_text_at_bottom: "",
             ephemeral: true,
             show_context_menu_commands: false,
+            secret_category: "",
         }
     }
 }
@@ -81,7 +84,7 @@ async fn help_single_command<U, E>(
     ctx: poise::Context<'_, U, E>,
     command_name: &str,
     config: HelpConfiguration<'_>,
-	staff: bool,
+	elevated_permissions: bool,
 ) -> Result<(), serenity::Error> {
     let command = ctx.framework().options().commands.iter().find(|command| {
         if command.name.eq_ignore_ascii_case(command_name) {
@@ -97,18 +100,42 @@ async fn help_single_command<U, E>(
     });
 
     let reply = if let Some(command) = command {
-		if (staff || command.required_permissions.is_empty()) && command.category.unwrap_or_default() != "Secret" {
-			match command.help_text {
-				Some(f) => f(),
-				None => command
-					.description
-					.as_deref()
-					.unwrap_or("No help available")
-					.to_owned(),
-			}
-		} else {
-			format!("Command not found: `{}`", command_name)
-		}
+        match command.context_menu_action.is_some() {
+            true => {
+                if config.show_context_menu_commands {
+                    if (elevated_permissions || command.required_permissions.is_empty())
+                    && command.category.unwrap_or_default() != config.secret_category {
+			            match command.help_text {
+				            Some(f) => f(),
+				            None => command
+					            .description
+					            .as_deref()
+					            .unwrap_or("No help available")
+					            .to_owned(),
+			            }
+		            } else {
+			            format!("Command not found: `{}`", command_name)
+		            }
+                } else {
+                    format!("Command not found: `{}`", command_name)
+                }
+            },
+            false => {
+                if (elevated_permissions || command.required_permissions.is_empty())
+                    && command.category.unwrap_or_default() != config.secret_category {
+			            match command.help_text {
+				            Some(f) => f(),
+				            None => command
+					            .description
+					            .as_deref()
+					            .unwrap_or("No help available")
+					            .to_owned(),
+			            }
+		            } else {
+			            format!("Command not found: `{}`", command_name)
+		        }
+            }
+        }
     } else {
         format!("Command not found: `{}`", command_name)
     };
@@ -121,14 +148,17 @@ async fn help_single_command<U, E>(
 async fn help_all_commands<U, E>(
     ctx: poise::Context<'_, U, E>,
     config: HelpConfiguration<'_>,
-	staff: bool,
+	elevated_permissions: bool,
 ) -> Result<(), serenity::Error> {
     let mut categories = OrderedMap::<Option<&str>, Vec<&poise::Command<U, E>>>::new();
     for cmd in &ctx.framework().options().commands {
-		if !staff && !cmd.required_permissions.is_empty() {
+		if !elevated_permissions && !cmd.required_permissions.is_empty() {
 			continue;
 		}
-        if cmd.category.unwrap_or_default() == "Secret" {
+        if cmd.category.unwrap_or_default() == config.secret_category {
+            continue;
+        }
+        if !config.show_context_menu_commands && cmd.context_menu_action.is_some() {
             continue;
         }
         categories
@@ -145,30 +175,6 @@ async fn help_all_commands<U, E>(
 				if command.hide_in_help {
 					continue;
 				}
-	
-				/*let prefix = if command.slash_action.is_some() {
-					String::from("/")
-				} else if command.prefix_action.is_some() {
-					let options = &ctx.framework().options().prefix_options;
-	
-					match &options.prefix {
-						Some(fixed_prefix) => fixed_prefix.clone(),
-						None => match options.dynamic_prefix {
-							Some(dynamic_prefix_callback) => {
-								match dynamic_prefix_callback(poise::PartialContext::from(ctx)).await {
-									Ok(Some(dynamic_prefix)) => dynamic_prefix,
-									// `String::new()` defaults to "" which is what we want
-									Err(_) | Ok(None) => String::new(),
-								}
-							}
-							None => String::new(),
-						},
-					}
-				} else {
-					// This is not a prefix or slash command, i.e. probably a context menu only command
-					// which we will only show later
-					continue;
-				};*/
 
 				let prefix = String::from("/");	
 				let total_command_name_length = prefix.chars().count() + command.name.chars().count();
@@ -184,11 +190,12 @@ async fn help_all_commands<U, E>(
 			};
 
 			category_content += "```";
-			(category_name.unwrap_or("Commands"), category_content, false)
+
+			(category_name.unwrap_or("Other"), category_content, false)
 		});
 
-    /*if config.show_context_menu_commands {
-        menu += "\nContext menu commands:\n";
+    if config.show_context_menu_commands {
+        let mut category_content = String::from("```");
 
         for command in &ctx.framework().options().commands {
             let kind = match command.context_menu_action {
@@ -197,20 +204,40 @@ async fn help_all_commands<U, E>(
                 None => continue,
             };
             let name = command.context_menu_name.unwrap_or(&command.name);
-            let _ = writeln!(menu, "  {} (on {})", name, kind);
+            let _ = writeln!(
+                category_content,
+                "{} (on {})\n>> {}",
+                name,
+                kind,
+                command.description.as_deref().unwrap_or("")
+            );
         }
-    }*/
 
-	ctx.send(|f| f
-		.embed(|f| f
-			.fields(fields)
-			.footer(|f| {
-				f.text(format!("{}", config.extra_text_at_bottom))
-				})
-			)
-		.ephemeral(config.ephemeral)
-	)
-	.await?;
+        category_content += "```";
+
+        ctx.send(|f| f
+            .embed(|f|f
+                .fields(fields)
+                .field("Context Menu Commands", category_content, false)
+                .footer(|f| {
+                    f.text(format!("{}", config.extra_text_at_bottom))
+                })
+            )
+            .ephemeral(config.ephemeral)
+        )
+        .await?;
+    } else {
+        ctx.send(|f| f
+            .embed(|f|f
+                .fields(fields)
+                .footer(|f| {
+                    f.text(format!("{}", config.extra_text_at_bottom))
+                })
+            )
+            .ephemeral(config.ephemeral)
+        )
+        .await?;
+    };
     
 	Ok(())
 }
@@ -219,11 +246,11 @@ pub async fn help_menu<U, E>(
     ctx: poise::Context<'_, U, E>,
     command: Option<&str>,
     config: HelpConfiguration<'_>,
-	staff: bool,
+	elevated_permissions: bool,
 ) -> Result<(), serenity::Error> {
     match command {
-        Some(command) => help_single_command(ctx, command, config, staff).await,
-        None => help_all_commands(ctx, config, staff).await,
+        Some(command) => help_single_command(ctx, command, config, elevated_permissions).await,
+        None => help_all_commands(ctx, config, elevated_permissions).await,
     }
 }
 
@@ -238,7 +265,7 @@ pub async fn help(
 	// #[autocomplete = "poise::builtins::autocomplete_command"]
 	command: Option<String>,
 ) -> Result<()> {
-	let staff = match ctx.guild_id() {
+	let elevated_permissions = match ctx.guild_id() {
 		Some(guild_id) => ctx.author().has_role(ctx, guild_id, ROLES.staff).await?,
 		None => false
 	};
@@ -248,9 +275,11 @@ pub async fn help(
 		command.as_deref(),
 		HelpConfiguration {
 			ephemeral: true,
+            secret_category: "Secret",
+            show_context_menu_commands: true,
 			..Default::default()
 		},
-		staff,
+		elevated_permissions,
 	)
 	.await?;
 
