@@ -7,6 +7,7 @@ use std::sync::atomic::Ordering;
 
 pub mod add;
 pub mod add_key;
+pub mod challenge;
 pub mod coffee;
 pub mod complete;
 pub mod courses;

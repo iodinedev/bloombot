@@ -1,11 +1,12 @@
 use anyhow::{Context as ErrorContext, Error, Result};
 use commands::{
-  add::add, add_key::add_key, coffee::coffee, complete::complete, courses::course,
-  erase::erase, glossary::glossary, hello::hello, help::help, list_keys::list_keys,
-  manage::manage, pick_winner::pick_winner, ping::ping, quote::quote, quotes::quotes,
+  add::add, add_key::add_key, challenge::challenge, coffee::coffee,
+  complete::complete, courses::course, erase::erase, glossary::glossary,
+  hello::hello, help::help, list_keys::list_keys, manage::manage,
+  pick_winner::pick_winner, ping::ping, quote::quote, quotes::quotes,
   recent::recent, remove_entry::remove_entry, remove_key::remove_key,
-  report_message::report_message, stats::stats, streak::streak, suggest::suggest,
-  terms::terms, use_key::use_key,
+  report_message::report_message, stats::stats, streak::streak,
+  suggest::suggest, terms::terms, use_key::use_key,
 };
 use dotenv::dotenv;
 use log::{error, info};
@@ -54,6 +55,7 @@ async fn main() -> Result<()> {
         manage(),
         quotes(),
         terms(),
+        challenge(),
         add(),
         recent(),
         remove_entry(),
