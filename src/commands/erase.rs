@@ -83,9 +83,46 @@ pub async fn erase(
         .await?;
     }
     Err(_) => {
+      let notification_thread = channel_id
+        .create_private_thread(ctx, |create_thread| create_thread
+          .name(format!(
+            "Private Notification: Message Deleted"
+          )))
+        .await?;
+
+      notification_thread
+        .edit_thread(ctx, |edit_thread| edit_thread
+          .invitable(false)
+          .locked(true)
+        )
+        .await?;
+
+      dm_embed.footer(|f| f.text(
+        "If you have any questions or concerns regarding this action, please contact staff via ModMail."
+      ));
+    
+      let thread_initial_message = format!(
+        "Private notification for <@{}>:",
+        message.author.id
+      );
+    
+      notification_thread.send_message(ctx, |create_message| {
+        create_message
+          .content(thread_initial_message)
+          .set_embed(dm_embed.to_owned())
+          .allowed_mentions(|create_allowed_mentions| {
+            create_allowed_mentions
+              .users([message.author.id])
+          })
+      })
+      .await?;
+
       mod_confirmation
         .edit(ctx, |f| {
-          f.content(":white_check_mark: Message deleted. Could not send the reason in DMs.")
+          f.content(format!(
+            ":white_check_mark: Message deleted. Could not send the reason in DMs. Private thread created: <#{}>",
+            notification_thread.id
+          ))
             .ephemeral(true)
         })
         .await?;
