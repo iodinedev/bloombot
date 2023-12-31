@@ -22,6 +22,31 @@ pub struct DatabaseHandler {
   pool: sqlx::PgPool,
 }
 
+#[derive(Debug)]
+pub struct TrackingProfile {
+  pub user_id: serenity::UserId,
+  pub guild_id: serenity::GuildId,
+  pub utc_offset: i16,
+  pub anonymous_tracking: bool,
+  pub streaks_active: bool,
+  pub streaks_private: bool,
+  pub stats_private: bool,
+}
+
+impl Default for TrackingProfile {
+  fn default() -> Self {
+      Self {
+          user_id: serenity::UserId::default(),
+          guild_id: serenity::GuildId::default(),
+          utc_offset: 0,
+          anonymous_tracking: false,
+          streaks_active: true,
+          streaks_private: false,
+          stats_private: false,
+      }
+  }
+}
+
 pub struct UserStats {
   pub all_minutes: i64,
   pub all_count: u64,
@@ -291,6 +316,115 @@ impl DatabaseHandler {
   ) -> Result<()> {
     transaction.rollback().await?;
     Ok(())
+  }
+
+  pub async fn create_tracking_profile(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+    utc_offset: i16,
+    anonymous_tracking: bool,
+    streaks_active: bool,
+    streaks_private: bool,
+    stats_private: bool,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+        INSERT INTO tracking_profile (record_id, user_id, guild_id, utc_offset, anonymous_tracking, streaks_active, streaks_private, stats_private)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      "#,
+      Ulid::new().to_string(),
+      user_id.to_string(),
+      guild_id.to_string(),
+      utc_offset,
+      anonymous_tracking,
+      streaks_active,
+      streaks_private,
+      stats_private,
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
+  }
+
+  pub async fn update_tracking_profile(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+    utc_offset: i16,
+    anonymous_tracking: bool,
+    streaks_active: bool,
+    streaks_private: bool,
+    stats_private: bool,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+        UPDATE tracking_profile
+        SET utc_offset = $1, anonymous_tracking = $2, streaks_active = $3, streaks_private = $4, stats_private = $5
+        WHERE user_id = $6 AND guild_id = $7
+      "#,
+      utc_offset,
+      anonymous_tracking,
+      streaks_active,
+      streaks_private,
+      stats_private,
+      user_id.to_string(),
+      guild_id.to_string(),
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
+  }
+
+  pub async fn remove_tracking_profile(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+        DELETE FROM tracking_profile WHERE user_id = $1 AND guild_id = $2
+      "#,
+      user_id.to_string(),
+      guild_id.to_string(),
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
+  }
+
+  pub async fn get_tracking_profile(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+  ) -> Result<Option<TrackingProfile>> {
+    let row = sqlx::query!(
+      r#"
+        SELECT user_id, guild_id, utc_offset, anonymous_tracking, streaks_active, streaks_private, stats_private FROM tracking_profile WHERE user_id = $1 AND guild_id = $2
+      "#,
+      user_id.to_string(),
+      guild_id.to_string(),
+    )
+    .fetch_optional(&mut **transaction)
+    .await?;
+
+    let tracking_profile = match row {
+      Some(row) => Some(TrackingProfile {
+        user_id: serenity::UserId(row.user_id.parse::<u64>().unwrap()),
+        guild_id: serenity::GuildId(row.guild_id.parse::<u64>().unwrap()),
+        utc_offset: row.utc_offset,
+        anonymous_tracking: row.anonymous_tracking,
+        streaks_active: row.streaks_active,
+        streaks_private: row.streaks_private,
+        stats_private: row.stats_private,
+      }),
+      None => None,
+    };
+
+    Ok(tracking_profile)
   }
 
   pub async fn add_minutes(

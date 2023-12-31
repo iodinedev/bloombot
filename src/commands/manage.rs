@@ -7,6 +7,14 @@ use anyhow::Result;
 use chrono::{Datelike, Timelike};
 use poise::serenity_prelude::{self as serenity, Mentionable};
 
+#[derive(poise::ChoiceParameter)]
+pub enum DataType {
+  #[name = "meditation entries"]
+  MeditationEntries,
+  #[name = "customization settings"]
+  CustomizationSettings,
+}
+
 /// Commands for managing meditation entries
 /// 
 /// Commands to create, list, update, or delete meditation entries for a user, or completely reset a user's data.
@@ -483,20 +491,32 @@ pub async fn delete(
   Ok(())
 }
 
-/// Reset all meditation entries for a user
+/// Reset meditation entries or customization settings
 /// 
-/// Resets all meditation entries for a user.
+/// Resets all meditation entries or customization settings for a user.
 #[poise::command(slash_command)]
 pub async fn reset(
   ctx: Context<'_>,
-  #[description = "The user to reset the entries for"] user: serenity::User,
+  #[description = "The user to reset the entries for"]
+  user: serenity::User,
+  #[description = "The type of data to reset (Defaults to meditation entries)"]
+  #[rename = "type"]
+  data_type: Option<DataType>,
 ) -> Result<()> {
   let data = ctx.data();
   let guild_id = ctx.guild_id().unwrap();
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
-  DatabaseHandler::reset_user_meditation_entries(&mut transaction, &guild_id, &user.id).await?;
+  let data_type = match data_type {
+    Some(data_type) => data_type,
+    None => DataType::MeditationEntries
+  };
+
+  match data_type {
+    DataType::CustomizationSettings => DatabaseHandler::remove_tracking_profile(&mut transaction, &guild_id, &user.id).await?,
+    DataType::MeditationEntries => DatabaseHandler::reset_user_meditation_entries(&mut transaction, &guild_id, &user.id).await?
+  }
 
   let ctx_id = ctx.id();
 
@@ -506,7 +526,8 @@ pub async fn reset(
   ctx
     .send(|f| {
       f.content(format!(
-        "Are you sure you want to reset all meditation entries for {}?",
+        "Are you sure you want to reset all {} for {}?",
+        data_type.name(),
         user.mention()
       ))
       .ephemeral(true)
@@ -560,7 +581,13 @@ pub async fn reset(
           DatabaseHandler::commit_transaction(transaction).await?;
 
           let log_embed = BloomBotEmbed::new()
-            .title("Meditation Entries Reset")
+            .title(format!(
+              "{} Reset",
+              match data_type {
+                DataType::CustomizationSettings => "Customization Settings",
+                DataType::MeditationEntries => "Meditation Entries"
+              }
+            ))
             .description(format!(
               "**User**: <@{}>",
               user.id
@@ -582,7 +609,8 @@ pub async fn reset(
         Err(e) => {
           DatabaseHandler::rollback_transaction(transaction).await?;
           return Err(anyhow::anyhow!(
-            "Failed to tell user that the meditation entries were reset: {}",
+            "Failed to tell user that the {} were reset: {}",
+            data_type.name(),
             e
           ));
         }

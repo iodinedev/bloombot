@@ -1,6 +1,6 @@
 use crate::charts;
-use crate::config::BloomBotEmbed;
-use crate::database::DatabaseHandler;
+use crate::config::{BloomBotEmbed, ROLES};
+use crate::database::{DatabaseHandler, TrackingProfile};
 use crate::database::Timeframe;
 use crate::Context;
 use anyhow::Result;
@@ -55,20 +55,6 @@ pub async fn user(
   >,
   #[description = "Set visibility of response (Defaults to public)"] privacy: Option<Privacy>,
 ) -> Result<()> {
-  let privacy = match privacy {
-    Some(privacy) => match privacy {
-      Privacy::Private => true,
-      Privacy::Public => false
-    },
-    None => false
-  };
-
-  if privacy {
-    ctx.defer_ephemeral().await?;
-  } else {
-    ctx.defer().await?;
-  }
-
   let data = ctx.data();
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
@@ -79,6 +65,42 @@ pub async fn user(
     Some(nick) => nick,
     None => user.name.clone()
   };
+
+  let tracking_profile = match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user.id).await? {
+    Some(tracking_profile) => tracking_profile,
+    None => TrackingProfile { ..Default::default() }
+  };
+
+  let privacy = match privacy {
+    Some(privacy) => match privacy {
+      Privacy::Private => true,
+      Privacy::Public => false
+    },
+    None => tracking_profile.stats_private
+  };
+
+  if privacy {
+    ctx.defer_ephemeral().await?;
+  } else {
+    ctx.defer().await?;
+  }
+
+  if ctx.author().id != user.id
+    && tracking_profile.stats_private
+    && !ctx.author().has_role(&ctx, guild_id, ROLES.staff).await? {
+    ctx
+      .send(|f| {
+        f.content(format!(
+          "Sorry, {}'s stats are set to private.",
+          user_nick_or_name
+        ))
+        .ephemeral(true)
+        .allowed_mentions(|f| f.empty_parse())
+      })
+      .await?;
+
+      return Ok(());
+  }
 
   let stats_type = stats_type.unwrap_or(StatsType::MeditationMinutes);
   let timeframe = timeframe.unwrap_or(Timeframe::Daily);
@@ -141,7 +163,9 @@ pub async fn user(
 
   embed.image(chart.get_attachment_url());
 
-  embed.footer(|f| f.text(format!("Current streak: {}", stats.streak)));
+  if tracking_profile.streaks_active {
+    embed.footer(|f| f.text(format!("Current streak: {}", stats.streak)));
+  }
 
   ctx
     .send(|f| {

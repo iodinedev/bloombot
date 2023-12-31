@@ -11,6 +11,7 @@ pub mod challenge;
 pub mod coffee;
 pub mod complete;
 pub mod courses;
+pub mod customize;
 pub mod erase;
 pub mod glossary;
 pub mod hello;
