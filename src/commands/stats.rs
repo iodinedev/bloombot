@@ -163,6 +163,7 @@ pub async fn user(
 
   embed.image(chart.get_attachment_url());
 
+  //Hide footer if streaks disabled
   if tracking_profile.streaks_active {
     embed.footer(|f| f.text(format!("Current streak: {}", stats.streak)));
   }

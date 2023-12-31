@@ -55,6 +55,7 @@ pub async fn streak(
     };
 
     if tracking_profile.streaks_private {
+      //Show for staff even when private
       if ctx.author().has_role(&ctx, guild_id, config::ROLES.staff).await? {
         ctx
         .send(|f| {

@@ -33,6 +33,7 @@ pub struct TrackingProfile {
   pub stats_private: bool,
 }
 
+//Default values for tracking customization
 impl Default for TrackingProfile {
   fn default() -> Self {
       Self {

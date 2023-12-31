@@ -197,6 +197,7 @@ pub async fn show(
         .description(format!(
           //"**UTC Offset**: {}\n**Anonymous Tracking**: {}\n**Streak Reporting**: {}\n**Streak Visibility**: {}\n**Stats Visibility**: {}",
           "```UTC Offset:           {}\nAnonymous Tracking:   {}\nStreak Reporting:     {}\nStreak Visibility:    {}\nStats Visibility:     {}```",
+          //Only show the offset (no time zone abbreviations)
           utc_offset.split_whitespace().next().unwrap().to_string(),
           match tracking_profile.anonymous_tracking {
             true => "On",

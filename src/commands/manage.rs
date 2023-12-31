@@ -508,6 +508,7 @@ pub async fn reset(
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
+  //Default to meditation entries
   let data_type = match data_type {
     Some(data_type) => data_type,
     None => DataType::MeditationEntries
