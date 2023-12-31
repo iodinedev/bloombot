@@ -331,8 +331,7 @@ impl DatabaseHandler {
   ) -> Result<()> {
     sqlx::query!(
       r#"
-        INSERT INTO tracking_profile (record_id, user_id, guild_id, utc_offset, anonymous_tracking, streaks_active, streaks_private, stats_private)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO tracking_profile (record_id, user_id, guild_id, utc_offset, anonymous_tracking, streaks_active, streaks_private, stats_private) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       "#,
       Ulid::new().to_string(),
       user_id.to_string(),
@@ -361,9 +360,7 @@ impl DatabaseHandler {
   ) -> Result<()> {
     sqlx::query!(
       r#"
-        UPDATE tracking_profile
-        SET utc_offset = $1, anonymous_tracking = $2, streaks_active = $3, streaks_private = $4, stats_private = $5
-        WHERE user_id = $6 AND guild_id = $7
+        UPDATE tracking_profile SET utc_offset = $1, anonymous_tracking = $2, streaks_active = $3, streaks_private = $4, stats_private = $5 WHERE user_id = $6 AND guild_id = $7
       "#,
       utc_offset,
       anonymous_tracking,
