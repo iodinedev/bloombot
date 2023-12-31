@@ -315,7 +315,7 @@ pub async fn offset(
     return Ok(());
   }
 
-  DatabaseHandler::update_tracking_profile(
+  DatabaseHandler::create_or_update_tracking_profile(
     &mut transaction, 
     &guild_id, 
     &user_id, 
@@ -373,7 +373,7 @@ pub async fn tracking(
     return Ok(());
   }
 
-  DatabaseHandler::update_tracking_profile(
+  DatabaseHandler::create_or_update_tracking_profile(
     &mut transaction, 
     &guild_id, 
     &user_id, 
@@ -447,7 +447,7 @@ pub async fn streak(
     return Ok(());
   }
 
-  DatabaseHandler::update_tracking_profile(
+  DatabaseHandler::create_or_update_tracking_profile(
     &mut transaction, 
     &guild_id, 
     &user_id, 
@@ -505,7 +505,7 @@ pub async fn stats(
     return Ok(());
   }
 
-  DatabaseHandler::update_tracking_profile(
+  DatabaseHandler::create_or_update_tracking_profile(
     &mut transaction, 
     &guild_id, 
     &user_id, 
