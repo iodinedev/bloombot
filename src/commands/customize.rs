@@ -303,28 +303,44 @@ pub async fn offset(
   
   let utc_offset = if minus_offset != 0 { minus_offset } else { plus_offset };
 
-  let tracking_profile = match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user_id).await? {
-    Some(tracking_profile) => tracking_profile,
-    None => TrackingProfile { ..Default::default() }
-  };
+  match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user_id).await? {
+    Some(tracking_profile) => {
+      let existing_profile = tracking_profile;
 
-  if utc_offset == tracking_profile.utc_offset {
-    ctx.send(|f| f.content(format!(
-      "Your current UTC offset already matches the specified offset. No changes made."
-    )).ephemeral(true)).await?;
-    return Ok(());
+      if utc_offset == existing_profile.utc_offset {
+        ctx.send(|f| f.content(format!(
+          "Your current UTC offset already matches the specified offset. No changes made."
+        )).ephemeral(true)).await?;
+        
+        return Ok(());
+      }
+
+      DatabaseHandler::update_tracking_profile(
+        &mut transaction, 
+        &guild_id, 
+        &user_id, 
+        utc_offset, 
+        existing_profile.anonymous_tracking, 
+        existing_profile.streaks_active, 
+        existing_profile.streaks_private, 
+        existing_profile.stats_private
+      ).await?;
+    },
+    None => {
+      let default = TrackingProfile { ..Default::default() };
+
+      DatabaseHandler::create_tracking_profile(
+        &mut transaction, 
+        &guild_id, 
+        &user_id, 
+        utc_offset, 
+        default.anonymous_tracking, 
+        default.streaks_active, 
+        default.streaks_private, 
+        default.stats_private
+      ).await?;
+    }
   }
-
-  DatabaseHandler::create_or_update_tracking_profile(
-    &mut transaction, 
-    &guild_id, 
-    &user_id, 
-    utc_offset, 
-    tracking_profile.anonymous_tracking, 
-    tracking_profile.streaks_active, 
-    tracking_profile.streaks_private, 
-    tracking_profile.stats_private
-  ).await?;
 
   commit_and_say(
     ctx,
@@ -360,29 +376,45 @@ pub async fn tracking(
     OnOff::Off => false
   };
 
-  let tracking_profile = match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user_id).await? {
-    Some(tracking_profile) => tracking_profile,
-    None => TrackingProfile { ..Default::default() }
-  };
+  match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user_id).await? {
+    Some(tracking_profile) => {
+      let existing_profile = tracking_profile;
 
-  if anonymous_tracking == tracking_profile.anonymous_tracking {
-    ctx.send(|f| f.content(format!(
-      "Anonymous tracking already turned **{}**. No changes made.",
-      anonymous.name()
-    )).ephemeral(true)).await?;
-    return Ok(());
+      if anonymous_tracking == existing_profile.anonymous_tracking {
+        ctx.send(|f| f.content(format!(
+          "Anonymous tracking already turned **{}**. No changes made.",
+          anonymous.name()
+        )).ephemeral(true)).await?;
+
+        return Ok(());
+      }
+
+      DatabaseHandler::update_tracking_profile(
+        &mut transaction, 
+        &guild_id, 
+        &user_id, 
+        existing_profile.utc_offset, 
+        anonymous_tracking, 
+        existing_profile.streaks_active, 
+        existing_profile.streaks_private, 
+        existing_profile.stats_private
+      ).await?;
+    },
+    None => {
+      let default = TrackingProfile { ..Default::default() };
+
+      DatabaseHandler::create_tracking_profile(
+        &mut transaction, 
+        &guild_id, 
+        &user_id, 
+        default.utc_offset, 
+        anonymous_tracking, 
+        default.streaks_active, 
+        default.streaks_private, 
+        default.stats_private
+      ).await?;
+    }
   }
-
-  DatabaseHandler::create_or_update_tracking_profile(
-    &mut transaction, 
-    &guild_id, 
-    &user_id, 
-    tracking_profile.utc_offset, 
-    anonymous_tracking, 
-    tracking_profile.streaks_active, 
-    tracking_profile.streaks_private, 
-    tracking_profile.stats_private
-  ).await?;
 
   commit_and_say(
     ctx,
@@ -435,28 +467,44 @@ pub async fn streak(
     None => false
   };
 
-  let tracking_profile = match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user_id).await? {
-    Some(tracking_profile) => tracking_profile,
-    None => TrackingProfile { ..Default::default() }
-  };
+  match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user_id).await? {
+    Some(tracking_profile) => {
+      let existing_profile = tracking_profile;
 
-  if (streaks_active == tracking_profile.streaks_active) && (streaks_private == tracking_profile.streaks_private) {
-    ctx.send(|f| f.content(format!(
-      "Current settings already match specified settings. No changes made."
-    )).ephemeral(true)).await?;
-    return Ok(());
+      if (streaks_active == existing_profile.streaks_active) && (streaks_private == existing_profile.streaks_private) {
+        ctx.send(|f| f.content(format!(
+          "Current settings already match specified settings. No changes made."
+        )).ephemeral(true)).await?;
+
+        return Ok(());
+      }
+
+      DatabaseHandler::update_tracking_profile(
+        &mut transaction, 
+        &guild_id, 
+        &user_id, 
+        existing_profile.utc_offset, 
+        existing_profile.anonymous_tracking, 
+        streaks_active, 
+        streaks_private, 
+        existing_profile.stats_private
+      ).await?;
+    },
+    None => {
+      let default = TrackingProfile { ..Default::default() };
+
+      DatabaseHandler::create_tracking_profile(
+        &mut transaction, 
+        &guild_id, 
+        &user_id, 
+        default.utc_offset, 
+        default.anonymous_tracking, 
+        streaks_active, 
+        streaks_private, 
+        default.stats_private
+      ).await?;
+    }
   }
-
-  DatabaseHandler::create_or_update_tracking_profile(
-    &mut transaction, 
-    &guild_id, 
-    &user_id, 
-    tracking_profile.utc_offset, 
-    tracking_profile.anonymous_tracking, 
-    streaks_active, 
-    streaks_private, 
-    tracking_profile.stats_private
-  ).await?;
 
   commit_and_say(
     ctx,
@@ -492,29 +540,45 @@ pub async fn stats(
     Privacy::Public => false
   };
 
-  let tracking_profile = match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user_id).await? {
-    Some(tracking_profile) => tracking_profile,
-    None => TrackingProfile { ..Default::default() }
-  };
+  match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user_id).await? {
+    Some(tracking_profile) => {
+      let existing_profile = tracking_profile;
 
-  if stats_private == tracking_profile.stats_private {
-    ctx.send(|f| f.content(format!(
-      "Stats already set to **{}**. No changes made.",
-      privacy.name()
-    )).ephemeral(true)).await?;
-    return Ok(());
+      if stats_private == existing_profile.stats_private {
+        ctx.send(|f| f.content(format!(
+          "Stats already set to **{}**. No changes made.",
+          privacy.name()
+        )).ephemeral(true)).await?;
+
+        return Ok(());
+      }
+
+      DatabaseHandler::update_tracking_profile(
+        &mut transaction, 
+        &guild_id, 
+        &user_id, 
+        existing_profile.utc_offset, 
+        existing_profile.anonymous_tracking, 
+        existing_profile.streaks_active, 
+        existing_profile.streaks_private, 
+        stats_private
+      ).await?;
+    },
+    None => {
+      let default = TrackingProfile { ..Default::default() };
+
+      DatabaseHandler::create_tracking_profile(
+        &mut transaction, 
+        &guild_id, 
+        &user_id, 
+        default.utc_offset, 
+        default.anonymous_tracking, 
+        default.streaks_active, 
+        default.streaks_private, 
+        stats_private
+      ).await?;
+    }
   }
-
-  DatabaseHandler::create_or_update_tracking_profile(
-    &mut transaction, 
-    &guild_id, 
-    &user_id, 
-    tracking_profile.utc_offset, 
-    tracking_profile.anonymous_tracking, 
-    tracking_profile.streaks_active, 
-    tracking_profile.streaks_private, 
-    stats_private
-  ).await?;
 
   commit_and_say(
     ctx,

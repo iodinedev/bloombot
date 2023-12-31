@@ -319,7 +319,7 @@ impl DatabaseHandler {
     Ok(())
   }
 
-  pub async fn create_or_update_tracking_profile(
+  pub async fn create_tracking_profile(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     guild_id: &serenity::GuildId,
     user_id: &serenity::UserId,
@@ -331,11 +331,7 @@ impl DatabaseHandler {
   ) -> Result<()> {
     sqlx::query!(
       r#"
-        INSERT INTO tracking_profile (record_id, user_id, guild_id, utc_offset, anonymous_tracking, streaks_active, streaks_private, stats_private)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT (record_id) DO UPDATE
-        SET (utc_offset, anonymous_tracking, streaks_active, streaks_private, stats_private) = (EXCLUDED.utc_offset, EXCLUDED.anonymous_tracking, EXCLUDED.streaks_active, EXCLUDED.streaks_private, EXCLUDED.stats_private)
-        WHERE EXCLUDED.user_id = $2 AND EXCLUDED.guild_id = $3
+        INSERT INTO tracking_profile (record_id, user_id, guild_id, utc_offset, anonymous_tracking, streaks_active, streaks_private, stats_private) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       "#,
       Ulid::new().to_string(),
       user_id.to_string(),
@@ -352,7 +348,7 @@ impl DatabaseHandler {
     Ok(())
   }
 
-  /*pub async fn update_tracking_profile(
+  pub async fn update_tracking_profile(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     guild_id: &serenity::GuildId,
     user_id: &serenity::UserId,
@@ -378,7 +374,7 @@ impl DatabaseHandler {
     .await?;
 
     Ok(())
-  }*/
+  }
 
   pub async fn remove_tracking_profile(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
