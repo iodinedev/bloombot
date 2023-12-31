@@ -1,8 +1,9 @@
 use crate::commands::{commit_and_say, MessageType};
 use crate::database::{TrackingProfile, DatabaseHandler};
-use crate::config::BloomBotEmbed;
+use crate::config::{StreakRoles, BloomBotEmbed};
 use crate::Context;
 use anyhow::Result;
+use log::error;
 
 #[derive(poise::ChoiceParameter)]
 pub enum MinusOffsetChoices {
@@ -451,25 +452,25 @@ pub async fn streak(
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
-  let streaks_active = match reporting {
-    Some(reporting) => match reporting {
-      OnOff::On => true,
-      OnOff::Off => false
-    },
-    None => true
-  };
-
-  let streaks_private = match privacy {
-    Some(privacy) => match privacy {
-      Privacy::Private => true,
-      Privacy::Public => false
-    },
-    None => false
-  };
-
   match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user_id).await? {
     Some(tracking_profile) => {
       let existing_profile = tracking_profile;
+
+      let streaks_active = match reporting {
+        Some(reporting) => match reporting {
+          OnOff::On => true,
+          OnOff::Off => false
+        },
+        None => existing_profile.streaks_active
+      };
+    
+      let streaks_private = match privacy {
+        Some(privacy) => match privacy {
+          Privacy::Private => true,
+          Privacy::Public => false
+        },
+        None => existing_profile.streaks_private
+      };
 
       if (streaks_active == existing_profile.streaks_active) && (streaks_private == existing_profile.streaks_private) {
         ctx.send(|f| f.content(format!(
@@ -489,9 +490,72 @@ pub async fn streak(
         streaks_private, 
         existing_profile.stats_private
       ).await?;
+
+      if existing_profile.streaks_active && !streaks_active {
+        let guild = ctx.guild().unwrap();
+        let mut member = guild.member(ctx, user_id).await?;
+
+        let current_streak_roles = StreakRoles::get_users_current_roles(&guild, &member);
+
+        for role in current_streak_roles {
+          match member.remove_role(ctx, role).await {
+            Ok(_) => {}
+            Err(err) => {
+              error!("Error removing role: {}", err);
+
+              ctx.send(|f| f
+                .content(":x: An error occured while removing your streak role. Your settings have been saved, but your roles have not been updated. Please contact a moderator.")
+                .allowed_mentions(|f| f.empty_parse())
+                .ephemeral(true)).await?;
+            }
+          }
+        }
+      }
+      
+      if !existing_profile.streaks_active && streaks_active {
+        let user_streak = DatabaseHandler::get_streak(&mut transaction, &guild_id, &user_id).await?;
+
+        let guild = ctx.guild().unwrap();
+        let mut member = guild.member(ctx, user_id).await?;
+
+        let current_streak_roles = StreakRoles::get_users_current_roles(&guild, &member);
+        let earned_streak_role = StreakRoles::from_streak(user_streak);
+
+        if let Some(earned_streak_role) = earned_streak_role {
+          if !current_streak_roles.contains(&earned_streak_role.to_role_id()) {
+            match member.add_role(ctx, earned_streak_role.to_role_id()).await {
+              Ok(_) => {}
+              Err(err) => {
+                error!("Error adding role: {}", err);
+
+                ctx.send(|f| f
+                  .content(":x: An error occured while adding your streak role. Your settings have been saved, but your roles have not been updated. Please contact a moderator.")
+                  .allowed_mentions(|f| f.empty_parse())
+                  .ephemeral(true)).await?;
+              }
+            }
+          }
+        }
+      }
     },
     None => {
       let default = TrackingProfile { ..Default::default() };
+
+      let streaks_active = match reporting {
+        Some(reporting) => match reporting {
+          OnOff::On => true,
+          OnOff::Off => false
+        },
+        None => default.streaks_active
+      };
+    
+      let streaks_private = match privacy {
+        Some(privacy) => match privacy {
+          Privacy::Private => true,
+          Privacy::Public => false
+        },
+        None => default.streaks_private
+      };
 
       DatabaseHandler::create_tracking_profile(
         &mut transaction, 
@@ -503,6 +567,53 @@ pub async fn streak(
         streaks_private, 
         default.stats_private
       ).await?;
+
+      if default.streaks_active && !streaks_active {
+        let guild = ctx.guild().unwrap();
+        let mut member = guild.member(ctx, user_id).await?;
+
+        let current_streak_roles = StreakRoles::get_users_current_roles(&guild, &member);
+
+        for role in current_streak_roles {
+          match member.remove_role(ctx, role).await {
+            Ok(_) => {}
+            Err(err) => {
+              error!("Error removing role: {}", err);
+
+              ctx.send(|f| f
+                .content(":x: An error occured while removing your streak role. Your settings have been saved, but your roles have not been updated. Please contact a moderator.")
+                .allowed_mentions(|f| f.empty_parse())
+                .ephemeral(true)).await?;
+            }
+          }
+        }
+      }
+      
+      if !default.streaks_active && streaks_active {
+        let user_streak = DatabaseHandler::get_streak(&mut transaction, &guild_id, &user_id).await?;
+
+        let guild = ctx.guild().unwrap();
+        let mut member = guild.member(ctx, user_id).await?;
+
+        let current_streak_roles = StreakRoles::get_users_current_roles(&guild, &member);
+        let earned_streak_role = StreakRoles::from_streak(user_streak);
+
+        if let Some(earned_streak_role) = earned_streak_role {
+          if !current_streak_roles.contains(&earned_streak_role.to_role_id()) {
+            match member.add_role(ctx, earned_streak_role.to_role_id()).await {
+              Ok(_) => {}
+              Err(err) => {
+                error!("Error adding role: {}", err);
+
+                ctx.send(|f| f
+                  .content(":x: An error occured while adding your streak role. Your settings have been saved, but your roles have not been updated. Please contact a moderator.")
+                  .allowed_mentions(|f| f.empty_parse())
+                  .ephemeral(true)).await?;
+              }
+            }
+          }
+        }
+      }
     }
   }
 

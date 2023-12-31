@@ -1,6 +1,6 @@
 use crate::commands::{commit_and_say, MessageType};
 use crate::config::{StreakRoles, TimeSumRoles, BloomBotEmbed, CHANNELS};
-use crate::database::DatabaseHandler;
+use crate::database::{DatabaseHandler, TrackingProfile};
 use crate::Context;
 use chrono::Duration;
 use anyhow::Result;
@@ -126,19 +126,24 @@ pub async fn add(
 ) -> Result<()> {
   let data = ctx.data();
 
-  let privacy = match privacy {
-    Some(privacy) => match privacy {
-      Privacy::Private => true,
-      Privacy::Public => false
-    },
-    None => false
-  };
-
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
   let user_id = ctx.author().id;
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
+
+  let tracking_profile = match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user_id).await? {
+    Some(tracking_profile) => tracking_profile,
+    None => TrackingProfile { ..Default::default() }
+  };
+
+  let privacy = match privacy {
+    Some(privacy) => match privacy {
+      Privacy::Private => true,
+      Privacy::Public => false
+    },
+    None => tracking_profile.anonymous_tracking
+  };
 
   let minus_offset = match minus_offset {
     Some(minus_offset) => match minus_offset {
@@ -200,6 +205,9 @@ pub async fn add(
     DatabaseHandler::create_meditation_entry(&mut transaction, &guild_id, &user_id, minutes, adjusted_datetime).await?;
   } else if plus_offset != 0 {
     let adjusted_datetime = chrono::Utc::now() + Duration::minutes(plus_offset);
+    DatabaseHandler::create_meditation_entry(&mut transaction, &guild_id, &user_id, minutes, adjusted_datetime).await?;
+  } else if tracking_profile.utc_offset != 0 {
+    let adjusted_datetime = chrono::Utc::now() + Duration::minutes(i64::from(tracking_profile.utc_offset));
     DatabaseHandler::create_meditation_entry(&mut transaction, &guild_id, &user_id, minutes, adjusted_datetime).await?;
   } else {
     DatabaseHandler::add_minutes(&mut transaction, &guild_id, &user_id, minutes).await?;
@@ -397,10 +405,7 @@ pub async fn add(
   let mut member = guild.member(ctx, user_id).await?;
 
   let current_time_roles = TimeSumRoles::get_users_current_roles(&guild, &member);
-  let current_streak_roles = StreakRoles::get_users_current_roles(&guild, &member);
-
   let updated_time_role = TimeSumRoles::from_sum(user_sum);
-  let updated_streak_role = StreakRoles::from_streak(user_streak);
 
   if let Some(updated_time_role) = updated_time_role {
     if !current_time_roles.contains(&updated_time_role.to_role_id()) {
@@ -439,13 +444,32 @@ pub async fn add(
     }
   }
 
-  if let Some(updated_streak_role) = updated_streak_role {
-    if !current_streak_roles.contains(&updated_streak_role.to_role_id()) {
-      for role in current_streak_roles {
-        match member.remove_role(ctx, role).await {
+  if tracking_profile.streaks_active {
+    let current_streak_roles = StreakRoles::get_users_current_roles(&guild, &member);
+    let updated_streak_role = StreakRoles::from_streak(user_streak);
+
+    if let Some(updated_streak_role) = updated_streak_role {
+      if !current_streak_roles.contains(&updated_streak_role.to_role_id()) {
+        for role in current_streak_roles {
+          match member.remove_role(ctx, role).await {
+            Ok(_) => {}
+            Err(err) => {
+              error!("Error removing role: {}", err);
+
+              ctx.send(|f| f
+                .content(":x: An error occured while updating your streak roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
+                .allowed_mentions(|f| f.empty_parse())
+                .ephemeral(privacy)).await?;
+
+              return Ok(());
+            }
+          }
+        }
+
+        match member.add_role(ctx, updated_streak_role.to_role_id()).await {
           Ok(_) => {}
           Err(err) => {
-            error!("Error removing role: {}", err);
+            error!("Error adding role: {}", err);
 
             ctx.send(|f| f
               .content(":x: An error occured while updating your streak roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
@@ -455,26 +479,12 @@ pub async fn add(
             return Ok(());
           }
         }
+
+        ctx.send(|f| f
+          .content(format!(":tada: Congrats to {}, your hard work is paying off! Your current streak is {}, giving you the <@&{}> role!", member.mention(), user_streak, updated_streak_role.to_role_id()))
+          .allowed_mentions(|f| f.empty_parse())
+          .ephemeral(privacy)).await?;
       }
-
-      match member.add_role(ctx, updated_streak_role.to_role_id()).await {
-        Ok(_) => {}
-        Err(err) => {
-          error!("Error adding role: {}", err);
-
-          ctx.send(|f| f
-            .content(":x: An error occured while updating your streak roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
-            .allowed_mentions(|f| f.empty_parse())
-            .ephemeral(privacy)).await?;
-
-          return Ok(());
-        }
-      }
-
-      ctx.send(|f| f
-        .content(format!(":tada: Congrats to {}, your hard work is paying off! Your current streak is {}, giving you the <@&{}> role!", member.mention(), user_streak, updated_streak_role.to_role_id()))
-        .allowed_mentions(|f| f.empty_parse())
-        .ephemeral(privacy)).await?;
     }
   }
 
