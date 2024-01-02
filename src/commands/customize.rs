@@ -435,9 +435,9 @@ pub async fn tracking(
 /// 
 /// Enable/disable streak reporting or set your streak privacy.
 /// 
-/// Streak reporting is enabled by default. When disabled, any existing streak role will be removed and you will no longer receive streak-related notifications when adding time. Your streak will also be hidden from your stats. However, your streak status will still be tracked and you will still be able to check your current streak using the `/streak` command.
+/// Streak reporting is enabled by default. When disabled, any existing streak role will be removed and you will no longer receive streak-related notifications when adding time. Your streak will also be hidden from your stats. However, your streak status will still be tracked and you will still be able to check your current streak using the /streak command.
 /// 
-/// When streaks are set to private, other members will be unable to view your streak using the `/streak` command. When you view your own streak using the `/streak` command, the response will be shown privately in an ephemeral message by default. This can be overridden by setting privacy to "public" when using the command.
+/// When streaks are set to private, other members will be unable to view your streak using the /streak command. When you view your own streak using the /streak command, the response will be shown privately in an ephemeral message by default. This can be overridden by setting privacy to "public" when using the command.
 #[poise::command(slash_command)]
 pub async fn streak(
   ctx: Context<'_>,
@@ -632,7 +632,7 @@ pub async fn streak(
 /// 
 /// Set your stats privacy.
 /// 
-/// When stats are set to private, other members will be unable to view your stats using the `/stats user` command. When you view your own stats using the `/stats user` command, the response will be shown privately in an ephemeral message by default. This can be overridden by setting privacy to "public" when using the command.
+/// When stats are set to private, other members will be unable to view your stats using the /stats user command. When you view your own stats using the /stats user command, the response will be shown privately in an ephemeral message by default. This can be overridden by setting privacy to "public" when using the command.
 #[poise::command(slash_command)]
 pub async fn stats(
   ctx: Context<'_>,

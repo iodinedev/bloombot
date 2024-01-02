@@ -22,11 +22,9 @@ pub enum Privacy {
   Public,
 }
 
-/// Show stats for the server or a user
+/// Show stats for a user or the server
 /// 
-/// Shows the stats for the whole server or a specified user.
-/// 
-/// Defaults to daily minutes for the server or yourself. Optionally specify the user, type (minutes or session count), and/or timeframe (daily, weekly, monthly, or yearly).
+/// Shows stats for yourself, a specified user, or the whole server.
 #[poise::command(
   slash_command,
   category = "Meditation Tracking",
@@ -38,9 +36,9 @@ pub async fn stats(_: Context<'_>) -> Result<()> {
   Ok(())
 }
 
-/// Show the stats for a specified user
+/// Show stats for a user
 /// 
-/// Shows the stats for a specified user.
+/// Shows stats for yourself or a specified user.
 /// 
 /// Defaults to daily minutes for yourself. Optionally specify the user, type (minutes or session count), and/or timeframe (daily, weekly, monthly, or yearly).
 #[poise::command(slash_command)]
@@ -180,11 +178,11 @@ pub async fn user(
   Ok(())
 }
 
-/// Show the stats for the server
+/// Show stats for the server
 /// 
-/// Shows the stats for the whole server.
+/// Shows stats for the whole server.
 /// 
-/// Defaults to daily minutes for yourself. Optionally specify the user, type (minutes or session count), and/or timeframe (daily, weekly, monthly, or yearly).
+/// Defaults to daily minutes. Optionally specify the type (minutes or session count) and/or timeframe (daily, weekly, monthly, or yearly).
 #[poise::command(slash_command)]
 pub async fn server(
   ctx: Context<'_>,

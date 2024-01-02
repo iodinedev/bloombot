@@ -124,6 +124,11 @@ async fn help_single_command<U, E>(
     false => String::from("/"),
   };
 
+  let command_name = match command.context_menu_action.is_some() {
+    true => command.context_menu_name.unwrap_or(&command.name).to_string(),
+    false => command.name.clone()
+  };
+
   let mut help_text = match command.help_text {
     Some(f) => f(),
     None => command
@@ -159,7 +164,7 @@ async fn help_single_command<U, E>(
   ctx
     .send(|f| {
       f.embed(|f| {
-        f.title(format!("{}{}", prefix, command.name))
+        f.title(format!("{}{}", prefix, command_name))
           .description(help_text)
           .fields(fields)
       })

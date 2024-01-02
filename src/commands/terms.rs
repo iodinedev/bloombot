@@ -105,7 +105,7 @@ pub async fn terms(_: poise::Context<'_, AppData, AppError>) -> Result<()> {
 
 /// Add a new term to the glossary
 /// 
-/// Adds a new term to the glossary. Uses a modal to collect information.
+/// Adds a new term to the glossary.
 #[poise::command(slash_command)]
 pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Result<()> {
   use poise::Modal as _;
@@ -170,7 +170,7 @@ pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Resul
 
 /// Update an existing term in the glossary
 /// 
-/// Updates an existing term in the glossary using a modal.
+/// Updates an existing term in the glossary.
 #[poise::command(slash_command)]
 pub async fn edit(
   ctx: poise::ApplicationContext<'_, AppData, AppError>,
@@ -268,9 +268,9 @@ pub async fn edit(
   Ok(())
 }
 
-/// Remove a term from the database
+/// Remove a term from the glossary
 /// 
-/// Removes a term from the database.
+/// Removes a term from the glossary.
 #[poise::command(slash_command)]
 pub async fn remove(
   ctx: Context<'_>,

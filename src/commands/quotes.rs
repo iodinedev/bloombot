@@ -96,7 +96,7 @@ pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Resul
 
 /// Edit an existing quote
 /// 
-/// Edits an existing quote using a modal.
+/// Edits an existing quote.
 #[poise::command(slash_command)]
 pub async fn edit(
   ctx: poise::ApplicationContext<'_, AppData, AppError>,

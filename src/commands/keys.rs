@@ -26,8 +26,6 @@ pub async fn keys(_: Context<'_>) -> Result<()> {
 /// List all Playne keys in the database
 /// 
 /// Lists all Playne keys in the database.
-/// 
-/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   rename = "list",
@@ -117,8 +115,6 @@ pub async fn list_keys(
 /// Add a Playne key to the database
 /// 
 /// Adds a Playne key to the database.
-/// 
-/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   rename = "add",
@@ -156,8 +152,6 @@ pub async fn add_key(
 /// Remove a Playne key from the database
 /// 
 /// Removes a Playne key from the database.
-/// 
-/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   rename = "remove",
@@ -195,8 +189,6 @@ pub async fn remove_key(
 /// Retrieve a Playne key
 /// 
 /// Selects an unused Playne key from the database, returning it and marking it as used.
-/// 
-/// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
   rename = "use",

@@ -5,9 +5,9 @@ use std::sync::Arc;
 
 /// Are you feeling lucky?
 /// 
-/// I will choose either ☕ or ⚰️.
+/// Are you feeling lucky?
 /// 
-/// (My version of Russian roulette)
+/// I will choose either ☕ or ⚰️.
 #[poise::command(slash_command, category = "Utilities")]
 pub async fn coffee(ctx: Context<'_>) -> Result<()> {
   let data = ctx.data();

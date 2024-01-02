@@ -190,12 +190,6 @@ pub async fn info(
 /// Search glossary entries using keywords or phrases
 ///
 /// Searches glossary entries using keywords or phrases, leveraging AI to find the closest matches.
-/// 
-/// For example, let us assume that there is an entry with the following information:
-/// Term Name: `Hello`
-/// Definition: `An interjection used to express a greeting, answer a telephone, or attract attention.`
-///
-/// If you search for `greeting` or `answer and attract attention`, the AI will present the term as a match.
 #[poise::command(slash_command)]
 pub async fn search(
   ctx: Context<'_>,
