@@ -31,19 +31,26 @@ async fn finalize_winner(
 ) -> Result<()> {
   let now = chrono::Utc::now();
   let announcement_embed = BloomBotEmbed::new()
-    .title(":tada: This month's meditation challenger in the spotlight is... :tada:")
+    .title(":tada: Monthly Challenge Winner :tada:")
+    .description(format!(
+      "**Meditator in the Spotlight for {}**\nCongratulations to **{}** on winning our {} challenge, with a meditation time of **{}** minutes for the month!",
+      selected_date.format("%B"),
+      winner.user,
+      selected_date.format("%B"),
+      minutes
+    ))
     .thumbnail(winner.user.avatar_url().unwrap_or_default())
-    .field(
-      "**Monthly hall-of-fame member**",
-      format!(
-        "**{}** is our server member of the month, with a meditation time of **{}** minutes!\nYou're doing great, keep at it!",
-        winner.user, minutes
-      ),
-      false,
-    )
+    //.field(
+    //  "**Monthly hall-of-fame member**",
+    //  format!(
+    //    "**{}** is our server member of the month, with a meditation time of **{}** minutes!\nYou're doing great, keep at it!",
+    //    winner.user, minutes
+    //  ),
+    //  false,
+    //)
     .footer(|f| {
       f.text(format!(
-        "Meditation challenge for {} | Selected on {}",
+        "Meditation Challenge for {} | Selected on {}",
         selected_date.format("%B %Y"),
         now.format("%B %d, %Y")
       ))
@@ -53,13 +60,13 @@ async fn finalize_winner(
     .title(":tada: You've won a key! :tada:")
     .thumbnail(winner.user.avatar_url().unwrap_or_default())
     .field(
-      "**Congratulations!**",
-      "**Congratulations on winning the giveaway!** 🥳\n\nYou\'ve won a key for Playne: The Meditation Game on Steam!\n\n**Would you like to redeem your key? Press \'Redeem\' below! Otherwise, click \'Cancel\' to keep it for someone else :\\)**",
+      "**Congratulations on winning the giveaway!** 🥳",
+      "You've won a key for [Playne: The Meditation Game](<https://store.steampowered.com/app/865540/PLAYNE__The_Meditation_Game/>) on Steam!\n\n**Would you like to redeem your key? If yes, press 'Redeem' below! Otherwise, click 'Cancel' to leave it for someone else :)**",
       false,
     )
     .footer(|f| {
       f.text(format!(
-        "From {} | If you have any problems, please contact a moderator and we will be happy to help!",
+        "From {} | If you need any assistance, please contact server staff.",
         ctx.guild().unwrap().name
       ))
     }).to_owned();
@@ -130,23 +137,62 @@ async fn finalize_winner(
         })
         .await?;
 
-      ctx
-        .say(format!(
-          "Awesome! Here is your key.\n```{}```\n{}",
+      dm_channel.send_message(ctx, |f| f
+        .content(format!(
+          "Awesome! Here is your key:\n```{}```\n{}",
           reserved_key, hyperlink
         ))
+      ).await?;
+
+      let log_embed = BloomBotEmbed::new()
+        .title("**Key Redeemed**")
+        .description(format!(
+            "Playne key redeemed by <@{}>. Key has been marked as used.",
+            winner.user.id
+          ))
+        .footer(|f| {
+          f.icon_url(winner.user.avatar_url().unwrap_or_default())
+            .text(format!("{} ({})", winner.user.name, winner.user.id))
+        }).to_owned();
+    
+      let log_channel = serenity::ChannelId(CHANNELS.logs);
+    
+      log_channel
+        .send_message(ctx, |f| f.set_embed(log_embed))
         .await?;
+
       return Ok(());
     } else if press.data.custom_id == cancel_id {
+      let mut conn = ctx.data().db.get_connection_with_retry(5).await?;
+      DatabaseHandler::unreserve_key(&mut conn, &reserved_key).await?;
+
       dm_message
         .edit(ctx, |f| {
           f.set_components(serenity::CreateComponents(Vec::new()))
         })
         .await?;
 
-      ctx
-        .say("Alright, we'll keep it for someone else. Congrats again!")
+      dm_channel.send_message(ctx, |f| f
+        .content("Alright, we'll keep it for someone else. Congrats again!")
+      ).await?;
+
+      let log_embed = BloomBotEmbed::new()
+        .title("**Key Declined**")
+        .description(format!(
+            "Playne key declined by <@{}>. Key has been returned to the pool.",
+            winner.user.id
+          ))
+        .footer(|f| {
+          f.icon_url(winner.user.avatar_url().unwrap_or_default())
+            .text(format!("{} ({})", winner.user.name, winner.user.id))
+        }).to_owned();
+    
+      let log_channel = serenity::ChannelId(CHANNELS.logs);
+    
+      log_channel
+        .send_message(ctx, |f| f.set_embed(log_embed))
         .await?;
+
       return Ok(());
     } else {
       // This is an unrelated button interaction
@@ -155,8 +201,8 @@ async fn finalize_winner(
   }
 
   let timeout_embed = BloomBotEmbed::new()
-    .title("**Congratulations!**")
-    .description("**Congratulations on winning the giveaway!** 🥳\n\nYou\'ve won a key for Playne: The Meditation Game on Steam!\n\n**Would you like to redeem your key? Please DM our staff and we'll get one for you, right away!**")
+    .title("**Congratulations on winning the giveaway!** 🥳")
+    .description("You've won a key for [Playne: The Meditation Game](<https://store.steampowered.com/app/865540/PLAYNE__The_Meditation_Game/>) on Steam!\n\n**Would you like to redeem your key? Please contact server staff and we'll get one to you!**")
     .footer(|f| {
       f.text(format!(
         "From {}",
@@ -169,6 +215,23 @@ async fn finalize_winner(
       f.set_embed(timeout_embed)
         .set_components(serenity::CreateComponents(Vec::new()))
     })
+    .await?;
+
+  let log_embed = BloomBotEmbed::new()
+    .title("**Key Offer Timed Out**")
+    .description(format!(
+        "Sent Playne key offer to <@{}>, but user did not respond within 24 hours. Key has been returned to the pool and user has been asked to contact a moderator if they wish to claim their key.",
+        winner.user.id
+      ))
+    .footer(|f| {
+      f.icon_url(winner.user.avatar_url().unwrap_or_default())
+        .text(format!("{} ({})", winner.user.name, winner.user.id))
+    }).to_owned();
+
+  let log_channel = serenity::ChannelId(CHANNELS.logs);
+
+  log_channel
+    .send_message(ctx, |f| f.set_embed(log_embed))
     .await?;
 
   Ok(())
@@ -312,7 +375,7 @@ pub async fn pick_winner(
     let reserved_key = match DatabaseHandler::reserve_key(
       &mut transaction,
       &guild_id,
-      &ctx.author().id,
+      &member.user.id,
     )
     .await?
     {

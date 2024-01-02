@@ -1373,6 +1373,22 @@ impl DatabaseHandler {
     Ok(row.map(|row| row.steam_key))
   }
 
+  pub async fn unreserve_key(
+    connection: &mut sqlx::pool::PoolConnection<sqlx::Postgres>,
+    key: &str,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+        UPDATE steamkey SET reserved = NULL WHERE steam_key = $1
+      "#,
+      key,
+    )
+    .execute(&mut **connection)
+    .await?;
+
+    Ok(())
+  }
+
   pub async fn mark_key_used(
     connection: &mut sqlx::pool::PoolConnection<sqlx::Postgres>,
     key: &str,

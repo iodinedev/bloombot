@@ -32,11 +32,11 @@ struct EditQuoteModal {
 
 /// Commands for managing quotes
 /// 
-/// Commands to list, add, or remove quotes.
+/// Commands to list, add, edit, or remove quotes.
 ///
 /// These quotes are used both for the `/quote` command and for motivational messages when a user runs `/add`.
 /// 
-/// Required `Manage Roles` permissions.
+/// Requires `Manage Roles` permissions.
 #[poise::command(
   slash_command,
   required_permissions = "MANAGE_ROLES",

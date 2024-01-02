@@ -1,12 +1,10 @@
 use anyhow::{Context as ErrorContext, Error, Result};
 use commands::{
-  add::add, add_key::add_key, challenge::challenge, coffee::coffee,
-  complete::complete, courses::course, customize::customize, erase::erase,
-  glossary::glossary, hello::hello, help::help, list_keys::list_keys,
-  manage::manage, pick_winner::pick_winner, ping::ping, quote::quote,
-  quotes::quotes, recent::recent, remove_entry::remove_entry,
-  remove_key::remove_key, report_message::report_message, stats::stats,
-  streak::streak, suggest::suggest, terms::terms, use_key::use_key,
+  add::add, challenge::challenge, coffee::coffee, complete::complete, courses::course,
+  customize::customize, erase::erase, glossary::glossary, hello::hello, help::help,
+  keys::keys, manage::manage, pick_winner::pick_winner, ping::ping, quote::quote,
+  quotes::quotes, recent::recent, remove_entry::remove_entry, report_message::report_message,
+  stats::stats, streak::streak, suggest::suggest, terms::terms,
 };
 use dotenv::dotenv;
 use log::{error, info};
@@ -45,12 +43,9 @@ async fn main() -> Result<()> {
   let framework = poise::Framework::builder()
     .options(poise::FrameworkOptions {
       commands: vec![
-        add_key(),
+        keys(),
         course(),
-        list_keys(),
         pick_winner(),
-        remove_key(),
-        use_key(),
         erase(),
         manage(),
         quotes(),

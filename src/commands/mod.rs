@@ -6,7 +6,6 @@ use poise::serenity_prelude as serenity;
 use std::sync::atomic::Ordering;
 
 pub mod add;
-pub mod add_key;
 pub mod challenge;
 pub mod coffee;
 pub mod complete;
@@ -16,7 +15,7 @@ pub mod erase;
 pub mod glossary;
 pub mod hello;
 pub mod help;
-pub mod list_keys;
+pub mod keys;
 pub mod manage;
 pub mod pick_winner;
 pub mod ping;
@@ -24,13 +23,11 @@ pub mod quote;
 pub mod quotes;
 pub mod recent;
 pub mod remove_entry;
-pub mod remove_key;
 pub mod report_message;
 pub mod stats;
 pub mod streak;
 pub mod suggest;
 pub mod terms;
-pub mod use_key;
 
 enum MessageType {
   TextOnly(String),
