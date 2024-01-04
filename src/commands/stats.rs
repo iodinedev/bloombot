@@ -150,12 +150,18 @@ pub async fn user(
     }
   }
 
+  let bar_color = match ctx.cache().member(guild_id, user.id).unwrap().colour(&ctx) {
+    Some(color) => (color.r(), color.g(), color.b(), 1.0),
+    None => (253, 172, 46, 1.0)
+  };
+  let light_mode = false;
+
   let chart_stats =
     DatabaseHandler::get_user_chart_stats(&mut transaction, &guild_id, &user.id, &timeframe)
       .await?;
   let chart_drawer = charts::ChartDrawer::new()?;
   let chart = chart_drawer
-    .draw(&chart_stats, &timeframe, &stats_type)
+    .draw(&chart_stats, &timeframe, &stats_type, bar_color, light_mode)
     .await?;
   let file_path = chart.get_file_path();
 
@@ -248,11 +254,14 @@ pub async fn server(
     }
   }
 
+  let bar_color = (253, 172, 46, 1.0);
+  let light_mode = false;
+
   let chart_stats =
     DatabaseHandler::get_guild_chart_stats(&mut transaction, &guild_id, &timeframe).await?;
   let chart_drawer = charts::ChartDrawer::new()?;
   let chart = chart_drawer
-    .draw(&chart_stats, &timeframe, &stats_type)
+    .draw(&chart_stats, &timeframe, &stats_type, bar_color, light_mode)
     .await?;
   let file_path = chart.get_file_path();
 

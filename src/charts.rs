@@ -40,11 +40,24 @@ impl ChartDrawer {
     stats: &Vec<TimeframeStats>,
     timeframe: &Timeframe,
     stats_type: &StatsType,
+    bar_color: (u8, u8, u8, f64),
+    light_mode: bool,
   ) -> Result<Chart> {
     let path = self.file.path().to_path_buf();
 
+    let text_color = match light_mode {
+      true => &BLACK,
+      false => &WHITE,
+    };
+
+    let background_color = match light_mode {
+      true => &WHITE,
+      false => &BLACK,
+    };
+
     let root = BitMapBackend::new(&path, (640, 480)).into_drawing_area();
-    root.fill(&WHITE).unwrap();
+    //root.fill(&WHITE).unwrap();
+    root.fill(background_color).unwrap();
 
     let header = match stats_type {
       StatsType::MeditationMinutes => "# of Minutes",
@@ -63,7 +76,7 @@ impl ChartDrawer {
     };
 
     let mut chart = ChartBuilder::on(&root)
-      .caption(header, ("sans-serif", 45).into_font())
+      .caption(header, ("sans-serif", 35).into_font().color(text_color))
       .margin(15)
       .margin_right(45)
       .x_label_area_size(45)
@@ -75,8 +88,11 @@ impl ChartDrawer {
 
     chart
       .configure_mesh()
-      .x_label_style(("sans-serif", 25).into_font())
-      .y_label_style(("sans-serif", 25).into_font())
+      .axis_style(text_color)
+      .light_line_style(text_color.mix(0.1))
+      .bold_line_style(text_color.mix(0.2))
+      .x_label_style(("sans-serif", 25).into_font().color(text_color))
+      .y_label_style(("sans-serif", 25).into_font().color(text_color))
       .x_label_formatter(&|x| {
         // Dates
         let x: i64 = (*x).try_into().unwrap();
@@ -99,10 +115,36 @@ impl ChartDrawer {
           }
         }
       })
+      .y_label_formatter(&|y| {
+        let mut index: usize = 0;
+        let base: f64 = 1000.0;
+        let mut value: f64 = (*y).try_into().unwrap();
+
+        loop {
+          if value < base {
+            break;
+          }
+
+          value /= base;
+          index += 1;
+        }
+
+        let unit = match index {
+          1 => "K",
+          2 => "M",
+          3 => "B",
+          _ => "",
+        };
+
+        let y_label = format!("{}{}", value, unit);
+
+        y_label
+      })
       .draw()?;
 
     let shape_color = ShapeStyle {
-      color: RGBAColor(253, 172, 46, 1.0),
+      //color: RGBAColor(253, 172, 46, 1.0),
+      color: RGBAColor(bar_color.0, bar_color.1, bar_color.2, bar_color.3),
       filled: true,
       stroke_width: 1,
     };
