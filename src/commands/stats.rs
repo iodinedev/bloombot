@@ -1,8 +1,8 @@
-use crate::charts;
 use crate::config::{BloomBotEmbed, ROLES};
-use crate::database::{DatabaseHandler, TrackingProfile};
 use crate::database::Timeframe;
+use crate::database::{DatabaseHandler, TrackingProfile};
 use crate::Context;
+use crate::{charts, config};
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
@@ -16,14 +16,22 @@ pub enum StatsType {
 
 #[derive(poise::ChoiceParameter)]
 pub enum Privacy {
-  #[name = "private"]
+  #[name = "Private"]
   Private,
-  #[name = "public"]
+  #[name = "Public"]
   Public,
 }
 
+#[derive(poise::ChoiceParameter)]
+pub enum Theme {
+  #[name = "Light Mode"]
+  LightMode,
+  #[name = "Dark Mode"]
+  DarkMode,
+}
+
 /// Show stats for a user or the server
-/// 
+///
 /// Shows stats for yourself, a specified user, or the whole server.
 #[poise::command(
   slash_command,
@@ -37,9 +45,9 @@ pub async fn stats(_: Context<'_>) -> Result<()> {
 }
 
 /// Show stats for a user
-/// 
+///
 /// Shows stats for yourself or a specified user.
-/// 
+///
 /// Defaults to daily minutes for yourself. Optionally specify the user, type (minutes or session count), and/or timeframe (daily, weekly, monthly, or yearly).
 #[poise::command(slash_command)]
 pub async fn user(
@@ -52,6 +60,7 @@ pub async fn user(
     Timeframe,
   >,
   #[description = "Set visibility of response (Defaults to public)"] privacy: Option<Privacy>,
+  #[description = "Toggle between light mode and dark mode (Defaults to dark mode)"] theme: Option<Theme>,
 ) -> Result<()> {
   let data = ctx.data();
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
@@ -61,20 +70,23 @@ pub async fn user(
   let user = user.unwrap_or_else(|| ctx.author().clone());
   let user_nick_or_name = match user.nick_in(&ctx, guild_id).await {
     Some(nick) => nick,
-    None => user.name.clone()
+    None => user.name.clone(),
   };
 
-  let tracking_profile = match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user.id).await? {
-    Some(tracking_profile) => tracking_profile,
-    None => TrackingProfile { ..Default::default() }
-  };
+  let tracking_profile =
+    match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user.id).await? {
+      Some(tracking_profile) => tracking_profile,
+      None => TrackingProfile {
+        ..Default::default()
+      },
+    };
 
   let privacy = match privacy {
     Some(privacy) => match privacy {
       Privacy::Private => true,
-      Privacy::Public => false
+      Privacy::Public => false,
     },
-    None => tracking_profile.stats_private
+    None => tracking_profile.stats_private,
   };
 
   if privacy {
@@ -85,7 +97,8 @@ pub async fn user(
 
   if ctx.author().id != user.id
     && tracking_profile.stats_private
-    && !ctx.author().has_role(&ctx, guild_id, ROLES.staff).await? {
+    && !ctx.author().has_role(&ctx, guild_id, ROLES.staff).await?
+  {
     ctx
       .send(|f| {
         f.content(format!(
@@ -97,7 +110,7 @@ pub async fn user(
       })
       .await?;
 
-      return Ok(());
+    return Ok(());
   }
 
   let stats_type = stats_type.unwrap_or(StatsType::MeditationMinutes);
@@ -150,11 +163,31 @@ pub async fn user(
     }
   }
 
-  let bar_color = match guild_id.member(&ctx, user.id).await?.colour(&ctx) {
-    Some(color) => (color.r(), color.g(), color.b(), 1.0),
-    None => (253, 172, 46, 1.0)
+  // Role-based bar color for donators; default otherwise
+  let bar_color = if user.has_role(&ctx, guild_id, config::ROLES.patreon).await?
+    || user.has_role(&ctx, guild_id, config::ROLES.kofi).await?
+  {
+    match guild_id.member(&ctx, user.id).await?.colour(&ctx) {
+      Some(color) => (color.r(), color.g(), color.b(), 1.0),
+      None => (253, 172, 46, 1.0),
+    }
+  } else {
+    (253, 172, 46, 1.0)
   };
-  let light_mode = false;
+
+  // Role-based bar color for all users
+  //let bar_color = match guild_id.member(&ctx, user.id).await?.colour(&ctx) {
+  //  Some(color) => (color.r(), color.g(), color.b(), 1.0),
+  //  None => (253, 172, 46, 1.0)
+  //};
+
+  let light_mode = match theme {
+    Some(theme) => match theme {
+      Theme::LightMode => true,
+      Theme::DarkMode => false,
+    },
+    None => false,
+  };
 
   let chart_stats =
     DatabaseHandler::get_user_chart_stats(&mut transaction, &guild_id, &user.id, &timeframe)
@@ -185,9 +218,9 @@ pub async fn user(
 }
 
 /// Show stats for the server
-/// 
+///
 /// Shows stats for the whole server.
-/// 
+///
 /// Defaults to daily minutes. Optionally specify the type (minutes or session count) and/or timeframe (daily, weekly, monthly, or yearly).
 #[poise::command(slash_command)]
 pub async fn server(
@@ -196,6 +229,7 @@ pub async fn server(
   #[description = "The timeframe to get the stats for (Defaults to daily)"] timeframe: Option<
     Timeframe,
   >,
+  #[description = "Toggle between light mode and dark mode (Defaults to dark mode)"] theme: Option<Theme>,
 ) -> Result<()> {
   ctx.defer().await?;
 
@@ -255,7 +289,13 @@ pub async fn server(
   }
 
   let bar_color = (253, 172, 46, 1.0);
-  let light_mode = false;
+  let light_mode = match theme {
+    Some(theme) => match theme {
+      Theme::LightMode => true,
+      Theme::DarkMode => false,
+    },
+    None => false,
+  };
 
   let chart_stats =
     DatabaseHandler::get_guild_chart_stats(&mut transaction, &guild_id, &timeframe).await?;

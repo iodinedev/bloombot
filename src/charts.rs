@@ -80,7 +80,7 @@ impl ChartDrawer {
       .margin(15)
       .margin_right(45)
       .x_label_area_size(45)
-      .y_label_area_size(45)
+      .y_label_area_size(50)
       .build_cartesian_2d(0u32..13u32, 0u32..upper_bound)
       .with_context(|| "Could not build chart")?;
 
