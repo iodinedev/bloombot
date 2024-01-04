@@ -150,7 +150,7 @@ pub async fn user(
     }
   }
 
-  let bar_color = match ctx.cache().member(guild_id, user.id).unwrap().colour(&ctx) {
+  let bar_color = match guild_id.member(&ctx, user.id).await?.colour(&ctx) {
     Some(color) => (color.r(), color.g(), color.b(), 1.0),
     None => (253, 172, 46, 1.0)
   };
