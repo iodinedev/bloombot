@@ -53,7 +53,7 @@ pub async fn message(
   let user_id = message.author.id;
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
-  let erase_count = DatabaseHandler::get_erases(&mut transaction, &guild_id, &user_id).await?.len();
+  let erase_count = DatabaseHandler::get_erases(&mut transaction, &guild_id, &user_id).await?.len() + 1;
 
   let mut log_embed = BloomBotEmbed::new();
 
