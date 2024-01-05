@@ -1,5 +1,6 @@
 use crate::config::{BloomBotEmbed, CHANNELS};
 use crate::Context;
+use crate::database::DatabaseHandler;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
@@ -33,14 +34,65 @@ pub async fn erase(
     .delete_message(channel_id.into(), message_id.into())
     .await?;
 
+  let occurred_at = chrono::Utc::now();
+  let reason = reason.unwrap_or("No reason provided.".to_string());
+
+  let data = ctx.data();
+  let guild_id = ctx.guild_id().unwrap();
+  let user_id = message.author.id;
+
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
+  let erase_count = DatabaseHandler::get_erases(&mut transaction, &guild_id, &user_id).await?.len();
+
+  let mut log_embed = BloomBotEmbed::new();
+
+  log_embed.title("Message Deleted").description(format!(
+    "**Channel**: <#{}>\n**Author**: {} ({} messages erased)\n**Reason**: {}",
+    message.channel_id, message.author, erase_count, reason,
+  ));
+
+  if let Some(attachment) = message.attachments.first() {
+    log_embed.field("Attachment", attachment.url.clone(), false);
+  }
+
+  if !message.content.is_empty() {
+    // If longer than 1024 - 6 characters for the embed, truncate to 1024 - 3 for "..."
+    let content = match message.content.len() > 1018 {
+      true => format!(
+        "{}...",
+        message.content.chars().take(1015).collect::<String>()
+      ),
+      false => message.content.clone(),
+    };
+
+    log_embed.field(
+      "Message Content",
+      format!("```{}```", content),
+      false,
+    );
+  }
+
+  log_embed.footer(|f| {
+    f.icon_url(ctx.author().avatar_url().unwrap_or_default())
+      .text(format!("Deleted by {} ({})", ctx.author().name, ctx.author().id))
+  });
+
+  let log_channel = serenity::ChannelId(CHANNELS.logs);
+
+  let log_message = log_channel
+    .send_message(ctx, |f| f.set_embed(log_embed))
+    .await?;
+
+  let message_link = log_message.link();
+
+  DatabaseHandler::add_erase(&mut transaction, &guild_id, &user_id, &message_link, occurred_at).await?;
+
   let mod_confirmation = ctx
     .send(|f| {
       f.content(":white_check_mark: Message deleted. Sending the reason in DMs...".to_string())
         .ephemeral(true)
     })
     .await?;
-
-  let reason = reason.unwrap_or("No reason provided.".to_string());
 
   let mut dm_embed = BloomBotEmbed::new();
 
@@ -128,45 +180,6 @@ pub async fn erase(
         .await?;
     }
   };
-
-  let mut log_embed = BloomBotEmbed::new();
-
-  log_embed.title("Message Deleted").description(format!(
-    "**Channel**: <#{}>\n**Author**: {}\n**Reason**: {}",
-    message.channel_id, message.author, reason
-  ));
-
-  if let Some(attachment) = message.attachments.first() {
-    log_embed.field("Attachment", attachment.url.clone(), false);
-  }
-
-  if !message.content.is_empty() {
-    // If longer than 1024 - 6 characters for the embed, truncate to 1024 - 3 for "..."
-    let content = match message.content.len() > 1018 {
-      true => format!(
-        "{}...",
-        message.content.chars().take(1015).collect::<String>()
-      ),
-      false => message.content.clone(),
-    };
-
-    log_embed.field(
-      "Message Content",
-      format!("```{}```", content),
-      false,
-    );
-  }
-
-  log_embed.footer(|f| {
-    f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-      .text(format!("Deleted by {} ({})", ctx.author().name, ctx.author().id))
-  });
-
-  let log_channel = serenity::ChannelId(CHANNELS.logs);
-
-  log_channel
-    .send_message(ctx, |f| f.set_embed(log_embed))
-    .await?;
 
   Ok(())
 }

@@ -75,6 +75,31 @@ pub struct TimeframeStats {
   pub count: Option<i64>,
 }
 
+pub struct EraseData {
+  pub id: String,
+  pub user_id: serenity::UserId,
+  pub message_link: String,
+  pub occurred_at: chrono::DateTime<Utc>,
+}
+
+impl PageRow for EraseData {
+  fn title(&self) -> String {
+    if self.occurred_at == (chrono::DateTime::<Utc>::default()) {
+      "Date: `Not Available`".to_string()
+    } else {
+      format!("Date: `{}`", self.occurred_at.format("%Y-%m-%d %H:%M"))
+    }
+  }
+
+  fn body(&self) -> String {
+    if self.message_link == "None" {
+      "**Erase Log**: `Not Available`".to_string()
+    } else {
+      format!("**Erase Log**: [Go to message]({})", self.message_link)
+    }
+  }
+}
+
 pub struct MeditationData {
   pub id: String,
   pub user_id: serenity::UserId,
@@ -423,6 +448,57 @@ impl DatabaseHandler {
     };
 
     Ok(tracking_profile)
+  }
+
+  pub async fn add_erase(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+    message_link: &str,
+    occurred_at: chrono::DateTime<Utc>,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+        INSERT INTO erases (record_id, user_id, guild_id, message_link, occurred_at) VALUES ($1, $2, $3, $4, $5)
+      "#,
+      Ulid::new().to_string(),
+      user_id.to_string(),
+      guild_id.to_string(),
+      message_link,
+      occurred_at,
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
+  }
+
+  pub async fn get_erases(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+  ) -> Result<Vec<EraseData>> {
+    let rows = sqlx::query!(
+      r#"
+        SELECT record_id, user_id, message_link, occurred_at FROM erases WHERE user_id = $1 AND guild_id = $2 ORDER BY occurred_at DESC
+      "#,
+      user_id.to_string(),
+      guild_id.to_string(),
+    )
+    .fetch_all(&mut **transaction)
+    .await?;
+
+    let erase_data = rows
+      .into_iter()
+      .map(|row| EraseData {
+        id: row.record_id,
+        user_id: serenity::UserId(row.user_id.parse::<u64>().unwrap()),
+        message_link: row.message_link.unwrap_or(String::from("None")),
+        occurred_at: row.occurred_at.unwrap_or(chrono::DateTime::<Utc>::default()),
+      })
+      .collect();
+
+    Ok(erase_data)
   }
 
   pub async fn add_minutes(
