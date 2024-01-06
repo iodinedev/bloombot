@@ -93,9 +93,9 @@ impl PageRow for EraseData {
 
   fn body(&self) -> String {
     if self.message_link == "None" {
-      "**Erase Log**: `Not Available`".to_string()
+      "Notification not available".to_string()
     } else {
-      format!("**Erase Log**: [Go to message]({})", self.message_link)
+      format!("[Go to erase notification]({})", self.message_link)
     }
   }
 }

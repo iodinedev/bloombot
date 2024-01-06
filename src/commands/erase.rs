@@ -54,57 +54,27 @@ pub async fn message(
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
   let erase_count = DatabaseHandler::get_erases(&mut transaction, &guild_id, &user_id).await?.len() + 1;
+  let erase_count_message = if erase_count == 1 {
+    "1 erase recorded".to_string()
+  } else {
+    format!("{} erases recorded", erase_count)
+  };
 
   let mut log_embed = BloomBotEmbed::new();
+  let mut dm_embed = BloomBotEmbed::new();
 
-  log_embed.title("Message Deleted").description(format!(
-    "**Channel**: <#{}>\n**Author**: {} ({} messages erased)\n**Reason**: {}",
-    message.channel_id, message.author, erase_count, reason,
+  log_embed
+  .title("Message Deleted")
+  .description(format!(
+    "**Channel**: <#{}>\n**Author**: {} ({})\n**Reason**: {}",
+    message.channel_id, message.author, erase_count_message, reason,
   ));
+  dm_embed
+  .title("A message you sent has been deleted.")
+  .description(format!("**Reason**: {}", reason));
 
   if let Some(attachment) = message.attachments.first() {
     log_embed.field("Attachment", attachment.url.clone(), false);
-  }
-
-  if !message.content.is_empty() {
-    // If longer than 1024 - 6 characters for the embed, truncate to 1024 - 3 for "..."
-    let content = match message.content.len() > 1018 {
-      true => format!(
-        "{}...",
-        message.content.chars().take(1015).collect::<String>()
-      ),
-      false => message.content.clone(),
-    };
-
-    log_embed.field(
-      "Message Content",
-      format!("```{}```", content),
-      false,
-    );
-  }
-
-  log_embed.footer(|f| {
-    f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-      .text(format!("Deleted by {} ({})", ctx.author().name, ctx.author().id))
-  });
-
-  let log_channel = serenity::ChannelId(CHANNELS.logs);
-
-  let log_message = log_channel
-    .send_message(ctx, |f| f.set_embed(log_embed))
-    .await?;
-
-  let message_link = log_message.link();
-
-  DatabaseHandler::add_erase(&mut transaction, &guild_id, &user_id, &message_link, occurred_at).await?;
-
-  let mut dm_embed = BloomBotEmbed::new();
-
-  dm_embed
-    .title("A message you sent has been deleted.")
-    .description(format!("**Reason**: {}", reason));
-
-  if let Some(attachment) = message.attachments.first() {
     dm_embed.field("Attachment", attachment.url.clone(), false);
   }
 
@@ -118,12 +88,35 @@ pub async fn message(
       false => message.content.clone(),
     };
 
+    log_embed.field("Message Content", format!("```{}```", content), false);
     dm_embed.field("Message Content", format!("```{}```", content), false);
-
-    dm_embed.footer(|f| f.text(
-      "If you have any questions or concerns regarding this action, please contact a moderator. Replies sent to Bloom are not viewable by staff."
-    ));
   }
+
+  log_embed.footer(|f| {
+    f.icon_url(ctx.author().avatar_url().unwrap_or_default())
+      .text(format!("Deleted by {} ({})", ctx.author().name, ctx.author().id))
+  });
+  dm_embed.footer(|f| f.text(
+    "If you have any questions or concerns regarding this action, please contact a moderator. Replies sent to Bloom are not viewable by staff."
+  ));
+
+  let log_channel = serenity::ChannelId(CHANNELS.logs);
+
+  let log_message = log_channel
+    .send_message(ctx, |f| f.set_embed(log_embed))
+    .await?;
+
+  let message_link = log_message.link();
+
+  DatabaseHandler::add_erase(&mut transaction, &guild_id, &user_id, &message_link, occurred_at).await?;
+
+  commit_and_say(
+        ctx,
+        transaction,
+        MessageType::TextOnly(format!(":white_check_mark: Message deleted. User will be notified via DM or private thread.")),
+        true,
+      )
+      .await?;
 
   match message
     .author
@@ -131,13 +124,13 @@ pub async fn message(
     .await
   {
     Ok(_) => {
-      commit_and_say(
-        ctx,
-        transaction,
-        MessageType::TextOnly(format!(":white_check_mark: Message deleted. Sent the reason in DMs.")),
-        true,
-      )
-      .await?;
+    //  commit_and_say(
+    //    ctx,
+    //    transaction,
+    //    MessageType::TextOnly(format!(":white_check_mark: Message deleted. Sent the reason in DMs.")),
+    //    true,
+    //  )
+    //  .await?;
     }
     Err(_) => {
       let notification_thread = channel_id
@@ -174,16 +167,16 @@ pub async fn message(
       })
       .await?;
 
-      commit_and_say(
-        ctx,
-        transaction,
-        MessageType::TextOnly(format!(
-          ":white_check_mark: Message deleted. Could not send the reason in DMs. Private thread created: <#{}>",
-          notification_thread.id
-        )),
-        true,
-      )
-      .await?;
+      //commit_and_say(
+      //  ctx,
+      //  transaction,
+      //  MessageType::TextOnly(format!(
+      //    ":white_check_mark: Message deleted. Could not send the reason in DMs. Private thread created: <#{}>",
+      //    notification_thread.id
+      //  )),
+      //  true,
+      //)
+      //.await?;
     }
   };
 
