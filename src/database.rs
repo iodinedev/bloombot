@@ -221,7 +221,7 @@ impl PageRow for Term {
   }
 
   fn body(&self) -> String {
-    let meaning = match self.meaning.len() > 157 {
+    /*let meaning = match self.meaning.len() > 157 {
       true => {
         let truncate = self.meaning.chars().take(157).collect::<String>();
         let truncate_split = match truncate.rsplit_once(' ') {
@@ -237,7 +237,8 @@ impl PageRow for Term {
       },
       false => self.meaning.clone(),
     };
-    meaning
+    meaning*/
+    self.meaning.clone()
   }
 }
 
