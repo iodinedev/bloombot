@@ -242,11 +242,28 @@ pub async fn search(
         None => "Unknown",
       };
 
+      let meaning = match possible_term.meaning.chars().count() > 157 {
+        true => {
+          let truncate = possible_term.meaning.chars().take(157).collect::<String>();
+          let truncate_split = match truncate.rsplit_once(' ') {
+            Some(pair) => pair.0.to_string(),
+            None => truncate.to_string()
+          };
+          let truncate_final = if truncate_split.chars().last().unwrap().is_ascii_punctuation() {
+            truncate_split.chars().take(truncate_split.chars().count() - 1).collect::<String>()
+          } else {
+            truncate_split
+          };
+          format!("{}...\n\n(see entry for more)", truncate_final)
+        },
+        false => possible_term.meaning.clone(),
+      };
+
       embed.field(
         format!("Term {}: `{}`", index + 1, &possible_term.term_name),
         format!(
           "```{}```\n> Estimated relevance: *{}*",
-          &possible_term.meaning, relevance_description
+          meaning, relevance_description
         ),
         false,
       );

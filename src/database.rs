@@ -221,7 +221,23 @@ impl PageRow for Term {
   }
 
   fn body(&self) -> String {
-    self.meaning.clone()
+    let meaning = match self.meaning.len() > 157 {
+      true => {
+        let truncate = self.meaning.chars().take(157).collect::<String>();
+        let truncate_split = match truncate.rsplit_once(' ') {
+          Some(pair) => pair.0.to_string(),
+          None => truncate
+        };
+        let truncate_final = if truncate_split.chars().last().unwrap().is_ascii_punctuation() {
+          truncate_split.chars().take(truncate_split.chars().count() - 1).collect::<String>()
+        } else {
+          truncate_split
+        };
+        format!("{}...\n*(see entry for more)*", truncate_final)
+      },
+      false => self.meaning.clone(),
+    };
+    meaning
   }
 }
 
