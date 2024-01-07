@@ -217,7 +217,7 @@ pub struct Term {
 
 impl PageRow for Term {
   fn title(&self) -> String {
-    self.term_name.clone()
+    format!("__{}__", self.term_name.clone())
   }
 
   fn body(&self) -> String {
@@ -233,7 +233,7 @@ impl PageRow for Term {
         } else {
           truncate_split
         };
-        format!("{}...\n*(see entry for more)*", truncate_final)
+        format!("{}...", truncate_final)
       },
       false => self.meaning.clone(),
     };

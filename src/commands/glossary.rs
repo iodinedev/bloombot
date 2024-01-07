@@ -254,7 +254,7 @@ pub async fn search(
           } else {
             truncate_split
           };
-          format!("{}...\n\n(see entry for more)", truncate_final)
+          format!("{}...", truncate_final)
         },
         false => possible_term.meaning.clone(),
       };
