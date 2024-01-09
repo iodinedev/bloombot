@@ -188,13 +188,13 @@ pub struct SteamKeyRecipientData {
 
 impl PageRow for SteamKeyRecipientData {
   fn title(&self) -> String {
-    format!("Name: {}", self.user_id.mention().to_string())
+    "__Recipient__".to_string()
   }
 
   fn body(&self) -> String {
     format!(
-      "Keys Received: {}\nDonator Perk: {}\nChallenge Prize: {}",
-      self.total_keys,
+      "Name: {}\nDonator Perk: {}\nChallenge Prize: {}\nTotal Keys: {}",
+      self.user_id.mention().to_string(),
       match self.donator_perk {
         Some(value) => match value {
           true => "Yes",
@@ -209,6 +209,7 @@ impl PageRow for SteamKeyRecipientData {
         },
         None => "No",
       },
+      self.total_keys,
     )
   }
 }
