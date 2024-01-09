@@ -178,6 +178,41 @@ impl PageRow for SteamKeyData {
   }
 }
 
+pub struct SteamKeyRecipientData {
+  pub user_id: serenity::UserId,
+  pub guild_id: serenity::GuildId,
+  pub challenge_prize: Option<bool>,
+  pub donator_perk: Option<bool>,
+  pub total_keys: i16,
+}
+
+impl PageRow for SteamKeyRecipientData {
+  fn title(&self) -> String {
+    format!("Name: {}", self.user_id.mention().to_string())
+  }
+
+  fn body(&self) -> String {
+    format!(
+      "Keys Received: {}\nDonator Perk: {}\nChallenge Prize: {}",
+      self.total_keys,
+      match self.donator_perk {
+        Some(value) => match value {
+          true => "Yes",
+          false => "No",
+        },
+        None => "No",
+      },
+      match self.challenge_prize {
+        Some(value) => match value {
+          true => "Yes",
+          false => "No",
+        },
+        None => "No",
+      },
+    )
+  }
+}
+
 pub struct CourseData {
   pub course_name: String,
   pub participant_role: serenity::RoleId,
@@ -465,6 +500,129 @@ impl DatabaseHandler {
     };
 
     Ok(tracking_profile)
+  }
+
+  pub async fn add_steamkey_recipient(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+    challenge_prize: Option<bool>,
+    donator_perk: Option<bool>,
+    total_keys: i16,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+        INSERT INTO steamkey_recipients (record_id, user_id, guild_id, challenge_prize, donator_perk, total_keys) VALUES ($1, $2, $3, $4, $5, $6)
+      "#,
+      Ulid::new().to_string(),
+      user_id.to_string(),
+      guild_id.to_string(),
+      challenge_prize,
+      donator_perk,
+      total_keys
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
+  }
+
+  pub async fn update_steamkey_recipient(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+    challenge_prize: Option<bool>,
+    donator_perk: Option<bool>,
+    total_keys: i16,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+      UPDATE steamkey_recipients SET challenge_prize = $1, donator_perk = $2, total_keys = $3 WHERE user_id = $4 AND guild_id = $5
+      "#,
+      challenge_prize,
+      donator_perk,
+      total_keys,
+      user_id.to_string(),
+      guild_id.to_string(),
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
+  }
+
+  pub async fn remove_steamkey_recipient(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+        DELETE FROM steamkey_recipients WHERE user_id = $1 AND guild_id = $2
+      "#,
+      user_id.to_string(),
+      guild_id.to_string(),
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
+  }
+
+  pub async fn get_steamkey_recipient(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+  ) -> Result<Option<SteamKeyRecipientData>> {
+    let row = sqlx::query!(
+      r#"
+        SELECT user_id, guild_id, challenge_prize, donator_perk, total_keys FROM steamkey_recipients WHERE user_id = $1 AND guild_id = $2
+      "#,
+      user_id.to_string(),
+      guild_id.to_string(),
+    )
+    .fetch_optional(&mut **transaction)
+    .await?;
+
+    let steamkey_recipient = match row {
+      Some(row) => Some(SteamKeyRecipientData {
+        user_id: serenity::UserId(row.user_id.parse::<u64>().unwrap()),
+        guild_id: serenity::GuildId(row.guild_id.parse::<u64>().unwrap()),
+        challenge_prize: row.challenge_prize,
+        donator_perk: row.donator_perk,
+        total_keys: row.total_keys,
+      }),
+      None => None,
+    };
+
+    Ok(steamkey_recipient)
+  }
+
+  pub async fn get_steamkey_recipients(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+  ) -> Result<Vec<SteamKeyRecipientData>> {
+    let rows = sqlx::query!(
+      r#"
+        SELECT user_id, guild_id, challenge_prize, donator_perk, total_keys FROM steamkey_recipients WHERE guild_id = $1
+      "#,
+      guild_id.to_string(),
+    )
+    .fetch_all(&mut **transaction)
+    .await?;
+
+    let steamkey_recipients = rows
+      .into_iter()
+      .map(|row| SteamKeyRecipientData {
+        user_id: serenity::UserId(row.user_id.parse::<u64>().unwrap()),
+        guild_id: serenity::GuildId(row.guild_id.parse::<u64>().unwrap()),
+        challenge_prize: row.challenge_prize,
+        donator_perk: row.donator_perk,
+        total_keys: row.total_keys,
+      })
+      .collect();
+
+    Ok(steamkey_recipients)
   }
 
   pub async fn add_erase(

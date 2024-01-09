@@ -130,6 +130,14 @@ async fn finalize_winner(
         "[Redeem your key](https://store.steampowered.com/account/registerkey?key={})",
         reserved_key
       );
+      /*DatabaseHandler::add_steamkey_recipient(
+        &mut conn, 
+        &ctx.guild_id().unwrap(), 
+        &winner.user.id, 
+        Some(true), 
+        None, 
+        1
+      ).await?;*/
 
       dm_message
         .edit(ctx, |f| {
@@ -346,6 +354,10 @@ pub async fn pick_winner(
     };
 
     if !member.roles.contains(&winner_role_id) {
+      continue;
+    }
+
+    if DatabaseHandler::get_steamkey_recipient(&mut transaction, &guild_id, &member.user.id).await?.is_some() {
       continue;
     }
 
