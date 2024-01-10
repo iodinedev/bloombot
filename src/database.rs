@@ -1560,11 +1560,11 @@ impl DatabaseHandler {
   ) -> Result<Vec<Term>> {
     let row = sqlx::query!(
       r#"
-        SELECT record_id, term_name, meaning, usage, links, category, SIMILARITY(LOWER(term_name), LOWER($1)) AS similarity_score
+        SELECT record_id, term_name, meaning, usage, links, category, SET_LIMIT($2), SIMILARITY(LOWER(term_name), LOWER($1)) AS similarity_score
         FROM term
-        WHERE SIMILARITY(LOWER(term_name), LOWER($1)) > $2 AND guild_id = $3
+        WHERE LOWER(term_name) % LOWER($1) AND guild_id = $3
         ORDER BY similarity_score DESC
-        LIMIT 1
+        LIMIT 5
       "#,
       term_name,
       similarity,

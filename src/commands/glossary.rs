@@ -120,17 +120,25 @@ pub async fn info(
 
   let mut transaction = ctx.data().db.start_transaction_with_retry(5).await?;
 
-  let term_info = DatabaseHandler::get_term(&mut transaction, &guild_id, &term).await?;
+  let term_info = DatabaseHandler::get_term(&mut transaction, &guild_id, &term.as_str()).await?;
   let mut embed = BloomBotEmbed::new();
 
   match term_info {
     Some(term_info) => {
       embed.title(term_info.term_name);
       embed.description(term_info.meaning);
+      if let Some(category) = term_info.category {
+        embed.footer(|f| {
+          f.text(format!(
+            "Categories: {}",
+            category
+          ))
+        });
+      }
     }
     None => {
       let possible_terms =
-        DatabaseHandler::get_possible_terms(&mut transaction, &guild_id, &term, 0.8).await?;
+        DatabaseHandler::get_possible_terms(&mut transaction, &guild_id, &term.as_str(), 0.7).await?;
 
       if possible_terms.len() == 1 {
         let possible_term = possible_terms.first().unwrap();

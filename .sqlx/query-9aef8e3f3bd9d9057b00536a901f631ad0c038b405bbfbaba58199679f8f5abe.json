@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT record_id, term_name, meaning, usage, links, category, SIMILARITY(LOWER(term_name), LOWER($1)) AS similarity_score\n        FROM term\n        WHERE SIMILARITY(LOWER(term_name), LOWER($1)) > $2 AND guild_id = $3\n        ORDER BY similarity_score DESC\n        LIMIT 1\n      ",
+  "query": "\n        SELECT record_id, term_name, meaning, usage, links, category, SET_LIMIT($2), SIMILARITY(LOWER(term_name), LOWER($1)) AS similarity_score\n        FROM term\n        WHERE LOWER(term_name) % LOWER($1) AND guild_id = $3\n        ORDER BY similarity_score DESC\n        LIMIT 5\n      ",
   "describe": {
     "columns": [
       {
@@ -35,6 +35,11 @@
       },
       {
         "ordinal": 6,
+        "name": "set_limit",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 7,
         "name": "similarity_score",
         "type_info": "Float4"
       }
@@ -53,8 +58,9 @@
       true,
       true,
       true,
+      null,
       null
     ]
   },
-  "hash": "3e1fed2dbd4cc7628ca6bd47df885a5df71741681f22946067475e6cb5c54404"
+  "hash": "9aef8e3f3bd9d9057b00536a901f631ad0c038b405bbfbaba58199679f8f5abe"
 }
