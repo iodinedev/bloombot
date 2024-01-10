@@ -626,6 +626,52 @@ impl DatabaseHandler {
     Ok(steamkey_recipients)
   }
 
+  pub async fn record_steamkey_receipt(
+    connection: &mut sqlx::pool::PoolConnection<sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+  ) -> Result<()> {
+    let possible_record = sqlx::query!(
+      r#"
+        SELECT total_keys FROM steamkey_recipients WHERE guild_id = $1 AND user_id = $2
+      "#,
+      guild_id.to_string(),
+      user_id.to_string(),
+    )
+    .fetch_optional(&mut **connection)
+    .await?;
+
+    match possible_record {
+      Some(existing_record) => {
+        let updated_keys = existing_record.total_keys + 1;
+        sqlx::query!(
+          r#"
+          UPDATE steamkey_recipients SET challenge_prize = TRUE, total_keys = $1 WHERE user_id = $2 AND guild_id = $3
+          "#,
+          updated_keys,
+          user_id.to_string(),
+          guild_id.to_string(),
+        )
+        .execute(&mut **connection)
+        .await?;
+      },
+      None => {
+        sqlx::query!(
+          r#"
+            INSERT INTO steamkey_recipients (record_id, user_id, guild_id, challenge_prize, total_keys) VALUES ($1, $2, $3, TRUE, 1)
+          "#,
+          Ulid::new().to_string(),
+          user_id.to_string(),
+          guild_id.to_string(),
+        )
+        .execute(&mut **connection)
+        .await?;
+      }
+    }
+
+    Ok(())
+  }
+
   pub async fn add_erase(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     guild_id: &serenity::GuildId,

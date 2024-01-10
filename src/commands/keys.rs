@@ -1,14 +1,14 @@
 use crate::commands::{commit_and_say, MessageType};
-use crate::pagination::{PageRowRef, Pagination};
 use crate::database::DatabaseHandler;
+use crate::pagination::{PageRowRef, Pagination};
 use crate::Context;
 use anyhow::Result;
-use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::{self as serenity, Mentionable};
 
 /// Commands for managing Playne keys
-/// 
+///
 /// Commands to list, add, remove, or use Playne keys.
-/// 
+///
 /// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
@@ -24,12 +24,9 @@ pub async fn keys(_: Context<'_>) -> Result<()> {
 }
 
 /// List all Playne keys in the database
-/// 
+///
 /// Lists all Playne keys in the database.
-#[poise::command(
-  slash_command,
-  rename = "list",
-)]
+#[poise::command(slash_command, rename = "list")]
 pub async fn list_keys(
   ctx: Context<'_>,
   #[description = "The page to show"] page: Option<usize>,
@@ -48,7 +45,9 @@ pub async fn list_keys(
 
   let mut current_page = page.unwrap_or(0);
 
-  if current_page > 0 { current_page = current_page - 1 }
+  if current_page > 0 {
+    current_page = current_page - 1
+  }
 
   let keys = DatabaseHandler::get_all_steam_keys(&mut transaction, &guild_id).await?;
   let keys: Vec<PageRowRef> = keys.iter().map(|key| key as PageRowRef).collect();
@@ -113,12 +112,9 @@ pub async fn list_keys(
 }
 
 /// Add a Playne key to the database
-/// 
+///
 /// Adds a Playne key to the database.
-#[poise::command(
-  slash_command,
-  rename = "add",
-)]
+#[poise::command(slash_command, rename = "add")]
 pub async fn add_key(
   ctx: Context<'_>,
   #[description = "The Playne key to add"] key: String,
@@ -150,12 +146,9 @@ pub async fn add_key(
 }
 
 /// Remove a Playne key from the database
-/// 
+///
 /// Removes a Playne key from the database.
-#[poise::command(
-  slash_command,
-  rename = "remove",
-)]
+#[poise::command(slash_command, rename = "remove")]
 pub async fn remove_key(
   ctx: Context<'_>,
   #[description = "The Playne key to remove"] key: String,
@@ -187,12 +180,9 @@ pub async fn remove_key(
 }
 
 /// Retrieve a Playne key
-/// 
+///
 /// Selects an unused Playne key from the database, returning it and marking it as used.
-#[poise::command(
-  slash_command,
-  rename = "use",
-)]
+#[poise::command(slash_command, rename = "use")]
 pub async fn use_key(ctx: Context<'_>) -> Result<()> {
   ctx.defer_ephemeral().await?;
 
@@ -214,8 +204,11 @@ pub async fn use_key(ctx: Context<'_>) -> Result<()> {
 
   ctx
     .send(|f| {
-      f.content(format!(":white_check_mark: Key retrieved and marked used: `{}`", key))
-        .ephemeral(true)
+      f.content(format!(
+        ":white_check_mark: Key retrieved and marked used: `{}`",
+        key
+      ))
+      .ephemeral(true)
     })
     .await?;
 
@@ -223,23 +216,17 @@ pub async fn use_key(ctx: Context<'_>) -> Result<()> {
 }
 
 /// Commands for managing Playne key recipients
-/// 
-/// Commands to list, add, update, or remove Playne key recipients.
-#[poise::command(
-  slash_command,
-  subcommands("list_recipients", "add_recipient", "update_recipient", "remove_recipient")
-)]
+///
+/// Commands to list or manage entries in the Playne key recipients database.
+#[poise::command(slash_command, subcommands("list_recipients", "update_recipient"))]
 pub async fn recipients(_: Context<'_>) -> Result<()> {
   Ok(())
 }
 
 /// List all Playne key recipients in the database
-/// 
+///
 /// Lists all Playne key recipients in the database.
-#[poise::command(
-  slash_command,
-  rename = "list",
-)]
+#[poise::command(slash_command, rename = "list")]
 pub async fn list_recipients(
   ctx: Context<'_>,
   #[description = "The page to show"] page: Option<usize>,
@@ -258,10 +245,15 @@ pub async fn list_recipients(
 
   let mut current_page = page.unwrap_or(0);
 
-  if current_page > 0 { current_page = current_page - 1 }
+  if current_page > 0 {
+    current_page = current_page - 1
+  }
 
   let recipients = DatabaseHandler::get_steamkey_recipients(&mut transaction, &guild_id).await?;
-  let recipients: Vec<PageRowRef> = recipients.iter().map(|recipient| recipient as PageRowRef).collect();
+  let recipients: Vec<PageRowRef> = recipients
+    .iter()
+    .map(|recipient| recipient as PageRowRef)
+    .collect();
   drop(transaction);
   let pagination = Pagination::new("Playne Key Recipients", recipients).await?;
 
@@ -322,64 +314,35 @@ pub async fn list_recipients(
   Ok(())
 }
 
-/// Add a Playne key recipient to the database
-/// 
-/// Adds a Playne key recipient to the database.
-#[poise::command(
-  slash_command,
-  rename = "add",
-)]
-pub async fn add_recipient(
-  ctx: Context<'_>,
-  #[description = "Playne key recipient to add"] recipient: serenity::User,
-  #[description = "Received key as challenge prize"] challenge_prize: Option<bool>,
-  #[description = "Received key as donator perk"] donator_perk: Option<bool>,
-  #[description = "Total number of Playne keys received"] total_keys: i16,
-) -> Result<()> {
-  let data = ctx.data();
-
-  // We unwrap here, because we know that the command is guild-only.
-  let guild_id = ctx.guild_id().unwrap();
-
-  let mut transaction = data.db.start_transaction_with_retry(5).await?;
-
-  if DatabaseHandler::get_steamkey_recipient(&mut transaction, &guild_id, &recipient.id).await?.is_some() {
-    ctx
-      .send(|f| f.content(":x: Recipient already in database. Use `/keys recipients update` to update.").ephemeral(true))
-      .await?;
-    return Ok(());
-  }
-
-  DatabaseHandler::add_steamkey_recipient(&mut transaction, &guild_id, &recipient.id, challenge_prize, donator_perk, total_keys).await?;
-
-  commit_and_say(
-    ctx,
-    transaction,
-    MessageType::TextOnly(":white_check_mark: Recipient has been added.".to_string()),
-    true,
-  )
-  .await?;
-
-  Ok(())
-}
-
-/// Update a Playne key recipient in the database
-/// 
-/// Updates a Playne key recipient in the database.
-#[poise::command(
-  slash_command,
-  rename = "update",
-)]
+/// Update the Playne key recipient database
+///
+/// Updates the Playne key recipient database.
+///
+/// If data is provided for a recipient not in the database, a new entry will be created. If data is provided for an existing recipient, the recipient's data will be updated. Specifying zero total keys for an existing recipient will remove that recipient from the database.
+#[poise::command(slash_command, rename = "update")]
 pub async fn update_recipient(
   ctx: Context<'_>,
-  #[description = "Playne key recipient to update"] recipient: serenity::User,
+  #[description = "Playne key recipient"] recipient: serenity::User,
   #[description = "Received key as challenge prize"] challenge_prize: Option<bool>,
   #[description = "Received key as donator perk"] donator_perk: Option<bool>,
   #[description = "Total number of Playne keys received"] total_keys: Option<i16>,
 ) -> Result<()> {
   if challenge_prize.is_none() && donator_perk.is_none() && total_keys.is_none() {
     ctx
-      .send(|f| f.content(":x: No new data supplied. Update aborted.").ephemeral(true))
+      .send(|f| {
+        f.content(":x: No input provided. Update aborted.")
+          .ephemeral(true)
+      })
+      .await?;
+    return Ok(());
+  }
+
+  if total_keys.is_some() && total_keys.unwrap() < 0 {
+    ctx
+      .send(|f| {
+        f.content(":x: Total keys cannot be less than zero.")
+          .ephemeral(true)
+      })
       .await?;
     return Ok(());
   }
@@ -390,73 +353,162 @@ pub async fn update_recipient(
   let guild_id = ctx.guild_id().unwrap();
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
-  let steamkey_recipient = DatabaseHandler::get_steamkey_recipient(&mut transaction, &guild_id, &recipient.id).await?;
+  let steamkey_recipient =
+    DatabaseHandler::get_steamkey_recipient(&mut transaction, &guild_id, &recipient.id).await?;
 
-  match steamkey_recipient {
-    Some(steamkey_recipient) => {
-      let challenge_prize = match challenge_prize {
-        Some(_) => challenge_prize,
-        None => steamkey_recipient.challenge_prize
-      };
-      let donator_perk = match donator_perk {
-        Some(_) => donator_perk,
-        None => steamkey_recipient.donator_perk
-      };
-      let total_keys = match total_keys {
-        Some(value) => value,
-        None => steamkey_recipient.total_keys
-      };
-      DatabaseHandler::update_steamkey_recipient(&mut transaction, &guild_id, &recipient.id, challenge_prize, donator_perk, total_keys).await?;
-    },
-    None => {
-      ctx
-      .send(|f| f.content(":x: Recipient not in database. Use `/keys recipients add` to add a recipient.").ephemeral(true))
-      .await?;
-      return Ok(());
+  if steamkey_recipient.is_none() {
+    match total_keys {
+      Some(total_keys) => {
+        DatabaseHandler::add_steamkey_recipient(
+          &mut transaction,
+          &guild_id,
+          &recipient.id,
+          challenge_prize,
+          donator_perk,
+          total_keys,
+        )
+        .await?;
+
+        commit_and_say(
+          ctx,
+          transaction,
+          MessageType::TextOnly(
+            ":white_check_mark: Recipient has been added to the database.".to_string(),
+          ),
+          true,
+        )
+        .await?;
+        return Ok(());
+      }
+      None => {
+        ctx
+          .send(|f| f.content(":x: No existing record for recipient. Please specify a number of keys to create a new record.").ephemeral(true))
+          .await?;
+        DatabaseHandler::rollback_transaction(transaction).await?;
+        return Ok(());
+      }
     }
   }
+
+  if total_keys.is_some() && total_keys.unwrap() == 0 {
+    DatabaseHandler::remove_steamkey_recipient(&mut transaction, &guild_id, &recipient.id).await?;
+
+    let ctx_id = ctx.id();
+
+    let confirm_id = format!("{}confirm", ctx_id);
+    let cancel_id = format!("{}cancel", ctx_id);
+
+    ctx
+      .send(|f| {
+        f.content(format!(
+          "Are you sure you want to remove {} from the recipient database?",
+          recipient.mention()
+        ))
+        .ephemeral(true)
+        .components(|c| {
+          c.create_action_row(|a| {
+            a.create_button(|b| {
+              b.custom_id(confirm_id.clone())
+                .label("Yes")
+                .style(serenity::ButtonStyle::Success)
+            })
+            .create_button(|b| {
+              b.custom_id(cancel_id.clone())
+                .label("No")
+                .style(serenity::ButtonStyle::Danger)
+            })
+          })
+        })
+      })
+      .await?;
+
+    // Loop through incoming interactions with the navigation buttons
+    while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+      // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
+      // button was pressed
+      .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
+      // Timeout when no navigation button has been pressed in one minute
+      .timeout(std::time::Duration::from_secs(60))
+      .await
+    {
+      // Depending on which button was pressed, go to next or previous page
+      if press.data.custom_id != confirm_id && press.data.custom_id != cancel_id {
+        // This is an unrelated button interaction
+        continue;
+      }
+
+      let confirmed = press.data.custom_id == confirm_id;
+
+      // Update the message with the new page contents
+      if confirmed {
+        match press
+          .create_interaction_response(ctx, |b| {
+            b.kind(serenity::InteractionResponseType::UpdateMessage)
+              .interaction_response_data(|f| {
+                f.content("Confirmed.")
+                  .set_components(serenity::CreateComponents(Vec::new()))
+              })
+          })
+          .await
+        {
+          Ok(_) => {
+            DatabaseHandler::commit_transaction(transaction).await?;
+            return Ok(());
+          }
+          Err(e) => {
+            DatabaseHandler::rollback_transaction(transaction).await?;
+            return Err(anyhow::anyhow!(
+              "Failed to tell user that {} ({}) was removed from the recipient database: {}",
+              recipient.name,
+              recipient.id,
+              e,
+            ));
+          }
+        }
+      } else {
+        press
+          .create_interaction_response(ctx, |b| {
+            b.kind(serenity::InteractionResponseType::UpdateMessage)
+              .interaction_response_data(|f| {
+                f.content("Cancelled.")
+                  .set_components(serenity::CreateComponents(Vec::new()))
+              })
+          })
+          .await?;
+      }
+    }
+    // This happens when the user didn't press any button for 60 seconds
+    return Ok(());
+  }
+
+  let steamkey_recipient = steamkey_recipient.unwrap();
+  let challenge_prize = match challenge_prize {
+    Some(_) => challenge_prize,
+    None => steamkey_recipient.challenge_prize,
+  };
+  let donator_perk = match donator_perk {
+    Some(_) => donator_perk,
+    None => steamkey_recipient.donator_perk,
+  };
+  let total_keys = match total_keys {
+    Some(total_keys) => total_keys,
+    None => steamkey_recipient.total_keys,
+  };
+
+  DatabaseHandler::update_steamkey_recipient(
+    &mut transaction,
+    &guild_id,
+    &recipient.id,
+    challenge_prize,
+    donator_perk,
+    total_keys,
+  )
+  .await?;
 
   commit_and_say(
     ctx,
     transaction,
     MessageType::TextOnly(":white_check_mark: Recipient has been updated.".to_string()),
-    true,
-  )
-  .await?;
-
-  Ok(())
-}
-
-/// Remove a Playne key recipient from the database
-/// 
-/// Removes a Playne key recipient from the database.
-#[poise::command(
-  slash_command,
-  rename = "remove",
-)]
-pub async fn remove_recipient(
-  ctx: Context<'_>,
-  #[description = "Playne key recipient to remove"] recipient: serenity::User,
-) -> Result<()> {
-  let data = ctx.data();
-
-  // We unwrap here, because we know that the command is guild-only.
-  let guild_id = ctx.guild_id().unwrap();
-
-  let mut transaction = data.db.start_transaction_with_retry(5).await?;
-  if DatabaseHandler::get_steamkey_recipient(&mut transaction, &guild_id, &recipient.id).await?.is_none() {
-    ctx
-      .send(|f| f.content(":x: Recipient not in database.").ephemeral(true))
-      .await?;
-    return Ok(());
-  }
-
-  DatabaseHandler::remove_steamkey_recipient(&mut transaction, &guild_id, &recipient.id).await?;
-
-  commit_and_say(
-    ctx,
-    transaction,
-    MessageType::TextOnly(format!(":white_check_mark: Recipient has been removed.")),
     true,
   )
   .await?;

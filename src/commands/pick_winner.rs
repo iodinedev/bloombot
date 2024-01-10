@@ -110,7 +110,13 @@ async fn finalize_winner(
     }
   };
 
-  ctx.send(|f| f.content(format!(":white_check_mark: Sent DM to {} and sent announcement!", winner.user)))
+  ctx
+    .send(|f| {
+      f.content(format!(
+        ":white_check_mark: Sent DM to {} and sent announcement!",
+        winner.user
+      ))
+    })
     .await?;
 
   // Loop through incoming interactions with the buttons
@@ -130,14 +136,12 @@ async fn finalize_winner(
         "[Redeem your key](https://store.steampowered.com/account/registerkey?key={})",
         reserved_key
       );
-      /*DatabaseHandler::add_steamkey_recipient(
-        &mut conn, 
-        &ctx.guild_id().unwrap(), 
-        &winner.user.id, 
-        Some(true), 
-        None, 
-        1
-      ).await?;*/
+      DatabaseHandler::record_steamkey_receipt(
+        &mut conn,
+        &ctx.guild_id().unwrap(),
+        &winner.user.id,
+      )
+      .await?;
 
       dm_message
         .edit(ctx, |f| {
@@ -145,26 +149,29 @@ async fn finalize_winner(
         })
         .await?;
 
-      dm_channel.send_message(ctx, |f| f
-        .content(format!(
-          "Awesome! Here is your key:\n```{}```\n{}",
-          reserved_key, hyperlink
-        ))
-      ).await?;
+      dm_channel
+        .send_message(ctx, |f| {
+          f.content(format!(
+            "Awesome! Here is your key:\n```{}```\n{}",
+            reserved_key, hyperlink
+          ))
+        })
+        .await?;
 
       let log_embed = BloomBotEmbed::new()
         .title("**Key Redeemed**")
         .description(format!(
-            "Playne key redeemed by <@{}>. Key has been marked as used.",
-            winner.user.id
-          ))
+          "Playne key redeemed by <@{}>. Key has been marked as used.",
+          winner.user.id
+        ))
         .footer(|f| {
           f.icon_url(winner.user.avatar_url().unwrap_or_default())
             .text(format!("{} ({})", winner.user.name, winner.user.id))
-        }).to_owned();
-    
+        })
+        .to_owned();
+
       let log_channel = serenity::ChannelId(CHANNELS.logs);
-    
+
       log_channel
         .send_message(ctx, |f| f.set_embed(log_embed))
         .await?;
@@ -180,23 +187,26 @@ async fn finalize_winner(
         })
         .await?;
 
-      dm_channel.send_message(ctx, |f| f
-        .content("Alright, we'll keep it for someone else. Congrats again!")
-      ).await?;
+      dm_channel
+        .send_message(ctx, |f| {
+          f.content("Alright, we'll keep it for someone else. Congrats again!")
+        })
+        .await?;
 
       let log_embed = BloomBotEmbed::new()
         .title("**Key Declined**")
         .description(format!(
-            "Playne key declined by <@{}>. Key has been returned to the pool.",
-            winner.user.id
-          ))
+          "Playne key declined by <@{}>. Key has been returned to the pool.",
+          winner.user.id
+        ))
         .footer(|f| {
           f.icon_url(winner.user.avatar_url().unwrap_or_default())
             .text(format!("{} ({})", winner.user.name, winner.user.id))
-        }).to_owned();
-    
+        })
+        .to_owned();
+
       let log_channel = serenity::ChannelId(CHANNELS.logs);
-    
+
       log_channel
         .send_message(ctx, |f| f.set_embed(log_embed))
         .await?;
@@ -246,13 +256,14 @@ async fn finalize_winner(
 }
 
 /// Pick a winner for the monthly challenge
-/// 
+///
 /// Picks the winner for the monthly meditation challenge and allows them to claim an unused Playne key.
 ///
-/// Finds a user who meets the following criteria:
+/// Finds a user who meets the following criteria (defaults):
 /// - Has the `@meditation challengers` role
 /// - Has tracked at least 30 minutes during the specified month
 /// - Has at least 8 sessions during the specified month
+/// - Has not received a Playne key previously
 /// If multiple users meet this criteria, one is chosen at random.
 #[poise::command(
   slash_command,
@@ -269,6 +280,12 @@ pub async fn pick_winner(
   #[description = "The month to pick a winner for (defaults to this month in UTC)"] month: Option<
     Months,
   >,
+  #[description = "Minimum minutes for eligibility (defaults to 30 minutes)"]
+  minimum_minutes: Option<i64>,
+  #[description = "Minimum session count for eligibility (defaults to 8 sessions)"]
+  minimum_count: Option<u64>,
+  #[description = "Include users who have already received a Playne key (defaults to false)"]
+  allow_multiple_keys: Option<bool>,
 ) -> Result<()> {
   ctx.defer_ephemeral().await?;
 
@@ -357,7 +374,11 @@ pub async fn pick_winner(
       continue;
     }
 
-    if DatabaseHandler::get_steamkey_recipient(&mut transaction, &guild_id, &member.user.id).await?.is_some() {
+    if !allow_multiple_keys.unwrap_or(false)
+      && DatabaseHandler::get_steamkey_recipient(&mut transaction, &guild_id, &member.user.id)
+        .await?
+        .is_some()
+    {
       continue;
     }
 
@@ -378,9 +399,11 @@ pub async fn pick_winner(
       end_datetime,
     )
     .await?;
-    
+
     // Make sure user has at least 30 minutes and 8 sessions during the challenge period
-    if challenge_minutes < 30 || challenge_count < 8 {
+    if challenge_minutes < minimum_minutes.unwrap_or(30)
+      || challenge_count < minimum_count.unwrap_or(8)
+    {
       continue;
     }
 
