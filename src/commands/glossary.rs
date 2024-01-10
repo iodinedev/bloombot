@@ -8,9 +8,9 @@ use pgvector;
 use poise::serenity_prelude as serenity;
 
 /// Glossary commands
-/// 
+///
 /// Commands for interacting with the glossary.
-/// 
+///
 /// Get `info` on a glossary entry, see a `list` of entries, or `search` for a relevant entry.
 #[poise::command(
   slash_command,
@@ -24,7 +24,7 @@ pub async fn glossary(_: Context<'_>) -> Result<()> {
 }
 
 /// See a list of all glossary entries
-/// 
+///
 /// Shows a list of all glossary entries.
 #[poise::command(slash_command)]
 pub async fn list(
@@ -45,7 +45,9 @@ pub async fn list(
 
   let mut current_page = page.unwrap_or(0);
 
-  if current_page > 0 { current_page = current_page - 1 }
+  if current_page > 0 {
+    current_page = current_page - 1
+  }
 
   let entries = DatabaseHandler::get_all_glossary_terms(&mut transaction, &guild_id).await?;
   let entries: Vec<PageRowRef> = entries.iter().map(|entry| entry as _).collect();
@@ -109,7 +111,7 @@ pub async fn list(
 }
 
 /// See information about a glossary entry
-/// 
+///
 /// Shows information about a glossary entry.
 #[poise::command(slash_command)]
 pub async fn info(
@@ -127,18 +129,37 @@ pub async fn info(
     Some(term_info) => {
       embed.title(term_info.term_name);
       embed.description(term_info.meaning);
-      if let Some(category) = term_info.category {
-        embed.footer(|f| {
-          f.text(format!(
-            "Categories: {}",
-            category
-          ))
-        });
+      let usage = term_info.usage.unwrap_or(String::new());
+      if !usage.is_empty() {
+        embed.field("Example of Usage:", usage, false);
+      }
+      let links = term_info.links.unwrap_or(Vec::new());
+      if !links.is_empty() {
+        embed.field(
+          "Related Resources:",
+          {
+            let mut field = String::new();
+            let mut count = 1;
+
+            for link in links {
+              field.push_str(&format!("{}. {}\n", count, link));
+              count += 1;
+            }
+
+            field
+          },
+          false,
+        );
+      }
+      let category = term_info.category.unwrap_or(String::new());
+      if !category.is_empty() {
+        embed.field("Categories:", category, false);
       }
     }
     None => {
       let possible_terms =
-        DatabaseHandler::get_possible_terms(&mut transaction, &guild_id, &term.as_str(), 0.7).await?;
+        DatabaseHandler::get_possible_terms(&mut transaction, &guild_id, &term.as_str(), 0.7)
+          .await?;
 
       if possible_terms.len() == 1 {
         let possible_term = possible_terms.first().unwrap();
@@ -255,15 +276,23 @@ pub async fn search(
           let truncate = possible_term.meaning.chars().take(157).collect::<String>();
           let truncate_split = match truncate.rsplit_once(' ') {
             Some(pair) => pair.0.to_string(),
-            None => truncate.to_string()
+            None => truncate.to_string(),
           };
-          let truncate_final = if truncate_split.chars().last().unwrap().is_ascii_punctuation() {
-            truncate_split.chars().take(truncate_split.chars().count() - 1).collect::<String>()
+          let truncate_final = if truncate_split
+            .chars()
+            .last()
+            .unwrap()
+            .is_ascii_punctuation()
+          {
+            truncate_split
+              .chars()
+              .take(truncate_split.chars().count() - 1)
+              .collect::<String>()
           } else {
             truncate_split
           };
           format!("{}...", truncate_final)
-        },
+        }
         false => possible_term.meaning.clone(),
       };
 
