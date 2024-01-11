@@ -192,14 +192,14 @@ pub async fn info(
         if !category.is_empty() {
           embed.footer(|f| {
             f.text(format!(
-              "Categories: {}\n\nYour search was `{}`, and it was corrected to `{}`.",
+              "Categories: {}\n\n*You searched for '{}'. The closest term available was '{}'.",
               category, term, possible_term.term_name
             ))
           });
         } else {
           embed.footer(|f| {
             f.text(format!(
-              "Your search was `{}`, and it was corrected to `{}`.",
+              "*You searched for '{}'. The closest term available was '{}'.",
               term, possible_term.term_name
             ))
           });

@@ -1376,7 +1376,7 @@ impl DatabaseHandler {
 
     let terms: Vec<TermSearchResult> = sqlx::query_as(
       r#"
-        SELECT term_name, meaning, embedding <-> $1 AS distance_score
+        SELECT term_name, meaning, embedding <=> $1 AS distance_score
         FROM term
         WHERE guild_id = $2
         ORDER BY distance_score ASC
