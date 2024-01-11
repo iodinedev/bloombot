@@ -282,7 +282,7 @@ pub async fn search(
     embed.description("No terms were found. Try browsing the glossary with `/glossary list`.");
   } else {
     for (index, possible_term) in possible_terms.iter().enumerate() {
-      if possible_term.distance_score.unwrap_or(1.0) > 0.5 {
+      if possible_term.distance_score.unwrap_or(1.0) > 0.6 {
         continue;
       }
       let relevance_description = match possible_term.distance_score {
@@ -348,6 +348,10 @@ pub async fn search(
       (end_time - start_time).as_millis()
     ))
   });
+
+  if !embed.0.contains_key("description") && !embed.0.contains_key("fields") {
+    embed.description("No terms were found. Try browsing the glossary with `/glossary list`.");
+  }
 
   ctx
     .send(|f| {
