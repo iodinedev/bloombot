@@ -153,7 +153,7 @@ pub async fn info(
       }
       let category = term_info.category.unwrap_or(String::new());
       if !category.is_empty() {
-        embed.field("Categories:", category, false);
+        embed.footer(|f| f.text(format!("Categories: {}", category)));
       }
     }
     None => {
@@ -166,12 +166,44 @@ pub async fn info(
 
         embed.title(&possible_term.term_name);
         embed.description(&possible_term.meaning);
-        embed.footer(|f| {
-          f.text(format!(
-            "Your search was `{}`, and it was corrected to `{}`.",
-            term, possible_term.term_name
-          ))
-        });
+        let usage = possible_term.usage.clone().unwrap_or(String::new());
+        if !usage.is_empty() {
+          embed.field("Example of Usage:", usage, false);
+        }
+        let links = possible_term.links.clone().unwrap_or(Vec::new());
+        if !links.is_empty() {
+          embed.field(
+            "Related Resources:",
+            {
+              let mut field = String::new();
+              let mut count = 1;
+
+              for link in links {
+                field.push_str(&format!("{}. {}\n", count, link));
+                count += 1;
+              }
+
+              field
+            },
+            false,
+          );
+        }
+        let category = possible_term.category.clone().unwrap_or(String::new());
+        if !category.is_empty() {
+          embed.footer(|f| {
+            f.text(format!(
+              "Categories: {}\n\nYour search was `{}`, and it was corrected to `{}`.",
+              category, term, possible_term.term_name
+            ))
+          });
+        } else {
+          embed.footer(|f| {
+            f.text(format!(
+              "Your search was `{}`, and it was corrected to `{}`.",
+              term, possible_term.term_name
+            ))
+          });
+        }
       } else if possible_terms.is_empty() {
         embed.title("Term not found");
         embed.description(format!(
