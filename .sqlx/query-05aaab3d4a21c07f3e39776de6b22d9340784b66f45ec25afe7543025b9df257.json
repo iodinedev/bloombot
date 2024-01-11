@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT course_name, participant_role, graduate_role, SIMILARITY(LOWER(course_name), LOWER($1)) AS similarity_score\n        FROM course\n        WHERE SIMILARITY(LOWER(course_name), LOWER($1)) > $2 AND guild_id = $3\n        ORDER BY similarity_score DESC\n        LIMIT 1\n      ",
+  "query": "\n        SELECT course_name, participant_role, graduate_role, SET_LIMIT($2), SIMILARITY(LOWER(course_name), LOWER($1)) AS similarity_score\n        FROM course\n        WHERE LOWER(course_name) % LOWER($1) AND guild_id = $3\n        ORDER BY similarity_score DESC\n        LIMIT 1\n      ",
   "describe": {
     "columns": [
       {
@@ -20,6 +20,11 @@
       },
       {
         "ordinal": 3,
+        "name": "set_limit",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 4,
         "name": "similarity_score",
         "type_info": "Float4"
       }
@@ -35,8 +40,9 @@
       false,
       false,
       false,
+      null,
       null
     ]
   },
-  "hash": "0dcf759cadb45cdb771976680952e33478c985fb2cdfec147a4f56916e623ac4"
+  "hash": "05aaab3d4a21c07f3e39776de6b22d9340784b66f45ec25afe7543025b9df257"
 }

@@ -626,6 +626,24 @@ impl DatabaseHandler {
     Ok(steamkey_recipients)
   }
 
+  pub async fn steamkey_recipient_exists(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    user_id: &serenity::UserId,
+  ) -> Result<bool> {
+    let row = sqlx::query!(
+      r#"
+        SELECT EXISTS(SELECT 1 FROM steamkey_recipients WHERE guild_id = $1 AND user_id = $2)
+      "#,
+      guild_id.to_string(),
+      user_id.to_string(),
+    )
+    .fetch_one(&mut **transaction)
+    .await?;
+
+    Ok(row.exists.unwrap())
+  }
+
   pub async fn record_steamkey_receipt(
     connection: &mut sqlx::pool::PoolConnection<sqlx::Postgres>,
     guild_id: &serenity::GuildId,
@@ -1527,9 +1545,9 @@ impl DatabaseHandler {
   ) -> Result<Option<CourseData>> {
     let row = sqlx::query!(
       r#"
-        SELECT course_name, participant_role, graduate_role, SIMILARITY(LOWER(course_name), LOWER($1)) AS similarity_score
+        SELECT course_name, participant_role, graduate_role, SET_LIMIT($2), SIMILARITY(LOWER(course_name), LOWER($1)) AS similarity_score
         FROM course
-        WHERE SIMILARITY(LOWER(course_name), LOWER($1)) > $2 AND guild_id = $3
+        WHERE LOWER(course_name) % LOWER($1) AND guild_id = $3
         ORDER BY similarity_score DESC
         LIMIT 1
       "#,

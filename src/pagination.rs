@@ -69,7 +69,7 @@ impl<'a> Pagination<'a> {
     let mut new_page = current_page as isize + change_by;
 
     if new_page < 0 {
-      new_page = self.page_count as isize;
+      new_page = (self.page_count - 1) as isize;
     } else if new_page >= self.page_count as isize {
       new_page = 0;
     }

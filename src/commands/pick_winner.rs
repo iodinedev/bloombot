@@ -375,9 +375,8 @@ pub async fn pick_winner(
     }
 
     if !allow_multiple_keys.unwrap_or(false)
-      && DatabaseHandler::get_steamkey_recipient(&mut transaction, &guild_id, &member.user.id)
+      && DatabaseHandler::steamkey_recipient_exists(&mut transaction, &guild_id, &member.user.id)
         .await?
-        .is_some()
     {
       continue;
     }

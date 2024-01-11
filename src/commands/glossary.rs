@@ -272,7 +272,7 @@ pub async fn search(
       .await?,
   );
   let possible_terms =
-    DatabaseHandler::search_terms_by_vector(&mut transaction, &guild_id, vector, 5).await?;
+    DatabaseHandler::search_terms_by_vector(&mut transaction, &guild_id, vector, 3).await?;
   let end_time = std::time::Instant::now();
 
   let mut embed = BloomBotEmbed::new();
@@ -282,6 +282,9 @@ pub async fn search(
     embed.description("No terms were found. Try browsing the glossary with `/glossary list`.");
   } else {
     for (index, possible_term) in possible_terms.iter().enumerate() {
+      if possible_term.distance_score.unwrap_or(1.0) > 0.5 {
+        continue;
+      }
       let relevance_description = match possible_term.distance_score {
         Some(score) => {
           let similarity_score = ((1.0 - score) * 100.0) as i32;
