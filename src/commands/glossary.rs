@@ -15,7 +15,7 @@ use poise::serenity_prelude as serenity;
 #[poise::command(
   slash_command,
   category = "Informational",
-  subcommands("list", "info", "search"),
+  subcommands("list", "browse", "info", "search"),
   subcommand_required,
   guild_only
 )]
@@ -27,7 +27,46 @@ pub async fn glossary(_: Context<'_>) -> Result<()> {
 ///
 /// Shows a list of all glossary entries.
 #[poise::command(slash_command)]
-pub async fn list(
+pub async fn list(ctx: Context<'_>) -> Result<()> {
+  let data = ctx.data();
+
+  // We unwrap here, because we know that the command is guild-only.
+  let guild_id = ctx.guild_id().unwrap();
+
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
+  let term_names = DatabaseHandler::get_term_list(&mut transaction, &guild_id).await?;
+  let term_count = term_names.len();
+
+  let mut term_list = String::new();
+  for (i, term_name) in term_names.iter().enumerate() {
+    term_list.push_str(&term_name);
+    if (term_count - 1) < i {
+      term_list.push_str(", ");
+    }
+  }
+
+  ctx
+    .send(|f| {
+      f.embed(|f| {
+        f.title("List of Glossary Terms")
+          .description(format!(
+            "Use `/glossary info` with any of the following terms to read the full entry.\n```{}```",
+            term_list
+          ))
+          // Will not reach char limit for a while. Can add pagination later.
+          .footer(|f| f.text(format!("Showing {} of {} terms.", term_count, term_count)))
+      })
+    })
+    .await?;
+
+  Ok(())
+}
+
+/// Browse a list of all glossary entries
+///
+/// Browse a list of all glossary entries.
+#[poise::command(slash_command)]
+pub async fn browse(
   ctx: Context<'_>,
   #[description = "The page to show"] page: Option<usize>,
 ) -> Result<()> {
@@ -311,30 +350,7 @@ pub async fn search(
         None => "Unknown",
       };
 
-      let meaning = possible_term.meaning.clone(); /*match possible_term.meaning.chars().count() > 157 {
-        true => {
-          let truncate = possible_term.meaning.chars().take(157).collect::<String>();
-          let truncate_split = match truncate.rsplit_once(' ') {
-            Some(pair) => pair.0.to_string(),
-            None => truncate.to_string(),
-          };
-          let truncate_final = if truncate_split
-            .chars()
-            .last()
-            .unwrap()
-            .is_ascii_punctuation()
-          {
-            truncate_split
-              .chars()
-              .take(truncate_split.chars().count() - 1)
-              .collect::<String>()
-          } else {
-            truncate_split
-          };
-          format!("{}...", truncate_final)
-        }
-        false => possible_term.meaning.clone(),
-      };*/
+      let meaning = possible_term.meaning.clone();
 
       embed.field(
         format!("Term {}: `{}`", index + 1, &possible_term.term_name),

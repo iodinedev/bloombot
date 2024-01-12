@@ -1624,6 +1624,30 @@ impl DatabaseHandler {
     Ok(term_count.try_into().unwrap())
   }
 
+  pub async fn get_term_list(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+  ) -> Result<Vec<String>> {
+    let rows = sqlx::query!(
+      r#"
+        SELECT term_name
+        FROM term
+        WHERE guild_id = $1
+        ORDER BY term_name ASC
+      "#,
+      guild_id.to_string(),
+    )
+    .fetch_all(&mut **transaction)
+    .await?;
+
+    let term_list = rows
+      .into_iter()
+      .map(|row| row.term_name)
+      .collect();
+
+    Ok(term_list)
+  }
+
   pub async fn get_all_glossary_terms(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     guild_id: &serenity::GuildId,
