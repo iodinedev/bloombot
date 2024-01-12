@@ -276,13 +276,14 @@ pub async fn search(
   let end_time = std::time::Instant::now();
 
   let mut embed = BloomBotEmbed::new();
-  embed.title(format!("You searched for `{}`", search));
+  embed.title(format!("Search results for `{}`", search));
 
   if possible_terms.is_empty() {
     embed.description("No terms were found. Try browsing the glossary with `/glossary list`.");
   } else {
     for (index, possible_term) in possible_terms.iter().enumerate() {
-      if possible_term.distance_score.unwrap_or(1.0) > 0.6 {
+      // Set threshold for terms to include
+      if possible_term.distance_score.unwrap_or(1.0) > 0.3 {
         continue;
       }
       let relevance_description = match possible_term.distance_score {
@@ -295,18 +296,22 @@ pub async fn search(
           );
           match similarity_score {
             100..=i32::MAX => "Exact match",
-            80..=99 => "Very similar",
-            60..=79 => "Similar",
-            40..=59 => "Somewhat similar",
-            20..=39 => "Not very similar",
-            0..=19 => "Not similar",
+            // Adjust for cosine similarity
+            90..=99 => "High",
+            80..=89 => "Medium",
+            70..=79 => "Low",
+            // 80..=99 => "Very similar",
+            // 60..=79 => "Similar",
+            // 40..=59 => "Somewhat similar",
+            // 20..=39 => "Not very similar",
+            // 0..=19 => "Not similar",
             _ => "Unknown",
           }
         }
         None => "Unknown",
       };
 
-      let meaning = match possible_term.meaning.chars().count() > 157 {
+      let meaning = possible_term.meaning.clone(); /*match possible_term.meaning.chars().count() > 157 {
         true => {
           let truncate = possible_term.meaning.chars().take(157).collect::<String>();
           let truncate_split = match truncate.rsplit_once(' ') {
@@ -329,12 +334,13 @@ pub async fn search(
           format!("{}...", truncate_final)
         }
         false => possible_term.meaning.clone(),
-      };
+      };*/
 
       embed.field(
         format!("Term {}: `{}`", index + 1, &possible_term.term_name),
         format!(
-          "```{}```\n> Estimated relevance: *{}*",
+          // "```{}```\n> Estimated relevance: *{}*",
+          "{}\n```Estimated relevance: {}```\n** **",
           meaning, relevance_description
         ),
         false,
