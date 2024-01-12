@@ -40,15 +40,16 @@ pub async fn list(ctx: Context<'_>) -> Result<()> {
   let mut term_list = String::new();
   for (i, term_name) in term_names.iter().enumerate() {
     term_list.push_str(&term_name);
-    if (term_count - 1) < i {
+    if i < (term_count - 1) {
       term_list.push_str(", ");
     }
   }
 
   ctx
     .send(|f| {
-      f.embed(|f| {
-        f.title("List of Glossary Terms")
+      f.embed(|e| {
+        BloomBotEmbed::from(e)
+          .title("List of Glossary Terms")
           .description(format!(
             "Use `/glossary info` with any of the following terms to read the full entry.\n```{}```",
             term_list
