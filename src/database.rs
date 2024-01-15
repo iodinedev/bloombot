@@ -249,6 +249,7 @@ pub struct Term {
   pub usage: Option<String>,
   pub links: Option<Vec<String>>,
   pub category: Option<String>,
+  pub aliases: Option<Vec<String>>,
 }
 
 impl PageRow for Term {
@@ -1343,12 +1344,13 @@ impl DatabaseHandler {
     usage: Option<&str>,
     links: &[String],
     category: Option<&str>,
+    aliases: &[String],
     guild_id: &serenity::GuildId,
     vector: pgvector::Vector,
   ) -> Result<()> {
     sqlx::query(
       r#"
-        INSERT INTO term (record_id, term_name, meaning, usage, links, category, guild_id, embedding) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO term (record_id, term_name, meaning, usage, links, category, aliases, guild_id, embedding) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       "#)
       .bind(Ulid::new().to_string())
       .bind(term_name)
@@ -1356,6 +1358,7 @@ impl DatabaseHandler {
       .bind(usage)
       .bind(links)
       .bind(category)
+      .bind(aliases)
       .bind(guild_id.to_string())
       .bind(vector)
       .execute(&mut **transaction)
@@ -1399,9 +1402,10 @@ impl DatabaseHandler {
   ) -> Result<Option<Term>> {
     let row = sqlx::query!(
       r#"
-        SELECT record_id, term_name, meaning, usage, links, category
+        SELECT record_id, term_name, meaning, usage, links, category, aliases
         FROM term
-        WHERE LOWER(term_name) = LOWER($1) AND guild_id = $2
+        WHERE (LOWER(term_name) = LOWER($1) AND guild_id = $2)
+        OR (ARRAY_TO_STRING(aliases, ',') ILIKE $1 AND guild_id = $2)
       "#,
       term_name,
       guild_id.to_string(),
@@ -1417,6 +1421,7 @@ impl DatabaseHandler {
         usage: row.usage,
         links: row.links,
         category: row.category,
+        aliases: row.aliases,
       }),
       None => None,
     };
@@ -1424,14 +1429,14 @@ impl DatabaseHandler {
     Ok(term)
   }
 
-  pub async fn get_term_from_alias(
+  /*pub async fn get_term_from_alias(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     guild_id: &serenity::GuildId,
     alias: &str,
   ) -> Result<Option<Term>> {
     let row = sqlx::query!(
       r#"
-        SELECT record_id, term_name, meaning, usage, links, category
+        SELECT record_id, term_name, meaning, usage, links, category, aliases
         FROM term
         WHERE ARRAY_TO_STRING(aliases, ',') ILIKE $1 AND guild_id = $2
       "#,
@@ -1449,12 +1454,13 @@ impl DatabaseHandler {
         usage: row.usage,
         links: row.links,
         category: row.category,
+        aliases: row.aliases,
       }),
       None => None,
     };
 
     Ok(term)
-  }
+  }*/
 
   pub async fn edit_term(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
@@ -1463,19 +1469,21 @@ impl DatabaseHandler {
     usage: Option<&str>,
     links: &[String],
     category: Option<&str>,
+    aliases: &[String],
     vector: Option<pgvector::Vector>,
   ) -> Result<()> {
     sqlx::query(
       r#"
         UPDATE term
-        SET meaning = $1, usage = $2, links = $3, category = $4, embedding = COALESCE($5, embedding)
-        WHERE record_id = $6
+        SET meaning = $1, usage = $2, links = $3, category = $4, aliases = $5, embedding = COALESCE($6, embedding)
+        WHERE record_id = $7
       "#,
     )
     .bind(meaning)
     .bind(usage)
     .bind(links)
     .bind(category)
+    .bind(aliases)
     .bind(vector)
     .bind(original_id)
     .execute(&mut **transaction)
@@ -1610,7 +1618,7 @@ impl DatabaseHandler {
   ) -> Result<Vec<Term>> {
     let row = sqlx::query!(
       r#"
-        SELECT record_id, term_name, meaning, usage, links, category, SET_LIMIT($2), SIMILARITY(LOWER(term_name), LOWER($1)) AS similarity_score
+        SELECT record_id, term_name, meaning, usage, links, category, aliases, SET_LIMIT($2), SIMILARITY(LOWER(term_name), LOWER($1)) AS similarity_score
         FROM term
         WHERE LOWER(term_name) % LOWER($1) AND guild_id = $3
         ORDER BY similarity_score DESC
@@ -1633,6 +1641,7 @@ impl DatabaseHandler {
           usage: row.usage,
           links: row.links,
           category: row.category,
+          aliases: row.aliases,
         })
         .collect(),
     )
@@ -1705,6 +1714,7 @@ impl DatabaseHandler {
         usage: None,
         links: None,
         category: None,
+        aliases: None,
       })
       .collect();
 

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT record_id, term_name, meaning, usage, links, category\n        FROM term\n        WHERE ARRAY_TO_STRING(aliases, ',') ILIKE $1 AND guild_id = $2\n      ",
+  "query": "\n        SELECT record_id, term_name, meaning, usage, links, category, aliases\n        FROM term\n        WHERE (LOWER(term_name) = LOWER($1) AND guild_id = $2)\n        OR (ARRAY_TO_STRING(aliases, ',') ILIKE $1 AND guild_id = $2)\n      ",
   "describe": {
     "columns": [
       {
@@ -32,6 +32,11 @@
         "ordinal": 5,
         "name": "category",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "aliases",
+        "type_info": "TextArray"
       }
     ],
     "parameters": {
@@ -46,8 +51,9 @@
       false,
       true,
       true,
+      true,
       true
     ]
   },
-  "hash": "ce2e36abb9260f7082fb01d250f2becfb6fe85cd5f38a6c9008bd8f1468feab3"
+  "hash": "10d4751e9cf176336803f5ee5b13beba13c4546c1507c73f124af0ed3b12574d"
 }

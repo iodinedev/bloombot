@@ -23,6 +23,8 @@ struct AddTermModal {
   category: Option<String>,
   #[name = "Links to further reading, comma separated"]
   links: Option<String>,
+  #[name = "Term aliases, comma separated"]
+  aliases: Option<String>,
 }
 
 #[derive(Debug, Modal)]
@@ -38,6 +40,8 @@ struct UpdateTermModal {
   category: Option<String>,
   #[name = "Links to further reading, comma separated"]
   links: Option<String>,
+  #[name = "Term aliases, comma separated"]
+  aliases: Option<String>,
 }
 
 pub async fn term_not_found(
@@ -85,9 +89,9 @@ pub async fn term_not_found(
 }
 
 /// Commands for managing glossary entries
-/// 
+///
 /// Commands to add, remove, or edit glossary entries.
-/// 
+///
 /// Requires `Manage Roles` permissions.
 #[poise::command(
   slash_command,
@@ -104,7 +108,7 @@ pub async fn terms(_: poise::Context<'_, AppData, AppError>) -> Result<()> {
 }
 
 /// Add a new term to the glossary
-/// 
+///
 /// Adds a new term to the glossary.
 #[poise::command(slash_command)]
 pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Result<()> {
@@ -124,10 +128,10 @@ pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Resul
         None => Vec::new(),
       };
 
-      // let aliases = match term_data.aliases {
-      //   Some(aliases) => aliases.split(",").map(|s| s.trim().to_string()).collect(),
-      //   None => Vec::new(),
-      // };
+      let aliases = match term_data.aliases {
+        Some(aliases) => aliases.split(",").map(|s| s.trim().to_string()).collect(),
+        None => Vec::new(),
+      };
 
       let vector = pgvector::Vector::from(
         ctx
@@ -144,6 +148,7 @@ pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Resul
         term_data.example.as_deref(),
         links.as_slice(),
         term_data.category.as_deref(),
+        aliases.as_slice(),
         &guild_id,
         vector,
       )
@@ -169,7 +174,7 @@ pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Resul
 }
 
 /// Update an existing term in the glossary
-/// 
+///
 /// Updates an existing term in the glossary.
 #[poise::command(slash_command)]
 pub async fn edit(
@@ -200,6 +205,10 @@ pub async fn edit(
     Some(links) => Some(links.join(", ")),
     None => None,
   };
+  let aliases = match existing_term.aliases {
+    Some(aliases) => Some(aliases.join(", ")),
+    None => None,
+  };
 
   let existing_definition = existing_term.meaning.clone();
 
@@ -208,6 +217,7 @@ pub async fn edit(
     example: existing_term.usage,
     category: existing_term.category,
     links,
+    aliases,
   };
 
   let term_data = UpdateTermModal::execute_with_defaults(ctx, defaults).await?;
@@ -233,10 +243,10 @@ pub async fn edit(
         None
       };
 
-      // let aliases = match term_data.aliases {
-      //   Some(aliases) => aliases.split(",").map(|s| s.trim().to_string()).collect(),
-      //   None => Vec::new(),
-      // };
+      let aliases = match term_data.aliases {
+        Some(aliases) => aliases.split(",").map(|s| s.trim().to_string()).collect(),
+        None => Vec::new(),
+      };
 
       DatabaseHandler::edit_term(
         &mut transaction,
@@ -245,7 +255,8 @@ pub async fn edit(
         term_data.example.as_deref(),
         links.as_slice(),
         term_data.category.as_deref(),
-        vector, // aliases.as_slice(),
+        aliases.as_slice(),
+        vector,
       )
       .await?;
 
@@ -269,7 +280,7 @@ pub async fn edit(
 }
 
 /// Remove a term from the glossary
-/// 
+///
 /// Removes a term from the glossary.
 #[poise::command(slash_command)]
 pub async fn remove(
