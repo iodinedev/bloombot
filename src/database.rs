@@ -1424,6 +1424,38 @@ impl DatabaseHandler {
     Ok(term)
   }
 
+  pub async fn get_term_from_alias(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    alias: &str,
+  ) -> Result<Option<Term>> {
+    let row = sqlx::query!(
+      r#"
+        SELECT record_id, term_name, meaning, usage, links, category
+        FROM term
+        WHERE ARRAY_TO_STRING(aliases, ',') ILIKE $1 AND guild_id = $2
+      "#,
+      alias,
+      guild_id.to_string(),
+    )
+    .fetch_optional(&mut **transaction)
+    .await?;
+
+    let term = match row {
+      Some(row) => Some(Term {
+        id: row.record_id,
+        term_name: row.term_name,
+        meaning: row.meaning,
+        usage: row.usage,
+        links: row.links,
+        category: row.category,
+      }),
+      None => None,
+    };
+
+    Ok(term)
+  }
+
   pub async fn edit_term(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     original_id: &str,

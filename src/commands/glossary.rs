@@ -197,82 +197,116 @@ pub async fn info(
       }
     }
     None => {
-      let possible_terms =
-        DatabaseHandler::get_possible_terms(&mut transaction, &guild_id, &term.as_str(), 0.7)
-          .await?;
+      match DatabaseHandler::get_term_from_alias(&mut transaction, &guild_id, &term.as_str()).await? {
+        Some(term_from_alias) => {
+          embed.title(term_from_alias.term_name);
+          embed.description(term_from_alias.meaning);
+          let usage = term_from_alias.usage.unwrap_or(String::new());
+          if !usage.is_empty() {
+            embed.field("Example of Usage:", usage, false);
+          }
+          let links = term_from_alias.links.unwrap_or(Vec::new());
+          if !links.is_empty() {
+            embed.field(
+              "Related Resources:",
+              {
+                let mut field = String::new();
+                let mut count = 1;
 
-      if possible_terms.len() == 1 {
-        let possible_term = possible_terms.first().unwrap();
+                for link in links {
+                  field.push_str(&format!("{}. {}\n", count, link));
+                  count += 1;
+                }
 
-        embed.title(&possible_term.term_name);
-        embed.description(&possible_term.meaning);
-        let usage = possible_term.usage.clone().unwrap_or(String::new());
-        if !usage.is_empty() {
-          embed.field("Example of Usage:", usage, false);
-        }
-        let links = possible_term.links.clone().unwrap_or(Vec::new());
-        if !links.is_empty() {
-          embed.field(
-            "Related Resources:",
-            {
-              let mut field = String::new();
-              let mut count = 1;
-
-              for link in links {
-                field.push_str(&format!("{}. {}\n", count, link));
-                count += 1;
-              }
-
-              field
-            },
-            false,
-          );
-        }
-        let category = possible_term.category.clone().unwrap_or(String::new());
-        if !category.is_empty() {
-          embed.footer(|f| {
-            f.text(format!(
-              "Categories: {}\n\n*You searched for '{}'. The closest term available was '{}'.",
-              category, term, possible_term.term_name
-            ))
-          });
-        } else {
-          embed.footer(|f| {
-            f.text(format!(
-              "*You searched for '{}'. The closest term available was '{}'.",
-              term, possible_term.term_name
-            ))
-          });
-        }
-      } else if possible_terms.is_empty() {
-        embed.title("Term not found");
-        embed.description(format!(
-          "The term `{}` was not found in the glossary.",
-          term
-        ));
-      } else {
-        embed.title("Term not found");
-        embed.description(format!(
-          "The term `{}` was not found in the glossary.",
-          term
-        ));
-
-        embed.field(
-          "Did you mean one of these?",
-          {
-            let mut field = String::new();
-
-            for possible_term in possible_terms.iter().take(3) {
-              field.push_str(&format!("`{}`\n", possible_term.term_name));
+                field
+              },
+              false,
+            );
+          }
+          let category = term_from_alias.category.unwrap_or(String::new());
+          if !category.is_empty() {
+            embed.footer(|f| f.text(format!("Categories: {}", category)));
+          }
+        },
+        None => {
+          let possible_terms =
+          DatabaseHandler::get_possible_terms(&mut transaction, &guild_id, &term.as_str(), 0.7)
+            .await?;
+  
+          if possible_terms.len() == 1 {
+            let possible_term = possible_terms.first().unwrap();
+    
+            embed.title(&possible_term.term_name);
+            embed.description(&possible_term.meaning);
+            let usage = possible_term.usage.clone().unwrap_or(String::new());
+            if !usage.is_empty() {
+              embed.field("Example of Usage:", usage, false);
             }
-
-            field
-          },
-          false,
-        );
-
-        embed
-          .footer(|f| f.text("Try using `/search` to take advantage of a more powerful search."));
+            let links = possible_term.links.clone().unwrap_or(Vec::new());
+            if !links.is_empty() {
+              embed.field(
+                "Related Resources:",
+                {
+                  let mut field = String::new();
+                  let mut count = 1;
+    
+                  for link in links {
+                    field.push_str(&format!("{}. {}\n", count, link));
+                    count += 1;
+                  }
+    
+                  field
+                },
+                false,
+              );
+            }
+            let category = possible_term.category.clone().unwrap_or(String::new());
+            if !category.is_empty() {
+              embed.footer(|f| {
+                f.text(format!(
+                  "Categories: {}\n\n*You searched for '{}'. The closest term available was '{}'.",
+                  category, term, possible_term.term_name
+                ))
+              });
+            } else {
+              embed.footer(|f| {
+                f.text(format!(
+                  "*You searched for '{}'. The closest term available was '{}'.",
+                  term, possible_term.term_name
+                ))
+              });
+            }
+          } else if possible_terms.is_empty() {
+            embed.title("Term not found");
+            embed.description(format!(
+              "The term `{}` was not found in the glossary.",
+              term
+            ));
+          } else {
+            embed.title("Term not found");
+            embed.description(format!(
+              "The term `{}` was not found in the glossary.",
+              term
+            ));
+    
+            embed.field(
+              "Did you mean one of these?",
+              {
+                let mut field = String::new();
+    
+                for possible_term in possible_terms.iter().take(3) {
+                  field.push_str(&format!("`{}`\n", possible_term.term_name));
+                }
+    
+                field
+              },
+              false,
+            );
+    
+            embed
+              .footer(|f| f.text("Try using `/search` to take advantage of a more powerful search."));
+          }
+        }
       }
     }
   }
