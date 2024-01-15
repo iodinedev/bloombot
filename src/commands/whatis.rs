@@ -42,7 +42,17 @@ pub async fn whatis(
         let possible_term = possible_terms.first().unwrap();
 
         embed.title(&possible_term.term_name);
-        embed.description(&possible_term.meaning);
+        match &possible_term.meaning.split_once('\n') {
+          Some(one_liner) => {
+            embed.description(format!(
+              "{}\n\n*Use </glossary info:1135659962308243479> for more information.*",
+              one_liner.0.to_string()
+            ));
+          }
+          None => {
+            embed.description(&possible_term.meaning);
+          }
+        };
 
         embed.footer(|f| {
           f.text(format!(
