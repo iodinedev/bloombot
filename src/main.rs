@@ -4,7 +4,7 @@ use commands::{
   customize::customize, erase::erase, glossary::glossary, hello::hello, help::help,
   keys::keys, manage::manage, pick_winner::pick_winner, ping::ping, quote::quote,
   quotes::quotes, recent::recent, remove_entry::remove_entry, report_message::report_message,
-  stats::stats, streak::streak, suggest::suggest, terms::terms,
+  stats::stats, streak::streak, suggest::suggest, terms::terms, whatis::whatis,
 };
 use dotenv::dotenv;
 use log::{error, info};
@@ -57,6 +57,7 @@ async fn main() -> Result<()> {
         remove_entry(),
         stats(),
         streak(),
+        whatis(),
         glossary(),
         quote(),
         coffee(),

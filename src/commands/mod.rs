@@ -28,6 +28,7 @@ pub mod stats;
 pub mod streak;
 pub mod suggest;
 pub mod terms;
+pub mod whatis;
 
 enum MessageType {
   TextOnly(String),
