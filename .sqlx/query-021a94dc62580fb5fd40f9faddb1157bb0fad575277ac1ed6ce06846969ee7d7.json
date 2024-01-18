@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT record_id, term_name, meaning, usage, links, category, aliases\n        FROM term\n        WHERE (LOWER(term_name) = LOWER($1) AND guild_id = $2)\n        OR (ARRAY_TO_STRING(aliases, ',') ILIKE $1 AND guild_id = $2)\n      ",
+  "query": "\n        SELECT record_id, term_name, meaning, usage, links, category, aliases\n        FROM term\n        WHERE (LOWER(term_name) = LOWER($1) AND guild_id = $2)\n        OR (ARRAY_TO_STRING(aliases, ',') ILIKE '%' || $1 || '%' AND guild_id = $2)\n      ",
   "describe": {
     "columns": [
       {
@@ -55,5 +55,5 @@
       true
     ]
   },
-  "hash": "10d4751e9cf176336803f5ee5b13beba13c4546c1507c73f124af0ed3b12574d"
+  "hash": "021a94dc62580fb5fd40f9faddb1157bb0fad575277ac1ed6ce06846969ee7d7"
 }
