@@ -23,8 +23,8 @@ struct AddTermModal {
   category: Option<String>,
   #[name = "Links to further reading, comma separated"]
   links: Option<String>,
-  #[name = "Term aliases, comma separated"]
-  aliases: Option<String>,
+  // #[name = "Term aliases, comma separated"]
+  // aliases: Option<String>,
 }
 
 #[derive(Debug, Modal)]
@@ -109,7 +109,7 @@ pub async fn terms(_: poise::Context<'_, AppData, AppError>) -> Result<()> {
 
 /// Add a new term to the glossary
 ///
-/// Adds a new term to the glossary.
+/// Adds a new term to the glossary. Term aliases may only be added when editing a term.
 #[poise::command(slash_command)]
 pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Result<()> {
   use poise::Modal as _;
@@ -128,10 +128,13 @@ pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Resul
         None => Vec::new(),
       };
 
-      let aliases = match term_data.aliases {
-        Some(aliases) => aliases.split(",").map(|s| s.trim().to_string()).collect(),
-        None => Vec::new(),
-      };
+      // let aliases = match term_data.aliases {
+      //   Some(aliases) => aliases.split(",").map(|s| s.trim().to_string()).collect(),
+      //   None => Vec::new(),
+      // };
+      //
+      // Modal can only have five fields, so adding aliases will have to be edit only.
+      let aliases = Vec::new();
 
       let vector = pgvector::Vector::from(
         ctx
