@@ -20,10 +20,11 @@ impl<'a> Pagination<'a> {
     title: impl ToString,
     entries: Vec<&'a (dyn PageRow + Send + Sync)>,
   ) -> Result<Pagination<'_>> {
+    let terms_per_page = if title.to_string() == "Glossary" { 1 } else { TERMS_PER_PAGE };
     let entries_count = entries.len();
     let page_count = match entries_count == 0 {
       true => 1,
-      false => (entries_count as f64 / TERMS_PER_PAGE as f64).ceil() as usize,
+      false => (entries_count as f64 / terms_per_page as f64).ceil() as usize,
     };
 
     let page_data = match entries_count == 0 {
@@ -35,7 +36,7 @@ impl<'a> Pagination<'a> {
         }]
       }
       false => entries
-        .chunks(TERMS_PER_PAGE)
+        .chunks(terms_per_page)
         .enumerate()
         .map(|(page_number, entries)| PaginationPage {
           entries: entries.to_vec(),
@@ -121,11 +122,12 @@ impl PaginationPage<'_> {
     embed: &'embed_lifetime mut CreateEmbed,
     title: &str,
   ) -> &'embed_lifetime mut serenity::CreateEmbed {
+    let terms_per_page = if title == "Glossary" { 1 } else { TERMS_PER_PAGE };
     embed.title(title);
     embed.description(format!(
       "Showing entries {} to {}.",
-      (self.page_number * TERMS_PER_PAGE) + 1,
-      (self.page_number * TERMS_PER_PAGE) + self.entries.len()
+      (self.page_number * terms_per_page) + 1,
+      (self.page_number * terms_per_page) + self.entries.len()
     ));
 
     let fields: Vec<(String, String, bool)> = self
