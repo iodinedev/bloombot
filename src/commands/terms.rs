@@ -9,9 +9,9 @@ use poise::Modal;
 #[derive(Debug, Modal)]
 #[name = "Add a new term"]
 struct AddTermModal {
-  #[name = "The term to add"]
-  #[placeholder = "For acronyms, use the full name here"]
-  term: String,
+  // #[name = "The term to add"]
+  // #[placeholder = "For acronyms, use the full name here"]
+  // term: String,
   #[name = "The definition of the term"]
   #[placeholder = "Include the acronym at the beginning of your definition"]
   #[paragraph]
@@ -23,8 +23,8 @@ struct AddTermModal {
   category: Option<String>,
   #[name = "Links to further reading, comma separated"]
   links: Option<String>,
-  // #[name = "Term aliases, comma separated"]
-  // aliases: Option<String>,
+  #[name = "Term aliases, comma separated"]
+  aliases: Option<String>,
 }
 
 #[derive(Debug, Modal)]
@@ -109,9 +109,12 @@ pub async fn terms(_: poise::Context<'_, AppData, AppError>) -> Result<()> {
 
 /// Add a new term to the glossary
 ///
-/// Adds a new term to the glossary. Term aliases may only be added when editing a term.
+/// Adds a new term to the glossary.
 #[poise::command(slash_command)]
-pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Result<()> {
+pub async fn add(
+  ctx: poise::ApplicationContext<'_, AppData, AppError>,
+  #[description = "The term to add"] term_name: String,
+) -> Result<()> {
   use poise::Modal as _;
 
   let term_data = AddTermModal::execute(ctx).await?;
@@ -128,25 +131,22 @@ pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Resul
         None => Vec::new(),
       };
 
-      // let aliases = match term_data.aliases {
-      //   Some(aliases) => aliases.split(",").map(|s| s.trim().to_string()).collect(),
-      //   None => Vec::new(),
-      // };
-      //
-      // Modal can only have five fields, so adding aliases will have to be edit only.
-      let aliases = Vec::new();
+      let aliases = match term_data.aliases {
+        Some(aliases) => aliases.split(",").map(|s| s.trim().to_string()).collect(),
+        None => Vec::new(),
+      };
 
       let vector = pgvector::Vector::from(
         ctx
           .data()
           .embeddings
-          .create_embedding(term_data.term.clone(), ctx.author().id)
+          .create_embedding(term_name.clone(), ctx.author().id)
           .await?,
       );
 
       DatabaseHandler::add_term(
         &mut transaction,
-        term_data.term.as_str(),
+        term_name.as_str(),
         term_data.definition.as_str(),
         term_data.example.as_deref(),
         links.as_slice(),

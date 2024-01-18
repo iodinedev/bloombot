@@ -1405,7 +1405,7 @@ impl DatabaseHandler {
         SELECT record_id, term_name, meaning, usage, links, category, aliases
         FROM term
         WHERE (LOWER(term_name) = LOWER($1) AND guild_id = $2)
-        OR (ARRAY_TO_STRING(aliases, ',') ILIKE $1 AND guild_id = $2)
+        OR (ARRAY_TO_STRING(aliases, ',') ILIKE '%' || $1 || '%' AND guild_id = $2)
       "#,
       term_name,
       guild_id.to_string(),
