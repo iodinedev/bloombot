@@ -1620,7 +1620,8 @@ impl DatabaseHandler {
       r#"
         SELECT record_id, term_name, meaning, usage, links, category, aliases, SET_LIMIT($2), SIMILARITY(LOWER(term_name), LOWER($1)) AS similarity_score
         FROM term
-        WHERE LOWER(term_name) % LOWER($1) AND guild_id = $3
+        WHERE guild_id = $3
+        AND (LOWER(term_name) % LOWER($1)) OR (ARRAY_TO_STRING(aliases, ',') ILIKE '%' || $1 || '%')
         ORDER BY similarity_score DESC
         LIMIT 5
       "#,
