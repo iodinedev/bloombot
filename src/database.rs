@@ -286,6 +286,11 @@ pub struct TermSearchResult {
   pub distance_score: Option<f64>,
 }
 
+pub struct TermNames {
+  pub term_name: String,
+  pub aliases: Option<Vec<String>>,
+}
+
 pub struct StarMessage {
   pub record_id: String,
   pub starred_message_id: serenity::MessageId,
@@ -1669,10 +1674,10 @@ impl DatabaseHandler {
   pub async fn get_term_list(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     guild_id: &serenity::GuildId,
-  ) -> Result<Vec<String>> {
+  ) -> Result<Vec<TermNames>> {
     let rows = sqlx::query!(
       r#"
-        SELECT term_name
+        SELECT term_name, aliases
         FROM term
         WHERE guild_id = $1
         ORDER BY term_name ASC
@@ -1684,7 +1689,10 @@ impl DatabaseHandler {
 
     let term_list = rows
       .into_iter()
-      .map(|row| row.term_name)
+      .map(|row| TermNames {
+        term_name: row.term_name,
+        aliases: row.aliases,
+      })
       .collect();
 
     Ok(term_list)

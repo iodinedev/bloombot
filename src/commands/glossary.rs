@@ -38,8 +38,20 @@ pub async fn list(ctx: Context<'_>) -> Result<()> {
   let term_count = term_names.len();
 
   let mut term_list = String::new();
-  for (i, term_name) in term_names.iter().enumerate() {
-    term_list.push_str(&term_name);
+  for (i, term) in term_names.iter().enumerate() {
+    term_list.push_str(&term.term_name);
+    let aliases = term.aliases.clone().unwrap_or(Vec::new());
+    if !aliases.is_empty() {
+      term_list.push_str(" (");
+      let alias_count = aliases.len();
+      for (i, alias) in aliases.iter().enumerate() {
+        term_list.push_str(&alias);
+        if i < (alias_count - 1) {
+          term_list.push_str(", ");
+        }
+      }
+      term_list.push_str(")");
+    }
     if i < (term_count - 1) {
       term_list.push_str(", ");
     }
@@ -51,7 +63,7 @@ pub async fn list(ctx: Context<'_>) -> Result<()> {
         BloomBotEmbed::from(e)
           .title("List of Glossary Terms")
           .description(format!(
-            "Use `/glossary info` with any of the following terms to read the full entry.\n```{}```",
+            "Use `/glossary info` with any of the following terms to read the full entry. Terms in parentheses are aliases for the preceding term.\n```{}```",
             term_list
           ))
           // Will not reach char limit for a while. Can add pagination later.
