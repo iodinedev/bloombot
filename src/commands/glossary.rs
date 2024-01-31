@@ -1,6 +1,7 @@
 use crate::commands::BloomBotEmbed;
+use crate::config::CHANNELS;
 use crate::database::DatabaseHandler;
-use crate::pagination::{PageRowRef, Pagination};
+// use crate::pagination::{PageRowRef, Pagination};
 use crate::Context;
 use anyhow::Result;
 use log::info;
@@ -15,7 +16,7 @@ use poise::serenity_prelude as serenity;
 #[poise::command(
   slash_command,
   category = "Informational",
-  subcommands("list", "browse", "info", "search"),
+  subcommands("list", "info", "search", "suggest"),
   subcommand_required,
   guild_only
 )]
@@ -75,6 +76,7 @@ pub async fn list(ctx: Context<'_>) -> Result<()> {
   Ok(())
 }
 
+/*
 /// Browse a list of all glossary entries
 ///
 /// Browse a list of all glossary entries.
@@ -161,6 +163,7 @@ pub async fn browse(
 
   Ok(())
 }
+*/
 
 /// See information about a glossary entry
 ///
@@ -432,6 +435,43 @@ pub async fn search(
       f.embeds = vec![embed];
 
       f
+    })
+    .await?;
+
+  Ok(())
+}
+
+/// Suggest a term for the glossary
+///
+/// Suggest a term for addition to the glossary.
+#[poise::command(slash_command)]
+pub async fn suggest(
+  ctx: Context<'_>,
+  #[description = "Term you wish to suggest"] suggestion: String,
+) -> Result<()> {
+  let log_embed = BloomBotEmbed::new()
+    .title("Term Suggestion")
+    .description(format!("**Suggestion**: {}", suggestion))
+    .footer(|f| {
+      f.icon_url(ctx.author().avatar_url().unwrap_or_default())
+        .text(format!(
+          "Suggested by {} ({})",
+          ctx.author().name,
+          ctx.author().id
+        ))
+    })
+    .to_owned();
+
+  let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+
+  log_channel
+    .send_message(ctx, |f| f.set_embed(log_embed))
+    .await?;
+
+  ctx
+    .send(|f| {
+      f.content("Your suggestion has been submitted. Thank you!")
+        .ephemeral(true)
     })
     .await?;
 
