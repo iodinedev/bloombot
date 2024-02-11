@@ -63,9 +63,19 @@ pub async fn whatis(
       } else if possible_terms.is_empty() {
         embed.title("Term not found");
         embed.description(format!(
-          "The term `{}` was not found in the glossary.",
+          "The term `{}` was not found in the glossary. If you believe it should be, use </glossary suggest:1135659962308243479> to suggest it for addition to the glossary.",
           term
         ));
+
+        ctx
+          .send(|f| {
+            f.embeds = vec![embed];
+
+            f.ephemeral(true)
+          })
+          .await?;
+
+        return Ok(());
       } else {
         embed.title("Term not found");
         embed.description(format!(
@@ -82,12 +92,22 @@ pub async fn whatis(
               field.push_str(&format!("`{}`\n", possible_term.term_name));
             }
 
-            field.push_str(&format!("\n\n*Try using </glossary search:1135659962308243479> to take advantage of a more powerful search.*"));
+            field.push_str(&format!("\n\n*Try using </glossary search:1135659962308243479> to take advantage of a more powerful search. You can also use </glossary suggest:1135659962308243479> to suggest the term for addition to the glossary.*"));
 
             field
           },
           false,
         );
+
+        ctx
+          .send(|f| {
+            f.embeds = vec![embed];
+
+            f.ephemeral(true)
+          })
+          .await?;
+
+        return Ok(());
       }
     }
   }

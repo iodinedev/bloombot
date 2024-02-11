@@ -12,7 +12,7 @@ use poise::serenity_prelude as serenity;
 ///
 /// Commands for interacting with the glossary.
 ///
-/// Get `info` on a glossary entry, see a `list` of entries, or `search` for a relevant entry.
+/// Get `info` on a glossary entry, see a `list` of entries, `search` for a relevant entry, or `suggest` a term for addition.
 #[poise::command(
   slash_command,
   category = "Informational",
