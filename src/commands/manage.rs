@@ -22,7 +22,7 @@ pub enum DataType {
 /// Requires `Ban Members` permissions.
 #[poise::command(
   slash_command,
-  subcommands("create", "list", "update", "delete", "reset"),
+  subcommands("create", "list", "update", "delete", "reset", "migrate"),
   subcommand_required,
   required_permissions = "BAN_MEMBERS",
   default_member_permissions = "BAN_MEMBERS",
@@ -611,6 +611,152 @@ pub async fn reset(
           DatabaseHandler::rollback_transaction(transaction).await?;
           return Err(anyhow::anyhow!(
             "Failed to tell user that the {} were reset: {}",
+            data_type.name(),
+            e
+          ));
+        }
+      }
+    } else {
+      press
+        .create_interaction_response(ctx, |b| {
+          b.kind(serenity::InteractionResponseType::UpdateMessage)
+            .interaction_response_data(|f| {
+              f.content("Cancelled.")
+                .set_components(serenity::CreateComponents(Vec::new()))
+            })
+        })
+        .await?;
+    }
+  }
+
+  // This happens when the user didn't press any button for 60 seconds
+  Ok(())
+}
+
+/// Migrates meditation entries or customization settings
+/// 
+/// Migrates all meditation entries or customization settings from one user account to another.
+#[poise::command(slash_command)]
+pub async fn migrate(
+  ctx: Context<'_>,
+  #[description = "The user to migrate data from"]
+  old_user: serenity::User,
+  #[description = "The user to migrate data to"]
+  new_user: serenity::User,
+  #[description = "The type of data to migrate (Defaults to meditation entries)"]
+  #[rename = "type"]
+  data_type: Option<DataType>,
+) -> Result<()> {
+  let data = ctx.data();
+  let guild_id = ctx.guild_id().unwrap();
+
+  let mut transaction = data.db.start_transaction_with_retry(5).await?;
+
+  //Default to meditation entries
+  let data_type = match data_type {
+    Some(data_type) => data_type,
+    None => DataType::MeditationEntries
+  };
+
+  match data_type {
+    DataType::CustomizationSettings => DatabaseHandler::migrate_tracking_profile(&mut transaction, &guild_id, &old_user.id, &new_user.id).await?,
+    DataType::MeditationEntries => DatabaseHandler::migrate_meditation_entries(&mut transaction, &guild_id, &old_user.id, &new_user.id).await?
+  }
+
+  let ctx_id = ctx.id();
+
+  let confirm_id = format!("{}confirm", ctx_id);
+  let cancel_id = format!("{}cancel", ctx_id);
+
+  ctx
+    .send(|f| {
+      f.content(format!(
+        "Are you sure you want to migrate all {} from {} to {}?",
+        data_type.name(),
+        old_user.mention(),
+        new_user.mention(),
+      ))
+      .ephemeral(true)
+      .components(|c| {
+        c.create_action_row(|a| {
+          a.create_button(|b| {
+            b.custom_id(confirm_id.clone())
+              .label("Yes")
+              .style(serenity::ButtonStyle::Success)
+          })
+          .create_button(|b| {
+            b.custom_id(cancel_id.clone())
+              .label("No")
+              .style(serenity::ButtonStyle::Danger)
+          })
+        })
+      })
+    })
+    .await?;
+
+  // Loop through incoming interactions with the navigation buttons
+  while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+    // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
+    // button was pressed
+    .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
+    // Timeout when no navigation button has been pressed in one minute
+    .timeout(std::time::Duration::from_secs(60))
+    .await
+  {
+    // Depending on which button was pressed, go to next or previous page
+    if press.data.custom_id != confirm_id && press.data.custom_id != cancel_id {
+      // This is an unrelated button interaction
+      continue;
+    }
+
+    let confirmed = press.data.custom_id == confirm_id;
+
+    // Update the message with the new page contents
+    if confirmed {
+      match press
+        .create_interaction_response(ctx, |b| {
+          b.kind(serenity::InteractionResponseType::UpdateMessage)
+            .interaction_response_data(|f| {
+              f.content("Confirmed.")
+                .set_components(serenity::CreateComponents(Vec::new()))
+            })
+        })
+        .await
+      {
+        Ok(_) => {
+          DatabaseHandler::commit_transaction(transaction).await?;
+
+          let log_embed = BloomBotEmbed::new()
+            .title(format!(
+              "{} Migrated",
+              match data_type {
+                DataType::CustomizationSettings => "Customization Settings",
+                DataType::MeditationEntries => "Meditation Entries"
+              }
+            ))
+            .description(format!(
+              "**From**: <@{}>\n**To**: <@{}>",
+              old_user.id,
+              new_user.id,
+            ))
+            .footer(|f| {
+              f.icon_url(ctx.author().avatar_url().unwrap_or_default())
+                .text(format!("Migrated by {} ({})", ctx.author().name, ctx.author().id))
+            })
+            .to_owned();
+        
+          let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+        
+          log_channel
+            .send_message(ctx, |f| f.set_embed(log_embed))
+            .await?;
+          
+          return Ok(());
+        }
+        Err(e) => {
+          DatabaseHandler::rollback_transaction(transaction).await?;
+          return Err(anyhow::anyhow!(
+            "Failed to tell user that the {} were migrated: {}",
             data_type.name(),
             e
           ));

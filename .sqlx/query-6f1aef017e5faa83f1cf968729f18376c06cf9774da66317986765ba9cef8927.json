@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE tracking_profile SET user_id = $3 WHERE user_id = $1 AND guild_id = $2\n      ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6f1aef017e5faa83f1cf968729f18376c06cf9774da66317986765ba9cef8927"
+}

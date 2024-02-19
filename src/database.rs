@@ -478,6 +478,26 @@ impl DatabaseHandler {
     Ok(())
   }
 
+  pub async fn migrate_tracking_profile(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    old_user_id: &serenity::UserId,
+    new_user_id: &serenity::UserId,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+        UPDATE tracking_profile SET user_id = $3 WHERE user_id = $1 AND guild_id = $2
+      "#,
+      old_user_id.to_string(),
+      guild_id.to_string(),
+      new_user_id.to_string(),
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
+  }
+
   pub async fn get_tracking_profile(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     guild_id: &serenity::GuildId,
@@ -894,6 +914,26 @@ impl DatabaseHandler {
       "#,
       user_id.to_string(),
       guild_id.to_string(),
+    )
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
+  }
+
+  pub async fn migrate_meditation_entries(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    guild_id: &serenity::GuildId,
+    old_user_id: &serenity::UserId,
+    new_user_id: &serenity::UserId,
+  ) -> Result<()> {
+    sqlx::query!(
+      r#"
+        UPDATE meditation SET user_id = $3 WHERE user_id = $1 AND guild_id = $2
+      "#,
+      old_user_id.to_string(),
+      guild_id.to_string(),
+      new_user_id.to_string(),
     )
     .execute(&mut **transaction)
     .await?;
