@@ -1211,7 +1211,7 @@ impl DatabaseHandler {
     if let Some(first) = row.try_next().await? {
       let days_ago = first.days_ago.unwrap() as i32;
 
-      if days_ago > 1 {
+      if days_ago > 2 {
         return Ok(0);
       }
 
