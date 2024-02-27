@@ -4,7 +4,7 @@ use crate::Context;
 use crate::database::DatabaseHandler;
 use crate::pagination::{PageRowRef, Pagination};
 use anyhow::Result;
-use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::{self as serenity, ChannelId};
 
 /// Commands for erasing and erase logs
 /// 
@@ -133,7 +133,13 @@ pub async fn message(
     //  .await?;
     }
     Err(_) => {
-      let notification_thread = channel_id
+      let thread_channel:ChannelId = match message.channel_id.to_channel(&ctx).await.unwrap().guild().unwrap().kind {
+        serenity::ChannelType::Text => channel_id,
+        // If not a text channel, then create private thread in lounge to avoid failure
+        _ => ChannelId::from(501464482996944909),
+      };
+      
+      let notification_thread = thread_channel
         .create_private_thread(ctx, |create_thread| create_thread
           .name(format!(
             "Private Notification: Message Deleted"
