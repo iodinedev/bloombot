@@ -92,6 +92,9 @@ pub enum TimeSumRoles {
   Ten,
   Eleven,
   Twelve,
+  Thirteen,
+  Fourteen,
+  Fifteen,
 }
 
 impl TimeSumRoles {
@@ -109,6 +112,9 @@ impl TimeSumRoles {
       TimeSumRoles::Ten => 504645771464015893,
       TimeSumRoles::Eleven => 504645799821574144,
       TimeSumRoles::Twelve => 504645823888621568,
+      TimeSumRoles::Thirteen => 1224667049175941120,
+      TimeSumRoles::Fourteen => 1224671462657359972,
+      TimeSumRoles::Fifteen => 1224678890161573969,
     })
   }
 
@@ -129,6 +135,9 @@ impl TimeSumRoles {
       504645771464015893 => Some(TimeSumRoles::Ten),
       504645799821574144 => Some(TimeSumRoles::Eleven),
       504645823888621568 => Some(TimeSumRoles::Twelve),
+      1224667049175941120 => Some(TimeSumRoles::Thirteen),
+      1224671462657359972 => Some(TimeSumRoles::Fourteen),
+      1224678890161573969 => Some(TimeSumRoles::Fifteen),
       _ => None,
     }
   }
@@ -166,7 +175,10 @@ impl TimeSumRoles {
       10000..=19999 => Some(TimeSumRoles::Nine),
       20000..=49999 => Some(TimeSumRoles::Ten),
       50000..=99999 => Some(TimeSumRoles::Eleven),
-      100000..=i64::MAX => Some(TimeSumRoles::Twelve),
+      100000..=119999 => Some(TimeSumRoles::Twelve),
+      120000..=149999 => Some(TimeSumRoles::Thirteen),
+      150000..=199999 => Some(TimeSumRoles::Fourteen),
+      200000..=i64::MAX => Some(TimeSumRoles::Fifteen),
     }
   }
 }
@@ -182,6 +194,7 @@ pub enum StreakRoles {
   Eagle,
   Dragon,
   Alien,
+  SpaceInvader,
 }
 
 impl StreakRoles {
@@ -196,6 +209,7 @@ impl StreakRoles {
       StreakRoles::Eagle => 857242212991762463,
       StreakRoles::Dragon => 857242210302427186,
       StreakRoles::Alien => 857242155784863754,
+      StreakRoles::SpaceInvader => 1226730813190836367,
     })
   }
 
@@ -210,7 +224,8 @@ impl StreakRoles {
       70..=139 => Some(StreakRoles::Owl),
       140..=364 => Some(StreakRoles::Eagle),
       365..=729 => Some(StreakRoles::Dragon),
-      730..=u64::MAX => Some(StreakRoles::Alien),
+      730..=1824 => Some(StreakRoles::Alien),
+      1825..=u64::MAX => Some(StreakRoles::SpaceInvader),
     }
   }
 
@@ -247,6 +262,7 @@ impl StreakRoles {
       857242212991762463 => Some(StreakRoles::Eagle),
       857242210302427186 => Some(StreakRoles::Dragon),
       85724215578486375 => Some(StreakRoles::Alien),
+      1226730813190836367 => Some(StreakRoles::SpaceInvader),
       _ => None,
     }
   }

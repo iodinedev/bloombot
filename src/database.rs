@@ -302,13 +302,42 @@ impl DatabaseHandler {
   pub async fn new() -> Result<Self> {
     let database_url =
       std::env::var("DATABASE_URL").with_context(|| "Missing DATABASE_URL environment variable")?;
-    let pool = sqlx::PgPool::connect(&database_url).await?;
+    // let pool = sqlx::PgPool::connect(&database_url).await?;
+    let max_retries = 5;
+    let mut attempts = 0;
 
-    sqlx::migrate!("./migrations").run(&pool).await?;
+    loop {
+      let pool = match sqlx::PgPool::connect(&database_url).await {
+        Ok(pool) => pool,
+        Err(e) => {
+          if attempts >= max_retries {
+            return Err(e.into());
+          }
 
-    info!("Successfully applied migrations.");
+          // Check if the error is a sqlx::Error
+          if let Some(sqlx_error) = Some(&e) {
+            // Now we can handle the sqlx::Error specifically
+            if let sqlx::Error::Io(io_error) = sqlx_error {
+              if io_error.kind() == std::io::ErrorKind::ConnectionReset {
+                attempts += 1;
+                // Wait before retrying
+                tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                continue;
+              }
+            }
+          }
 
-    Ok(Self { pool })
+          // If it's a different kind of error, we might want to return it immediately
+          return Err(e.into());
+        }
+      };
+
+      sqlx::migrate!("./migrations").run(&pool).await?;
+  
+      info!("Successfully applied migrations.");
+  
+      return Ok(Self { pool });
+    }
   }
 
   pub async fn get_connection(&self) -> Result<sqlx::pool::PoolConnection<sqlx::Postgres>> {
