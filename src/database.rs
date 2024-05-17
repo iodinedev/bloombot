@@ -2,7 +2,7 @@ use crate::pagination::PageRow;
 use anyhow::{Context, Result};
 use chrono::Utc;
 use futures::{stream::Stream, StreamExt, TryStreamExt};
-use log::info;
+use log::{info, warn};
 use poise::serenity_prelude::{self as serenity, Mentionable};
 use ulid::Ulid;
 
@@ -320,8 +320,10 @@ impl DatabaseHandler {
             if let sqlx::Error::Io(io_error) = sqlx_error {
               if io_error.kind() == std::io::ErrorKind::ConnectionReset {
                 attempts += 1;
+                // Log warning
+                warn!("Error establishing a database connection: retry attempt {} of {}", attempts, max_retries);
                 // Wait before retrying
-                tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
                 continue;
               }
             }
