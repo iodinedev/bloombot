@@ -6,7 +6,7 @@ use commands::{
   recent::recent, remove_entry::remove_entry, report_message::report_message, stats::stats,
   streak::streak, suggest::suggest, terms::terms, whatis::whatis,
 };
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use log::{error, info};
 use poise::serenity_prelude::{self as serenity, model::channel};
 use rand::rngs::SmallRng;
