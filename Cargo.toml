@@ -6,20 +6,20 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.75"
-async-openai = "0.14.2"
-futures = "0.3.28"
-log = "0.4.20"
+anyhow = "1.0.86"
+async-openai = "0.21.0"
+futures = "0.3.30"
+log = "0.4.21"
 poise = {version = "0.6.1", features = ["cache"]}
 pretty_env_logger = "0.5.0"
 rand = {version = "0.8.5", features = ["small_rng"]}
-serde = "1.0.188"
-sqlx = { version = "0.7.1", features = ["postgres", "runtime-tokio", "chrono", "bigdecimal"] }
-tokio = { version = "1.32.0", features = ["full"] }
-ulid = "1.1.0"
-pgvector = { version = "0.2", features = ["sqlx"] }
-chrono = "0.4.31"
+serde = "1.0.202"
+sqlx = { version = "0.7.4", features = ["postgres", "runtime-tokio", "chrono", "bigdecimal"] }
+tokio = { version = "1.37.0", features = ["full"] }
+ulid = "1.1.2"
+pgvector = { version = "0.3.2", features = ["sqlx"] }
+chrono = "0.4.38"
 chrono-humanize = "0.2.3"
-plotters = "0.3.5"
-tempfile = "3.8.0"
+plotters = "0.3.6"
+tempfile = "3.10.1"
 dotenvy = "0.15.7"

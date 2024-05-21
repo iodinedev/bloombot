@@ -27,6 +27,7 @@ impl OpenAIHandler {
       model: "text-embedding-ada-002".to_string(),
       input: EmbeddingInput::String(input),
       user: Some(user.to_string()),
+      ..Default::default()
     };
 
     let embeddings = self.client.embeddings().create(input).await?;
