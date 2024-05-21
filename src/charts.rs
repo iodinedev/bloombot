@@ -60,8 +60,8 @@ impl ChartDrawer {
     root.fill(background_color).unwrap();
 
     let header = match stats_type {
-      StatsType::MeditationMinutes => "# of Minutes",
-      StatsType::MeditationCount => "# of Sessions",
+      StatsType::MeditationMinutes => String::from("# of Minutes"),
+      StatsType::MeditationCount => String::from("# of Sessions"),
     };
 
     let upper_bound = match stats_type {
