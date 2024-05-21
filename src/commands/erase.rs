@@ -1,15 +1,16 @@
 use crate::commands::{commit_and_say, MessageType};
-use crate::config::{BloomBotEmbed, CHANNELS, self};
-use crate::Context;
+use crate::config::{self, BloomBotEmbed, CHANNELS};
 use crate::database::DatabaseHandler;
 use crate::pagination::{PageRowRef, Pagination};
+use crate::Context;
 use anyhow::Result;
-use poise::serenity_prelude::{self as serenity, ChannelId};
+use poise::serenity_prelude::{self as serenity, builder::*, ChannelId};
+use poise::CreateReply;
 
 /// Commands for erasing and erase logs
-/// 
+///
 /// Commands to delete a message with private notification or review and update deletion logs.
-/// 
+///
 /// Requires `Manage Messages` permissions.
 #[poise::command(
   slash_command,
@@ -25,13 +26,13 @@ pub async fn erase(_: Context<'_>) -> Result<()> {
 }
 
 /// Delete a message and notify the user
-/// 
+///
 /// Deletes a message and notifies the user via DM or private thread with an optional reason.
 #[poise::command(slash_command)]
 pub async fn message(
   ctx: Context<'_>,
   #[description = "The message to delete"] message: serenity::Message,
-  #[max_length = 1000]
+  #[max_length = 512] // Max length for audit log reason
   #[description = "The reason for deleting the message"]
   reason: Option<String>,
 ) -> Result<()> {
@@ -39,21 +40,25 @@ pub async fn message(
 
   let channel_id = message.channel_id;
   let message_id = message.id;
+  let reason = reason.unwrap_or("No reason provided.".to_string());
+  let audit_log_reason: Option<&str> = Some(reason.as_str());
 
   ctx
     .http()
-    .delete_message(channel_id.into(), message_id.into())
+    .delete_message(channel_id.into(), message_id.into(), audit_log_reason)
     .await?;
 
   let occurred_at = chrono::Utc::now();
-  let reason = reason.unwrap_or("No reason provided.".to_string());
 
   let data = ctx.data();
   let guild_id = ctx.guild_id().unwrap();
   let user_id = message.author.id;
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
-  let erase_count = DatabaseHandler::get_erases(&mut transaction, &guild_id, &user_id).await?.len() + 1;
+  let erase_count = DatabaseHandler::get_erases(&mut transaction, &guild_id, &user_id)
+    .await?
+    .len()
+    + 1;
   let erase_count_message = if erase_count == 1 {
     "1 erase recorded".to_string()
   } else {
@@ -63,19 +68,17 @@ pub async fn message(
   let mut log_embed = BloomBotEmbed::new();
   let mut dm_embed = BloomBotEmbed::new();
 
-  log_embed
-  .title("Message Deleted")
-  .description(format!(
+  log_embed = log_embed.title("Message Deleted").description(format!(
     "**Channel**: <#{}>\n**Author**: {} ({})\n**Reason**: {}",
     message.channel_id, message.author, erase_count_message, reason,
   ));
-  dm_embed
-  .title("A message you sent has been deleted.")
-  .description(format!("**Reason**: {}", reason));
+  dm_embed = dm_embed
+    .title("A message you sent has been deleted.")
+    .description(format!("**Reason**: {}", reason));
 
   if let Some(attachment) = message.attachments.first() {
-    log_embed.field("Attachment", attachment.url.clone(), false);
-    dm_embed.field("Attachment", attachment.url.clone(), false);
+    log_embed = log_embed.field("Attachment", attachment.url.clone(), false);
+    dm_embed = dm_embed.field("Attachment", attachment.url.clone(), false);
   }
 
   if !message.content.is_empty() {
@@ -88,90 +91,104 @@ pub async fn message(
       false => message.content.clone(),
     };
 
-    log_embed.field("Message Content", format!("```{}```", content), false);
-    dm_embed.field("Message Content", format!("```{}```", content), false);
+    log_embed = log_embed.field("Message Content", format!("```{}```", content), false);
+    dm_embed = dm_embed.field("Message Content", format!("```{}```", content), false);
   }
 
-  log_embed.footer(|f| {
-    f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-      .text(format!("Deleted by {} ({})", ctx.author().name, ctx.author().id))
-  });
-  dm_embed.footer(|f| f.text(
+  log_embed = log_embed.footer(
+    CreateEmbedFooter::new(format!(
+      "Deleted by {} ({})",
+      ctx.author().name,
+      ctx.author().id
+    ))
+    .icon_url(ctx.author().avatar_url().unwrap_or_default()),
+  );
+  dm_embed = dm_embed.footer(CreateEmbedFooter::new(
     "If you have any questions or concerns regarding this action, please contact a moderator. Replies sent to Bloom are not viewable by staff."
   ));
 
-  let log_channel = serenity::ChannelId(CHANNELS.logs);
+  let log_channel = serenity::ChannelId::new(CHANNELS.logs);
 
   let log_message = log_channel
-    .send_message(ctx, |f| f.set_embed(log_embed))
+    .send_message(ctx, CreateMessage::new().embed(log_embed))
     .await?;
 
   let message_link = log_message.link();
 
-  DatabaseHandler::add_erase(&mut transaction, &guild_id, &user_id, &message_link, occurred_at).await?;
+  DatabaseHandler::add_erase(
+    &mut transaction,
+    &guild_id,
+    &user_id,
+    &message_link,
+    occurred_at,
+  )
+  .await?;
 
   commit_and_say(
-        ctx,
-        transaction,
-        MessageType::TextOnly(format!(":white_check_mark: Message deleted. User will be notified via DM or private thread.")),
-        true,
-      )
-      .await?;
+    ctx,
+    transaction,
+    MessageType::TextOnly(format!(
+      ":white_check_mark: Message deleted. User will be notified via DM or private thread."
+    )),
+    true,
+  )
+  .await?;
 
   match message
     .author
-    .direct_message(ctx, |f| f.set_embed(dm_embed.to_owned()))
+    .direct_message(ctx, CreateMessage::new().embed(dm_embed.to_owned()))
     .await
   {
     Ok(_) => {
-    //  commit_and_say(
-    //    ctx,
-    //    transaction,
-    //    MessageType::TextOnly(format!(":white_check_mark: Message deleted. Sent the reason in DMs.")),
-    //    true,
-    //  )
-    //  .await?;
+      //  commit_and_say(
+      //    ctx,
+      //    transaction,
+      //    MessageType::TextOnly(format!(":white_check_mark: Message deleted. Sent the reason in DMs.")),
+      //    true,
+      //  )
+      //  .await?;
     }
     Err(_) => {
-      let thread_channel:ChannelId = match message.channel_id.to_channel(&ctx).await.unwrap().guild().unwrap().kind {
+      let thread_channel: ChannelId = match message
+        .channel_id
+        .to_channel(&ctx)
+        .await
+        .unwrap()
+        .guild()
+        .unwrap()
+        .kind
+      {
         serenity::ChannelType::Text => channel_id,
         // If not a text channel, then create private thread in lounge to avoid failure
         _ => ChannelId::from(501464482996944909),
       };
-      
-      let notification_thread = thread_channel
-        .create_private_thread(ctx, |create_thread| create_thread
-          .name(format!(
-            "Private Notification: Message Deleted"
-          )))
-        .await?;
 
-      notification_thread
-        .edit_thread(ctx, |edit_thread| edit_thread
-          .invitable(false)
-          .locked(true)
+      let mut notification_thread = thread_channel
+        .create_thread(
+          ctx,
+          CreateThread::new(format!("Private Notification: Message Deleted")),
         )
         .await?;
 
-      dm_embed.footer(|f| f.text(
+      notification_thread
+        .edit_thread(ctx, EditThread::new().invitable(false).locked(true))
+        .await?;
+
+      dm_embed = dm_embed.footer(CreateEmbedFooter::new(
         "If you have any questions or concerns regarding this action, please contact staff via ModMail."
       ));
-    
-      let thread_initial_message = format!(
-        "Private notification for <@{}>:",
-        message.author.id
-      );
-    
-      notification_thread.send_message(ctx, |create_message| {
-        create_message
-          .content(thread_initial_message)
-          .set_embed(dm_embed.to_owned())
-          .allowed_mentions(|create_allowed_mentions| {
-            create_allowed_mentions
-              .users([message.author.id])
-          })
-      })
-      .await?;
+
+      let thread_initial_message = format!("Private notification for <@{}>:", message.author.id);
+
+      notification_thread
+        .send_message(
+          ctx,
+          CreateMessage::new()
+            .content(thread_initial_message)
+            .embed(dm_embed.to_owned())
+            .allowed_mentions(CreateAllowedMentions::new().users([message.author.id])),
+        )
+        .await?;
 
       //commit_and_say(
       //  ctx,
@@ -190,7 +207,7 @@ pub async fn message(
 }
 
 /// List erases for a user
-/// 
+///
 /// List erases for a specified user, with dates and links to notification messages, when available.
 #[poise::command(slash_command)]
 pub async fn list(
@@ -204,7 +221,7 @@ pub async fn list(
   let guild_id = ctx.guild_id().unwrap();
   let user_nick_or_name = match user.nick_in(&ctx, guild_id).await {
     Some(nick) => nick,
-    None => user.name.clone()
+    None => user.name.clone(),
   };
 
   let privacy = if ctx.channel_id() == config::CHANNELS.logs {
@@ -222,7 +239,9 @@ pub async fn list(
 
   let mut current_page = page.unwrap_or(0);
 
-  if current_page > 0 { current_page = current_page - 1 }
+  if current_page > 0 {
+    current_page = current_page - 1
+  }
 
   let erases = DatabaseHandler::get_erases(&mut transaction, &guild_id, &user.id).await?;
   let erases: Vec<PageRowRef> = erases.iter().map(|erase| erase as _).collect();
@@ -236,27 +255,21 @@ pub async fn list(
   let first_page = pagination.create_page_embed(current_page);
 
   ctx
-    .send(|f| {
-      f.components(|b| {
-        if pagination.get_page_count() > 1 {
-          b.create_action_row(|b| {
-            b.create_button(|b| b.custom_id(&prev_button_id).label("Previous"))
-              .create_button(|b| b.custom_id(&next_button_id).label("Next"))
-          });
-        }
-
-        b
-      })
-      .ephemeral(privacy);
-
+    .send({
+      let mut f = CreateReply::default();
+      if pagination.get_page_count() > 1 {
+        f = f.components(vec![CreateActionRow::Buttons(vec![
+          CreateButton::new(&prev_button_id).label("Previous"),
+          CreateButton::new(&next_button_id).label("Next"),
+        ])])
+      }
       f.embeds = vec![first_page];
-
-      f
+      f.ephemeral(privacy)
     })
     .await?;
 
   // Loop through incoming interactions with the navigation buttons
-  while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+  while let Some(press) = serenity::ComponentInteractionCollector::new(ctx)
     // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
     // button was pressed
     .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
@@ -276,10 +289,12 @@ pub async fn list(
 
     // Update the message with the new page contents
     press
-      .create_interaction_response(ctx, |b| {
-        b.kind(serenity::InteractionResponseType::UpdateMessage)
-          .interaction_response_data(|f| f.set_embed(pagination.create_page_embed(current_page)))
-      })
+      .create_response(
+        ctx,
+        CreateInteractionResponse::UpdateMessage(
+          CreateInteractionResponseMessage::new().embed(pagination.create_page_embed(current_page)),
+        ),
+      )
       .await?;
   }
 
@@ -287,7 +302,7 @@ pub async fn list(
 }
 
 /// Populate past erases for a user
-/// 
+///
 /// Populate the database with past erases for a user.
 #[poise::command(slash_command)]
 pub async fn populate(
@@ -313,7 +328,7 @@ pub async fn populate(
   minute: Option<u32>,
 ) -> Result<()> {
   let data = ctx.data();
-  
+
   // We unwrap here, because we know that the command is guild-only.
   let guild_id = ctx.guild_id().unwrap();
 
@@ -321,14 +336,16 @@ pub async fn populate(
     Some(date) => date,
     None => {
       ctx
-        .send(|f| {
-          f.embed(|e| {
-            e.title("Error")
-              .description(format!("Invalid date provided: {}-{}-{}", year, month, day))
-              .color(serenity::Color::RED)
-          })
-          .ephemeral(true)
-        })
+        .send(
+          CreateReply::default()
+            .embed(
+              CreateEmbed::new()
+                .title("Error")
+                .description(format!("Invalid date provided: {}-{}-{}", year, month, day))
+                .color(serenity::Color::RED),
+            )
+            .ephemeral(true),
+        )
         .await?;
       return Ok(());
     }
@@ -338,18 +355,20 @@ pub async fn populate(
     Some(time) => time,
     None => {
       ctx
-        .send(|f| {
-          f.embed(|e| {
-            e.title("Error")
-              .description(format!(
-                "Invalid time provided: {}:{}",
-                hour.unwrap_or(0),
-                minute.unwrap_or(0)
-              ))
-              .color(serenity::Color::RED)
-          })
-          .ephemeral(true)
-        })
+        .send(
+          CreateReply::default()
+            .embed(
+              CreateEmbed::new()
+                .title("Error")
+                .description(format!(
+                  "Invalid time provided: {}:{}",
+                  hour.unwrap_or(0),
+                  minute.unwrap_or(0)
+                ))
+                .color(serenity::Color::RED),
+            )
+            .ephemeral(true),
+        )
         .await?;
       return Ok(());
     }
@@ -358,7 +377,14 @@ pub async fn populate(
   let datetime = chrono::NaiveDateTime::new(date, time).and_utc();
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
-  DatabaseHandler::add_erase(&mut transaction, &guild_id, &user.id, &message_link, datetime).await?;
+  DatabaseHandler::add_erase(
+    &mut transaction,
+    &guild_id,
+    &user.id,
+    &message_link,
+    datetime,
+  )
+  .await?;
 
   commit_and_say(
     ctx,

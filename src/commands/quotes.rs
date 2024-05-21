@@ -3,8 +3,8 @@ use crate::database::DatabaseHandler;
 use crate::pagination::{PageRowRef, Pagination};
 use crate::{Context, Data as AppData, Error as AppError};
 use anyhow::Result;
-use poise::serenity_prelude as serenity;
-use poise::Modal;
+use poise::serenity_prelude::{self as serenity, builder::*};
+use poise::{CreateReply, Modal};
 
 #[derive(Debug, Modal)]
 #[name = "Add a new quote"]
@@ -31,11 +31,11 @@ struct EditQuoteModal {
 }
 
 /// Commands for managing quotes
-/// 
+///
 /// Commands to list, add, edit, or remove quotes.
 ///
 /// These quotes are used both for the `/quote` command and for motivational messages when a user runs `/add`.
-/// 
+///
 /// Requires `Manage Roles` permissions.
 #[poise::command(
   slash_command,
@@ -52,7 +52,7 @@ pub async fn quotes(_: poise::Context<'_, AppData, AppError>) -> Result<()> {
 }
 
 /// Add a quote to the database
-/// 
+///
 /// Adds a quote to the database.
 #[poise::command(slash_command)]
 pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Result<()> {
@@ -85,7 +85,11 @@ pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Resul
     }
     None => {
       ctx
-        .send(|f| f.content(":x: No data was provided.").ephemeral(true))
+        .send(
+          CreateReply::default()
+            .content(":x: No data was provided.")
+            .ephemeral(true),
+        )
         .await?;
       return Ok(());
     }
@@ -95,7 +99,7 @@ pub async fn add(ctx: poise::ApplicationContext<'_, AppData, AppError>) -> Resul
 }
 
 /// Edit an existing quote
-/// 
+///
 /// Edits an existing quote.
 #[poise::command(slash_command)]
 pub async fn edit(
@@ -111,8 +115,13 @@ pub async fn edit(
     DatabaseHandler::get_quote(&mut transaction, &guild_id, quote_id.as_str()).await?;
 
   if existing_quote.is_none() {
-    ctx.send(|f| f.content(":x: Invalid quote ID.").ephemeral(true))
-    .await?;
+    ctx
+      .send(
+        CreateReply::default()
+          .content(":x: Invalid quote ID.")
+          .ephemeral(true),
+      )
+      .await?;
     return Ok(());
   }
 
@@ -147,7 +156,11 @@ pub async fn edit(
     }
     None => {
       ctx
-        .send(|f| f.content(":x: No data was provided.").ephemeral(true))
+        .send(
+          CreateReply::default()
+            .content(":x: No data was provided.")
+            .ephemeral(true),
+        )
         .await?;
       return Ok(());
     }
@@ -157,7 +170,7 @@ pub async fn edit(
 }
 
 /// Remove a quote from the database
-/// 
+///
 /// Removes a quote from the database.
 #[poise::command(slash_command)]
 pub async fn remove(
@@ -172,7 +185,11 @@ pub async fn remove(
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
   if !DatabaseHandler::quote_exists(&mut transaction, &guild_id, id.as_str()).await? {
     ctx
-      .send(|f| f.content(":x: Quote does not exist.").ephemeral(true))
+      .send(
+        CreateReply::default()
+          .content(":x: Quote does not exist.")
+          .ephemeral(true),
+      )
       .await?;
     return Ok(());
   }
@@ -191,7 +208,7 @@ pub async fn remove(
 }
 
 /// List all quotes in the database
-/// 
+///
 /// Lists all quotes in the database.
 #[poise::command(slash_command)]
 pub async fn list(
@@ -212,7 +229,9 @@ pub async fn list(
 
   let mut current_page = page.unwrap_or(0);
 
-  if current_page > 0 { current_page = current_page - 1 }
+  if current_page > 0 {
+    current_page = current_page - 1
+  }
 
   let quotes = DatabaseHandler::get_all_quotes(&mut transaction, &guild_id).await?;
   let quotes: Vec<PageRowRef> = quotes.iter().map(|quote| quote as PageRowRef).collect();
@@ -226,27 +245,21 @@ pub async fn list(
   let first_page = pagination.create_page_embed(current_page);
 
   ctx
-    .send(|f| {
-      f.components(|b| {
-        if pagination.get_page_count() > 1 {
-          b.create_action_row(|b| {
-            b.create_button(|b| b.custom_id(&prev_button_id).label("Previous"))
-              .create_button(|b| b.custom_id(&next_button_id).label("Next"))
-          });
-        }
-
-        b
-      })
-      .ephemeral(true);
-
+    .send({
+      let mut f = CreateReply::default();
+      if pagination.get_page_count() > 1 {
+        f = f.components(vec![CreateActionRow::Buttons(vec![
+          CreateButton::new(&prev_button_id).label("Previous"),
+          CreateButton::new(&next_button_id).label("Next"),
+        ])])
+      }
       f.embeds = vec![first_page];
-
-      f
+      f.ephemeral(true)
     })
     .await?;
 
   // Loop through incoming interactions with the navigation buttons
-  while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+  while let Some(press) = serenity::ComponentInteractionCollector::new(ctx)
     // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
     // button was pressed
     .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
@@ -266,10 +279,12 @@ pub async fn list(
 
     // Update the message with the new page contents
     press
-      .create_interaction_response(ctx, |b| {
-        b.kind(serenity::InteractionResponseType::UpdateMessage)
-          .interaction_response_data(|f| f.set_embed(pagination.create_page_embed(current_page)))
-      })
+      .create_response(
+        ctx,
+        CreateInteractionResponse::UpdateMessage(
+          CreateInteractionResponseMessage::new().embed(pagination.create_page_embed(current_page)),
+        ),
+      )
       .await?;
   }
 

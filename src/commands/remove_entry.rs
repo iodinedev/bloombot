@@ -3,12 +3,12 @@ use crate::config::{BloomBotEmbed, CHANNELS};
 use crate::database::DatabaseHandler;
 use crate::Context;
 use anyhow::Result;
-use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::{self as serenity, CreateEmbedFooter, CreateMessage};
 
 /// Remove one of your meditation entries
-/// 
+///
 /// Removes one of your meditation entries.
-/// 
+///
 /// Use `/recent` to retrieve the ID for the entry you wish to remove.
 #[poise::command(
   slash_command,
@@ -58,16 +58,20 @@ pub async fn remove_entry(
       entry.occurred_at.format("%B %d, %Y"),
       entry.meditation_minutes
     ))
-    .footer(|f| {
-      f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-        .text(format!("Removed by {} ({})", ctx.author().name, ctx.author().id))
-    })
+    .footer(
+      CreateEmbedFooter::new(format!(
+        "Removed by {} ({})",
+        ctx.author().name,
+        ctx.author().id
+      ))
+      .icon_url(ctx.author().avatar_url().unwrap_or_default()),
+    )
     .to_owned();
 
-  let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+  let log_channel = serenity::ChannelId::new(CHANNELS.bloomlogs);
 
   log_channel
-    .send_message(ctx, |f| f.set_embed(log_embed))
+    .send_message(ctx, CreateMessage::new().embed(log_embed))
     .await?;
 
   Ok(())

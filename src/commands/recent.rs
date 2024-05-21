@@ -2,18 +2,15 @@ use crate::database::DatabaseHandler;
 use crate::pagination::{PageRowRef, Pagination};
 use crate::Context;
 use anyhow::Result;
-use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::{self as serenity, builder::*};
+use poise::CreateReply;
 
 /// See your recent meditation entries
-/// 
+///
 /// Displays a list of your recent meditation entries.
-/// 
+///
 /// Use this command to retrieve the ID used to remove an entry.
-#[poise::command(
-  slash_command,
-  category = "Meditation Tracking",
-  guild_only
-)]
+#[poise::command(slash_command, category = "Meditation Tracking", guild_only)]
 pub async fn recent(
   ctx: Context<'_>,
   #[description = "The page to show"] page: Option<usize>,
@@ -44,27 +41,21 @@ pub async fn recent(
   let first_page = pagination.create_page_embed(current_page);
 
   ctx
-    .send(|f| {
-      f.components(|b| {
-        if pagination.get_page_count() > 1 {
-          b.create_action_row(|b| {
-            b.create_button(|b| b.custom_id(&prev_button_id).label("Previous"))
-              .create_button(|b| b.custom_id(&next_button_id).label("Next"))
-          });
-        }
-
-        b
-      })
-      .ephemeral(true);
-
+    .send({
+      let mut f = CreateReply::default();
+      if pagination.get_page_count() > 1 {
+        f = f.components(vec![CreateActionRow::Buttons(vec![
+          CreateButton::new(&prev_button_id).label("Previous"),
+          CreateButton::new(&next_button_id).label("Next"),
+        ])])
+      }
       f.embeds = vec![first_page];
-
-      f
+      f.ephemeral(true)
     })
     .await?;
 
   // Loop through incoming interactions with the navigation buttons
-  while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+  while let Some(press) = serenity::ComponentInteractionCollector::new(ctx)
     // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
     // button was pressed
     .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
@@ -84,10 +75,12 @@ pub async fn recent(
 
     // Update the message with the new page contents
     press
-      .create_interaction_response(ctx, |b| {
-        b.kind(serenity::InteractionResponseType::UpdateMessage)
-          .interaction_response_data(|f| f.set_embed(pagination.create_page_embed(current_page)))
-      })
+      .create_response(
+        ctx,
+        CreateInteractionResponse::UpdateMessage(
+          CreateInteractionResponseMessage::new().embed(pagination.create_page_embed(current_page)),
+        ),
+      )
       .await?;
   }
 

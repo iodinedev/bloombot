@@ -6,7 +6,8 @@ use crate::Context;
 use anyhow::Result;
 use log::info;
 use pgvector;
-use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::{self as serenity, builder::*};
+use poise::CreateReply;
 
 /// Glossary commands
 ///
@@ -59,18 +60,17 @@ pub async fn list(ctx: Context<'_>) -> Result<()> {
   }
 
   ctx
-    .send(|f| {
-      f.embed(|e| {
-        BloomBotEmbed::from(e)
+    .send(CreateReply::default()
+      .embed(BloomBotEmbed::new()
           .title("List of Glossary Terms")
           .description(format!(
             "Use `/glossary info` with any of the following terms to read the full entry. Terms in parentheses are aliases for the preceding term.\n```{}```",
             term_list
           ))
           // Will not reach char limit for a while. Can add pagination later.
-          .footer(|f| f.text(format!("Showing {} of {} terms.", term_count, term_count)))
-      })
-    })
+          .footer(CreateEmbedFooter::new(format!("Showing {} of {} terms.", term_count, term_count)))
+      )
+    )
     .await?;
 
   Ok(())
@@ -182,15 +182,16 @@ pub async fn info(
 
   match term_info {
     Some(term_info) => {
-      embed.title(term_info.term_name);
-      embed.description(term_info.meaning);
+      embed = embed
+        .title(term_info.term_name)
+        .description(term_info.meaning);
       let usage = term_info.usage.unwrap_or(String::new());
       if !usage.is_empty() {
-        embed.field("Example of Usage:", usage, false);
+        embed = embed.field("Example of Usage:", usage, false);
       }
       let links = term_info.links.unwrap_or(Vec::new());
       if !links.is_empty() {
-        embed.field(
+        embed = embed.field(
           "Related Resources:",
           {
             let mut field = String::new();
@@ -208,7 +209,7 @@ pub async fn info(
       }
       let aliases = term_info.aliases.clone().unwrap_or(Vec::new());
       if !aliases.is_empty() {
-        embed.field(
+        embed = embed.field(
           "Aliases:",
           {
             let mut field = String::new();
@@ -228,7 +229,7 @@ pub async fn info(
       }
       let category = term_info.category.unwrap_or(String::new());
       if !category.is_empty() {
-        embed.footer(|f| f.text(format!("Categories: {}", category)));
+        embed = embed.footer(CreateEmbedFooter::new(format!("Categories: {}", category)));
       }
     }
     None => {
@@ -239,15 +240,16 @@ pub async fn info(
       if possible_terms.len() == 1 {
         let possible_term = possible_terms.first().unwrap();
 
-        embed.title(&possible_term.term_name);
-        embed.description(&possible_term.meaning);
+        embed = embed
+          .title(&possible_term.term_name)
+          .description(&possible_term.meaning);
         let usage = possible_term.usage.clone().unwrap_or(String::new());
         if !usage.is_empty() {
-          embed.field("Example of Usage:", usage, false);
+          embed = embed.field("Example of Usage:", usage, false);
         }
         let links = possible_term.links.clone().unwrap_or(Vec::new());
         if !links.is_empty() {
-          embed.field(
+          embed = embed.field(
             "Related Resources:",
             {
               let mut field = String::new();
@@ -265,7 +267,7 @@ pub async fn info(
         }
         let aliases = possible_term.aliases.clone().unwrap_or(Vec::new());
         if !aliases.is_empty() {
-          embed.field(
+          embed = embed.field(
             "Aliases:",
             {
               let mut field = String::new();
@@ -285,34 +287,28 @@ pub async fn info(
         }
         let category = possible_term.category.clone().unwrap_or(String::new());
         if !category.is_empty() {
-          embed.footer(|f| {
-            f.text(format!(
-              "Categories: {}\n\n*You searched for '{}'. The closest term available was '{}'.",
-              category, term, possible_term.term_name
-            ))
-          });
+          embed = embed.footer(CreateEmbedFooter::new(format!(
+            "Categories: {}\n\n*You searched for '{}'. The closest term available was '{}'.",
+            category, term, possible_term.term_name
+          )));
         } else {
-          embed.footer(|f| {
-            f.text(format!(
-              "*You searched for '{}'. The closest term available was '{}'.",
-              term, possible_term.term_name
-            ))
-          });
+          embed = embed.footer(CreateEmbedFooter::new(format!(
+            "*You searched for '{}'. The closest term available was '{}'.",
+            term, possible_term.term_name
+          )));
         }
       } else if possible_terms.is_empty() {
-        embed.title("Term not found");
-        embed.description(format!(
+        embed = embed.title("Term not found").description(format!(
           "The term `{}` was not found in the glossary.",
           term
         ));
       } else {
-        embed.title("Term not found");
-        embed.description(format!(
+        embed = embed.title("Term not found").description(format!(
           "The term `{}` was not found in the glossary.",
           term
         ));
 
-        embed.field(
+        embed = embed.field(
           "Did you mean one of these?",
           {
             let mut field = String::new();
@@ -332,7 +328,8 @@ pub async fn info(
   }
 
   ctx
-    .send(|f| {
+    .send({
+      let mut f = CreateReply::default();
       f.embeds = vec![embed];
 
       f
@@ -370,10 +367,12 @@ pub async fn search(
   let end_time = std::time::Instant::now();
 
   let mut embed = BloomBotEmbed::new();
-  embed.title(format!("Search results for `{}`", search));
+  let mut terms_returned = 0;
+  embed = embed.title(format!("Search results for `{}`", search));
 
   if possible_terms.is_empty() {
-    embed.description("No terms were found. Try browsing the glossary with `/glossary list`.");
+    embed =
+      embed.description("No terms were found. Try browsing the glossary with `/glossary list`.");
   } else {
     for (index, possible_term) in possible_terms.iter().enumerate() {
       // Set threshold for terms to include
@@ -407,7 +406,7 @@ pub async fn search(
 
       let meaning = possible_term.meaning.clone();
 
-      embed.field(
+      embed = embed.field(
         format!("Term {}: `{}`", index + 1, &possible_term.term_name),
         format!(
           // "```{}```\n> Estimated relevance: *{}*",
@@ -416,22 +415,24 @@ pub async fn search(
         ),
         false,
       );
+
+      terms_returned += 1;
     }
   }
 
-  embed.footer(|f| {
-    f.text(format!(
-      "Search took {}ms",
-      (end_time - start_time).as_millis()
-    ))
-  });
+  embed = embed.footer(CreateEmbedFooter::new(format!(
+    "Search took {}ms",
+    (end_time - start_time).as_millis()
+  )));
 
-  if !embed.0.contains_key("description") && !embed.0.contains_key("fields") {
-    embed.description("No terms were found. Try browsing the glossary with `/glossary list`.");
+  if terms_returned == 0 {
+    embed =
+      embed.description("No terms were found. Try browsing the glossary with `/glossary list`.");
   }
 
   ctx
-    .send(|f| {
+    .send({
+      let mut f = CreateReply::default();
       f.embeds = vec![embed];
 
       f
@@ -452,27 +453,28 @@ pub async fn suggest(
   let log_embed = BloomBotEmbed::new()
     .title("Term Suggestion")
     .description(format!("**Suggestion**: {}", suggestion))
-    .footer(|f| {
-      f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-        .text(format!(
-          "Suggested by {} ({})",
-          ctx.author().name,
-          ctx.author().id
-        ))
-    })
+    .footer(
+      CreateEmbedFooter::new(format!(
+        "Suggested by {} ({})",
+        ctx.author().name,
+        ctx.author().id
+      ))
+      .icon_url(ctx.author().avatar_url().unwrap_or_default()),
+    )
     .to_owned();
 
-  let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+  let log_channel = serenity::ChannelId::new(CHANNELS.bloomlogs);
 
   log_channel
-    .send_message(ctx, |f| f.set_embed(log_embed))
+    .send_message(ctx, CreateMessage::new().embed(log_embed))
     .await?;
 
   ctx
-    .send(|f| {
-      f.content("Your suggestion has been submitted. Thank you!")
-        .ephemeral(true)
-    })
+    .send(
+      CreateReply::default()
+        .content("Your suggestion has been submitted. Thank you!")
+        .ephemeral(true),
+    )
     .await?;
 
   Ok(())

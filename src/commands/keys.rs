@@ -3,7 +3,8 @@ use crate::database::DatabaseHandler;
 use crate::pagination::{PageRowRef, Pagination};
 use crate::Context;
 use anyhow::Result;
-use poise::serenity_prelude::{self as serenity, Mentionable};
+use poise::serenity_prelude::{self as serenity, builder::*, Mentionable};
+use poise::CreateReply;
 
 /// Commands for managing Playne keys
 ///
@@ -61,27 +62,21 @@ pub async fn list_keys(
   let first_page = pagination.create_page_embed(current_page);
 
   ctx
-    .send(|f| {
-      f.components(|b| {
-        if pagination.get_page_count() > 1 {
-          b.create_action_row(|b| {
-            b.create_button(|b| b.custom_id(&prev_button_id).label("Previous"))
-              .create_button(|b| b.custom_id(&next_button_id).label("Next"))
-          });
-        }
-
-        b
-      })
-      .ephemeral(true);
-
+    .send({
+      let mut f = CreateReply::default();
+      if pagination.get_page_count() > 1 {
+        f = f.components(vec![CreateActionRow::Buttons(vec![
+          CreateButton::new(&prev_button_id).label("Previous"),
+          CreateButton::new(&next_button_id).label("Next"),
+        ])])
+      }
       f.embeds = vec![first_page];
-
-      f
+      f.ephemeral(true)
     })
     .await?;
 
   // Loop through incoming interactions with the navigation buttons
-  while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+  while let Some(press) = serenity::ComponentInteractionCollector::new(ctx)
     // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
     // button was pressed
     .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
@@ -101,10 +96,12 @@ pub async fn list_keys(
 
     // Update the message with the new page contents
     press
-      .create_interaction_response(ctx, |b| {
-        b.kind(serenity::InteractionResponseType::UpdateMessage)
-          .interaction_response_data(|f| f.set_embed(pagination.create_page_embed(current_page)))
-      })
+      .create_response(
+        ctx,
+        CreateInteractionResponse::UpdateMessage(
+          CreateInteractionResponseMessage::new().embed(pagination.create_page_embed(current_page)),
+        ),
+      )
       .await?;
   }
 
@@ -127,7 +124,11 @@ pub async fn add_key(
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
   if DatabaseHandler::steam_key_exists(&mut transaction, &guild_id, key.as_str()).await? {
     ctx
-      .send(|f| f.content(":x: Key already exists.").ephemeral(true))
+      .send(
+        CreateReply::default()
+          .content(":x: Key already exists.")
+          .ephemeral(true),
+      )
       .await?;
     return Ok(());
   }
@@ -161,7 +162,11 @@ pub async fn remove_key(
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
   if !DatabaseHandler::steam_key_exists(&mut transaction, &guild_id, key.as_str()).await? {
     ctx
-      .send(|f| f.content(":x: Key does not exist.").ephemeral(true))
+      .send(
+        CreateReply::default()
+          .content(":x: Key does not exist.")
+          .ephemeral(true),
+      )
       .await?;
     return Ok(());
   }
@@ -194,7 +199,11 @@ pub async fn use_key(ctx: Context<'_>) -> Result<()> {
 
   if !DatabaseHandler::unused_key_exists(&mut transaction, &guild_id).await? {
     ctx
-      .send(|f| f.content(":x: No unused keys found.").ephemeral(true))
+      .send(
+        CreateReply::default()
+          .content(":x: No unused keys found.")
+          .ephemeral(true),
+      )
       .await?;
     return Ok(());
   }
@@ -203,13 +212,14 @@ pub async fn use_key(ctx: Context<'_>) -> Result<()> {
   let key = key.unwrap();
 
   ctx
-    .send(|f| {
-      f.content(format!(
-        ":white_check_mark: Key retrieved and marked used: `{}`",
-        key
-      ))
-      .ephemeral(true)
-    })
+    .send(
+      CreateReply::default()
+        .content(format!(
+          ":white_check_mark: Key retrieved and marked used: `{}`",
+          key
+        ))
+        .ephemeral(true),
+    )
     .await?;
 
   Ok(())
@@ -264,27 +274,21 @@ pub async fn list_recipients(
   let first_page = pagination.create_page_embed(current_page);
 
   ctx
-    .send(|f| {
-      f.components(|b| {
-        if pagination.get_page_count() > 1 {
-          b.create_action_row(|b| {
-            b.create_button(|b| b.custom_id(&prev_button_id).label("Previous"))
-              .create_button(|b| b.custom_id(&next_button_id).label("Next"))
-          });
-        }
-
-        b
-      })
-      .ephemeral(true);
-
+    .send({
+      let mut f = CreateReply::default();
+      if pagination.get_page_count() > 1 {
+        f = f.components(vec![CreateActionRow::Buttons(vec![
+          CreateButton::new(&prev_button_id).label("Previous"),
+          CreateButton::new(&next_button_id).label("Next"),
+        ])])
+      }
       f.embeds = vec![first_page];
-
-      f
+      f.ephemeral(true)
     })
     .await?;
 
   // Loop through incoming interactions with the navigation buttons
-  while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+  while let Some(press) = serenity::ComponentInteractionCollector::new(ctx)
     // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
     // button was pressed
     .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
@@ -304,10 +308,12 @@ pub async fn list_recipients(
 
     // Update the message with the new page contents
     press
-      .create_interaction_response(ctx, |b| {
-        b.kind(serenity::InteractionResponseType::UpdateMessage)
-          .interaction_response_data(|f| f.set_embed(pagination.create_page_embed(current_page)))
-      })
+      .create_response(
+        ctx,
+        CreateInteractionResponse::UpdateMessage(
+          CreateInteractionResponseMessage::new().embed(pagination.create_page_embed(current_page)),
+        ),
+      )
       .await?;
   }
 
@@ -329,20 +335,22 @@ pub async fn update_recipient(
 ) -> Result<()> {
   if challenge_prize.is_none() && donator_perk.is_none() && total_keys.is_none() {
     ctx
-      .send(|f| {
-        f.content(":x: No input provided. Update aborted.")
-          .ephemeral(true)
-      })
+      .send(
+        CreateReply::default()
+          .content(":x: No input provided. Update aborted.")
+          .ephemeral(true),
+      )
       .await?;
     return Ok(());
   }
 
   if total_keys.is_some() && total_keys.unwrap() < 0 {
     ctx
-      .send(|f| {
-        f.content(":x: Total keys cannot be less than zero.")
-          .ephemeral(true)
-      })
+      .send(
+        CreateReply::default()
+          .content(":x: Total keys cannot be less than zero.")
+          .ephemeral(true),
+      )
       .await?;
     return Ok(());
   }
@@ -382,7 +390,7 @@ pub async fn update_recipient(
       }
       None => {
         ctx
-          .send(|f| f.content(":x: No existing record for recipient. Please specify a number of keys to create a new record.").ephemeral(true))
+          .send(CreateReply::default().content(":x: No existing record for recipient. Please specify a number of keys to create a new record.").ephemeral(true))
           .await?;
         DatabaseHandler::rollback_transaction(transaction).await?;
         return Ok(());
@@ -399,31 +407,26 @@ pub async fn update_recipient(
     let cancel_id = format!("{}cancel", ctx_id);
 
     ctx
-      .send(|f| {
-        f.content(format!(
-          "Are you sure you want to remove {} from the recipient database?",
-          recipient.mention()
-        ))
-        .ephemeral(true)
-        .components(|c| {
-          c.create_action_row(|a| {
-            a.create_button(|b| {
-              b.custom_id(confirm_id.clone())
-                .label("Yes")
-                .style(serenity::ButtonStyle::Success)
-            })
-            .create_button(|b| {
-              b.custom_id(cancel_id.clone())
-                .label("No")
-                .style(serenity::ButtonStyle::Danger)
-            })
-          })
-        })
-      })
+      .send(
+        CreateReply::default()
+          .content(format!(
+            "Are you sure you want to remove {} from the recipient database?",
+            recipient.mention()
+          ))
+          .ephemeral(true)
+          .components(vec![CreateActionRow::Buttons(vec![
+            CreateButton::new(confirm_id.clone())
+              .label("Yes")
+              .style(serenity::ButtonStyle::Success),
+            CreateButton::new(cancel_id.clone())
+              .label("No")
+              .style(serenity::ButtonStyle::Danger),
+          ])]),
+      )
       .await?;
 
     // Loop through incoming interactions with the navigation buttons
-    while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+    while let Some(press) = serenity::ComponentInteractionCollector::new(ctx)
       // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
       // button was pressed
       .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
@@ -442,13 +445,14 @@ pub async fn update_recipient(
       // Update the message with the new page contents
       if confirmed {
         match press
-          .create_interaction_response(ctx, |b| {
-            b.kind(serenity::InteractionResponseType::UpdateMessage)
-              .interaction_response_data(|f| {
-                f.content("Confirmed.")
-                  .set_components(serenity::CreateComponents(Vec::new()))
-              })
-          })
+          .create_response(
+            ctx,
+            CreateInteractionResponse::UpdateMessage(
+              CreateInteractionResponseMessage::new()
+                .content("Confirmed.")
+                .components(Vec::new()),
+            ),
+          )
           .await
         {
           Ok(_) => {
@@ -467,13 +471,14 @@ pub async fn update_recipient(
         }
       } else {
         press
-          .create_interaction_response(ctx, |b| {
-            b.kind(serenity::InteractionResponseType::UpdateMessage)
-              .interaction_response_data(|f| {
-                f.content("Cancelled.")
-                  .set_components(serenity::CreateComponents(Vec::new()))
-              })
-          })
+          .create_response(
+            ctx,
+            CreateInteractionResponse::UpdateMessage(
+              CreateInteractionResponseMessage::new()
+                .content("Cancelled.")
+                .components(Vec::new()),
+            ),
+          )
           .await?;
       }
     }

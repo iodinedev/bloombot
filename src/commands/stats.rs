@@ -4,7 +4,7 @@ use crate::database::{DatabaseHandler, TrackingProfile};
 use crate::Context;
 use crate::{charts, config};
 use anyhow::Result;
-use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::{self as serenity, builder::*};
 
 #[derive(poise::ChoiceParameter)]
 pub enum StatsType {
@@ -60,7 +60,9 @@ pub async fn user(
     Timeframe,
   >,
   #[description = "Set visibility of response (Defaults to public)"] privacy: Option<Privacy>,
-  #[description = "Toggle between light mode and dark mode (Defaults to dark mode)"] theme: Option<Theme>,
+  #[description = "Toggle between light mode and dark mode (Defaults to dark mode)"] theme: Option<
+    Theme,
+  >,
 ) -> Result<()> {
   let data = ctx.data();
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
@@ -100,14 +102,15 @@ pub async fn user(
     && !ctx.author().has_role(&ctx, guild_id, ROLES.staff).await?
   {
     ctx
-      .send(|f| {
-        f.content(format!(
-          "Sorry, {}'s stats are set to private.",
-          user_nick_or_name
-        ))
-        .ephemeral(true)
-        .allowed_mentions(|f| f.empty_parse())
-      })
+      .send(
+        poise::CreateReply::default()
+          .content(format!(
+            "Sorry, {}'s stats are set to private.",
+            user_nick_or_name
+          ))
+          .ephemeral(true)
+          .allowed_mentions(serenity::CreateAllowedMentions::new()),
+      )
       .await?;
 
     return Ok(());
@@ -127,16 +130,13 @@ pub async fn user(
     DatabaseHandler::get_user_stats(&mut transaction, &guild_id, &user.id, &timeframe).await?;
 
   let mut embed = BloomBotEmbed::new();
-  let embed = embed
+  embed = embed
     .title(format!("Stats for {}", user_nick_or_name))
-    .author(|f| {
-      f.name(format!("{}'s Stats", user_nick_or_name))
-        .icon_url(user.face())
-    });
+    .author(CreateEmbedAuthor::new(format!("{}'s Stats", user_nick_or_name)).icon_url(user.face()));
 
   match stats_type {
     StatsType::MeditationMinutes => {
-      embed
+      embed = embed
         .field(
           "All-Time Meditation Minutes",
           format!("```{}```", stats.all_minutes),
@@ -149,7 +149,7 @@ pub async fn user(
         );
     }
     StatsType::MeditationCount => {
-      embed
+      embed = embed
         .field(
           "All-Time Session Count",
           format!("```{}```", stats.all_count),
@@ -198,16 +198,20 @@ pub async fn user(
     .await?;
   let file_path = chart.get_file_path();
 
-  embed.image(chart.get_attachment_url());
+  embed = embed.image(chart.get_attachment_url());
 
   //Hide footer if streaks disabled
   if tracking_profile.streaks_active {
-    embed.footer(|f| f.text(format!("Current streak: {}", stats.streak)));
+    embed = embed.footer(CreateEmbedFooter::new(format!(
+      "Current streak: {}",
+      stats.streak
+    )));
   }
 
   ctx
-    .send(|f| {
-      f.attachment(serenity::AttachmentType::Path(&file_path));
+    .send({
+      let mut f =
+        poise::CreateReply::default().attachment(CreateAttachment::path(&file_path).await?);
       f.embeds = vec![embed.to_owned()];
 
       f
@@ -229,7 +233,9 @@ pub async fn server(
   #[description = "The timeframe to get the stats for (Defaults to daily)"] timeframe: Option<
     Timeframe,
   >,
-  #[description = "Toggle between light mode and dark mode (Defaults to dark mode)"] theme: Option<Theme>,
+  #[description = "Toggle between light mode and dark mode (Defaults to dark mode)"] theme: Option<
+    Theme,
+  >,
 ) -> Result<()> {
   ctx.defer().await?;
 
@@ -252,16 +258,16 @@ pub async fn server(
   let stats = DatabaseHandler::get_guild_stats(&mut transaction, &guild_id, &timeframe).await?;
 
   let mut embed = BloomBotEmbed::new();
-  let embed = embed
+  embed = embed
     .title(format!("Stats for {}", ctx.guild().unwrap().name))
-    .author(|f| {
-      f.name(format!("{}'s Stats", ctx.guild().unwrap().name))
-        .icon_url(ctx.guild().unwrap().icon_url().unwrap_or_default())
-    });
+    .author(
+      CreateEmbedAuthor::new(format!("{}'s Stats", ctx.guild().unwrap().name))
+        .icon_url(ctx.guild().unwrap().icon_url().unwrap_or_default()),
+    );
 
   match stats_type {
     StatsType::MeditationMinutes => {
-      embed
+      embed = embed
         .field(
           "All-Time Meditation Minutes",
           format!("```{}```", stats.all_minutes),
@@ -274,7 +280,7 @@ pub async fn server(
         );
     }
     StatsType::MeditationCount => {
-      embed
+      embed = embed
         .field(
           "All-Time Session Count",
           format!("```{}```", stats.all_count),
@@ -305,11 +311,12 @@ pub async fn server(
     .await?;
   let file_path = chart.get_file_path();
 
-  embed.image(chart.get_attachment_url());
+  embed = embed.image(chart.get_attachment_url());
 
   ctx
-    .send(|f| {
-      f.attachment(serenity::AttachmentType::Path(&file_path));
+    .send({
+      let mut f =
+        poise::CreateReply::default().attachment(CreateAttachment::path(&file_path).await?);
       f.embeds = vec![embed.to_owned()];
 
       f

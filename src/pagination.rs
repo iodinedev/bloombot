@@ -1,6 +1,6 @@
 use crate::config::{BloomBotEmbed, TERMS_PER_PAGE};
 use anyhow::Result;
-use poise::serenity_prelude::{self as serenity, CreateEmbed};
+use poise::serenity_prelude::{self as serenity, CreateEmbed, CreateEmbedFooter};
 
 pub trait PageRow {
   fn title(&self) -> String;
@@ -87,18 +87,20 @@ impl<'a> Pagination<'a> {
         // If it is a valid page that is empty, it must be page 0
         // This implies that there are no terms in the glossary
         if page.is_empty() {
-          embed.title(self.title.to_string());
-          embed.description("No entries have been added yet.");
+          embed = embed
+            .title(self.title.to_string())
+            .description("No entries have been added yet.");
 
           embed
         } else {
-          page.to_embed(&mut embed, self.title.as_str()).clone()
+          page.to_embed(self.title.as_str()).clone()
         }
       }
       // This should never happen unless we have a bug in our pagination code
       None => {
-        embed.title(self.title.to_string());
-        embed.description("This page does not exist.");
+        embed = embed
+          .title(self.title.to_string())
+          .description("This page does not exist.");
 
         embed
       }
@@ -119,31 +121,31 @@ impl PaginationPage<'_> {
 
   pub fn to_embed<'embed_lifetime>(
     &'embed_lifetime self,
-    embed: &'embed_lifetime mut CreateEmbed,
+    //embed: &'embed_lifetime mut CreateEmbed,
     title: &str,
-  ) -> &'embed_lifetime mut serenity::CreateEmbed {
+  ) -> serenity::CreateEmbed {
     let terms_per_page = if title == "Glossary" { 1 } else { TERMS_PER_PAGE };
-    embed.title(title);
-    embed.description(format!(
-      "Showing entries {} to {}.",
-      (self.page_number * terms_per_page) + 1,
-      (self.page_number * terms_per_page) + self.entries.len()
-    ));
+    let mut embed = BloomBotEmbed::new()
+      .title(title)
+      .description(format!(
+        "Showing entries {} to {}.",
+        (self.page_number * terms_per_page) + 1,
+        (self.page_number * terms_per_page) + self.entries.len()
+      ));
 
     let fields: Vec<(String, String, bool)> = self
       .entries
       .iter()
       .map(|entry| (entry.title(), entry.body(), false))
       .collect();
-    embed.fields(fields);
+    embed = embed.fields(fields);
 
-    embed.footer(|f| {
-      f.text(format!(
+    embed = embed.footer(CreateEmbedFooter::new(format!(
         "Page {} of {}",
         self.page_number + 1,
         self.page_count
       ))
-    });
+    );
 
     embed
   }

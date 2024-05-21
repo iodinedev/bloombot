@@ -9,15 +9,12 @@ pub struct BloomBotEmbed {}
 
 impl BloomBotEmbed {
   pub fn new() -> serenity::CreateEmbed {
-    let mut embed = serenity::CreateEmbed::default();
-    embed.color(EMBED_COLOR);
-    embed
+    serenity::CreateEmbed::default().color(EMBED_COLOR)
   }
 
-  pub fn from(embed: &mut serenity::CreateEmbed) -> &mut serenity::CreateEmbed {
-    embed.color(EMBED_COLOR);
-    embed
-  }
+  // pub fn from(embed: Embed) -> serenity::CreateEmbed {
+  //   serenity::CreateEmbed::from(embed).color(EMBED_COLOR)
+  // }
 }
 
 pub struct Roles {
@@ -99,7 +96,7 @@ pub enum TimeSumRoles {
 
 impl TimeSumRoles {
   pub fn to_role_id(&self) -> serenity::RoleId {
-    serenity::RoleId(match self {
+    serenity::RoleId::new(match self {
       TimeSumRoles::One => 504641899890475018,
       TimeSumRoles::Two => 504641945596067851,
       TimeSumRoles::Three => 504642088760115241,
@@ -199,7 +196,7 @@ pub enum StreakRoles {
 
 impl StreakRoles {
   pub fn to_role_id(&self) -> serenity::RoleId {
-    serenity::RoleId(match self {
+    serenity::RoleId::new(match self {
       StreakRoles::Egg => 857242224390832158,
       StreakRoles::HatchingChick => 857242222529347584,
       StreakRoles::BabyChick => 857242220675465227,

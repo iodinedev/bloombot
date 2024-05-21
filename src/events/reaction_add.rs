@@ -1,7 +1,7 @@
-use crate::config::{self, CHANNELS, ROLES, EMOTES};
+use crate::config::{self, CHANNELS, EMOTES, ROLES};
 use crate::database::DatabaseHandler;
 use anyhow::{Context as AnyhowContext, Result};
-use poise::serenity_prelude::{ChannelId, Context, CreateEmbed, Reaction, ReactionType, UserId};
+use poise::serenity_prelude::{builder::*, ChannelId, Context, Reaction, ReactionType, UserId};
 
 pub async fn reaction_add(
   ctx: &Context,
@@ -33,53 +33,59 @@ async fn check_report(ctx: &Context, user: &UserId, reaction: &Reaction) -> Resu
           .await
           .expect("Failed to remove reaction");
 
-        let report_channel_id = ChannelId(CHANNELS.reportchannel);
+        let report_channel_id = ChannelId::new(CHANNELS.reportchannel);
         let message = reaction.message(&ctx).await?;
         let message_link = message.link().clone();
         let message_user = message.author;
-        let message_channel_name = message.channel_id.to_channel(&ctx).await.unwrap().guild().unwrap().name;
+        let message_channel_name = message
+          .channel_id
+          .to_channel(&ctx)
+          .await
+          .unwrap()
+          .guild()
+          .unwrap()
+          .name;
         let reporting_user = reaction.user(&ctx).await?;
 
         let message_content = match message.content.is_empty() {
-          true => {
-            match message.attachments.first() {
-              Some(attachment) => format!("**Attachment**\n{}", attachment.url.clone()),
-              None => message.content.clone()
-            }
+          true => match message.attachments.first() {
+            Some(attachment) => format!("**Attachment**\n{}", attachment.url.clone()),
+            None => message.content.clone(),
           },
-          false => message.content.clone()
+          false => message.content.clone(),
         };
 
         report_channel_id
-          .send_message(&ctx, |m| {
-            m.content(format!("<@&{}> Message Reported", ROLES.staff))
-              .embed(|e| {
-                config::BloomBotEmbed::from(e)
-                  .author(|a| a.name(format!("{}", &message_user.name)).icon_url(message_user.face()))
+          .send_message(
+            &ctx,
+            CreateMessage::new()
+              .content(format!("<@&{}> Message Reported", ROLES.staff))
+              .embed(
+                config::BloomBotEmbed::new()
+                  .author(
+                    CreateEmbedAuthor::new(format!("{}", &message_user.name))
+                      .icon_url(message_user.face()),
+                  )
                   .description(message_content)
                   .field("Link", format!("[Go to message]({})", message_link), false)
-                  .footer(|f| {
-                    f.text(format!(
-                      "Author ID: {}\nReported via reaction in #{} by {} ({})",
-                      &message_user.id,
-                      message_channel_name,
-                      reporting_user.name,
-                      user
-                    ))
-                  })
-                  .timestamp(message.timestamp)
-              })
-          })
+                  .footer(CreateEmbedFooter::new(format!(
+                    "Author ID: {}\nReported via reaction in #{} by {} ({})",
+                    &message_user.id, message_channel_name, reporting_user.name, user
+                  )))
+                  .timestamp(message.timestamp),
+              ),
+          )
           .await?;
 
         reporting_user
-          .dm(&ctx, |m| {
-            m.embed(|e| {
-              config::BloomBotEmbed::from(e)
+          .dm(
+            &ctx,
+            CreateMessage::new().embed(
+              config::BloomBotEmbed::new()
                 .title("Report")
-                .description("Your report has been sent to the moderation team.")
-            })
-          })
+                .description("Your report has been sent to the moderation team."),
+            ),
+          )
           .await?;
       }
     }
@@ -110,7 +116,7 @@ async fn add_star(ctx: &Context, database: &DatabaseHandler, reaction: &Reaction
       match star_message {
         Some(star_message) => {
           // Already exists, find the starboard channel
-          let starboard_channel = ChannelId(config::CHANNELS.starchannel);
+          let starboard_channel = ChannelId::new(config::CHANNELS.starchannel);
 
           // Get the starboard message
           let mut starboard_message = starboard_channel
@@ -124,12 +130,12 @@ async fn add_star(ctx: &Context, database: &DatabaseHandler, reaction: &Reaction
             )
           })?;
 
-          let mut updated_embed: CreateEmbed = existing_embed.clone().into();
-
-          updated_embed.footer(|f| f.text(format!("⭐ Times starred: {}", star_count)));
+          let updated_embed = CreateEmbed::from(existing_embed.clone()).footer(
+            CreateEmbedFooter::new(format!("⭐ Times starred: {}", star_count)),
+          );
 
           match starboard_message
-            .edit(ctx, |m| m.set_embed(updated_embed))
+            .edit(ctx, EditMessage::new().embed(updated_embed))
             .await
           {
             Ok(_) => (),
@@ -165,16 +171,13 @@ async fn create_star_message(
     let author_nick_or_name = match reaction.guild_id {
       Some(guild_id) => match starred_message.author.nick_in(&ctx, guild_id).await {
         Some(nick) => nick,
-        None => starred_message.author.name.clone()
+        None => starred_message.author.name.clone(),
       },
-      None => starred_message.author.name.clone()
+      None => starred_message.author.name.clone(),
     };
 
     let mut embed = config::BloomBotEmbed::new()
-      .author(|a| {
-        a.name(author_nick_or_name)
-          .icon_url(starred_message.author.face())
-      })
+      .author(CreateEmbedAuthor::new(author_nick_or_name).icon_url(starred_message.author.face()))
       .description(starred_message.content.clone())
       .field(
         "Link",
@@ -184,17 +187,20 @@ async fn create_star_message(
         ),
         false,
       )
-      .footer(|f| f.text(format!("⭐ Times starred: {}", star_count)))
+      .footer(CreateEmbedFooter::new(format!(
+        "⭐ Times starred: {}",
+        star_count
+      )))
       .to_owned();
 
     if let Some(attachment) = &starred_message.attachments.first() {
       embed = embed.image(attachment.url.clone()).to_owned();
     }
 
-    let starboard_channel = ChannelId(CHANNELS.starchannel);
+    let starboard_channel = ChannelId::new(CHANNELS.starchannel);
 
     let starboard_message = starboard_channel
-      .send_message(ctx, |m| m.set_embed(embed))
+      .send_message(ctx, CreateMessage::new().embed(embed))
       .await?;
 
     DatabaseHandler::insert_star_message(

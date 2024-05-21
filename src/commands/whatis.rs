@@ -2,6 +2,7 @@ use crate::commands::BloomBotEmbed;
 use crate::database::DatabaseHandler;
 use crate::Context;
 use anyhow::Result;
+use poise::serenity_prelude::CreateEmbedFooter;
 
 /// See information about a term
 ///
@@ -20,16 +21,16 @@ pub async fn whatis(
 
   match term_info {
     Some(term_info) => {
-      embed.title(term_info.term_name);
+      embed = embed.title(term_info.term_name);
       match term_info.meaning.split_once('\n') {
         Some(one_liner) => {
-          embed.description(format!(
+          embed = embed.description(format!(
             "{}\n\n*Use </glossary info:1135659962308243479> for more information.*",
             one_liner.0.to_string()
           ));
         }
         None => {
-          embed.description(term_info.meaning);
+          embed = embed.description(term_info.meaning);
         }
       };
     }
@@ -41,49 +42,47 @@ pub async fn whatis(
       if possible_terms.len() == 1 {
         let possible_term = possible_terms.first().unwrap();
 
-        embed.title(&possible_term.term_name);
+        embed = embed.title(&possible_term.term_name);
         match &possible_term.meaning.split_once('\n') {
           Some(one_liner) => {
-            embed.description(format!(
+            embed = embed.description(format!(
               "{}\n\n*Use </glossary info:1135659962308243479> for more information.*",
               one_liner.0.to_string()
             ));
           }
           None => {
-            embed.description(&possible_term.meaning);
+            embed = embed.description(&possible_term.meaning);
           }
         };
 
-        embed.footer(|f| {
-          f.text(format!(
-            "*You searched for '{}'. The closest term available was '{}'.",
-            term, possible_term.term_name,
-          ))
-        });
+        embed = embed.footer(CreateEmbedFooter::new(format!(
+          "*You searched for '{}'. The closest term available was '{}'.",
+          term, possible_term.term_name,
+        )));
       } else if possible_terms.is_empty() {
-        embed.title("Term not found");
-        embed.description(format!(
-          "The term `{}` was not found in the glossary. If you believe it should be included, use </glossary suggest:1135659962308243479> to suggest it for addition.",
-          term
-        ));
+        embed = embed
+          .title("Term not found")
+          .description(format!(
+            "The term `{}` was not found in the glossary. If you believe it should be included, use </glossary suggest:1135659962308243479> to suggest it for addition.",
+            term
+          ));
 
         ctx
-          .send(|f| {
+          .send({
+            let mut f = poise::CreateReply::default();
             f.embeds = vec![embed];
-
             f.ephemeral(true)
           })
           .await?;
 
         return Ok(());
       } else {
-        embed.title("Term not found");
-        embed.description(format!(
+        embed = embed.title("Term not found").description(format!(
           "The term `{}` was not found in the glossary.",
           term
         ));
 
-        embed.field(
+        embed = embed.field(
           "Did you mean one of these?",
           {
             let mut field = String::new();
@@ -100,9 +99,9 @@ pub async fn whatis(
         );
 
         ctx
-          .send(|f| {
+          .send({
+            let mut f = poise::CreateReply::default();
             f.embeds = vec![embed];
-
             f.ephemeral(true)
           })
           .await?;
@@ -113,9 +112,9 @@ pub async fn whatis(
   }
 
   ctx
-    .send(|f| {
+    .send({
+      let mut f = poise::CreateReply::default();
       f.embeds = vec![embed];
-
       f
     })
     .await?;

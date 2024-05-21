@@ -1,7 +1,7 @@
 use crate::config::{self, EMOTES};
 use crate::database::DatabaseHandler;
 use anyhow::Result;
-use poise::serenity_prelude::{ChannelId, Context, CreateEmbed, Reaction, ReactionType};
+use poise::serenity_prelude::{builder::*, ChannelId, Context, Reaction, ReactionType};
 
 pub async fn reaction_remove(
   ctx: &Context,
@@ -31,7 +31,7 @@ async fn remove_star(ctx: &Context, database: &DatabaseHandler, reaction: &React
           .map(|r| r.count)
           .unwrap_or(0);
 
-        let starboard_channel = ChannelId(config::CHANNELS.starchannel);
+        let starboard_channel = ChannelId::new(config::CHANNELS.starchannel);
 
         if star_count >= config::MIN_STARS {
           // Get the starboard message
@@ -40,12 +40,12 @@ async fn remove_star(ctx: &Context, database: &DatabaseHandler, reaction: &React
             .await?;
 
           let existing_embed = starboard_message.embeds.get(0).unwrap();
-          let mut updated_embed: CreateEmbed = existing_embed.clone().into();
-
-          updated_embed.footer(|f| f.text(format!("⭐ Times starred: {}", star_count)));
+          let updated_embed = CreateEmbed::from(existing_embed.clone()).footer(
+            CreateEmbedFooter::new(format!("⭐ Times starred: {}", star_count)),
+          );
 
           starboard_message
-            .edit(ctx, |m| m.set_embed(updated_embed))
+            .edit(ctx, EditMessage::new().embed(updated_embed))
             .await?;
         } else {
           starboard_channel

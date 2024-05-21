@@ -1,17 +1,17 @@
 use anyhow::{Context as ErrorContext, Error, Result};
 use commands::{
   add::add, challenge::challenge, coffee::coffee, complete::complete, courses::course,
-  customize::customize, erase::erase, glossary::glossary, hello::hello, help::help,
-  keys::keys, manage::manage, pick_winner::pick_winner, ping::ping, quote::quote,
-  quotes::quotes, recent::recent, remove_entry::remove_entry, report_message::report_message,
-  stats::stats, streak::streak, suggest::suggest, terms::terms, whatis::whatis,
+  customize::customize, erase::erase, glossary::glossary, hello::hello, help::help, keys::keys,
+  manage::manage, pick_winner::pick_winner, ping::ping, quote::quote, quotes::quotes,
+  recent::recent, remove_entry::remove_entry, report_message::report_message, stats::stats,
+  streak::streak, suggest::suggest, terms::terms, whatis::whatis,
 };
 use dotenv::dotenv;
 use log::{error, info};
-use poise::serenity_prelude::{self as serenity, channel};
-use poise::Event;
+use poise::serenity_prelude::{self as serenity, model::channel};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
+use serenity::FullEvent as Event;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -39,6 +39,9 @@ async fn main() -> Result<()> {
   let token =
     std::env::var("DISCORD_TOKEN").with_context(|| "Missing DISCORD_TOKEN environment variable")?;
   let test_guild = std::env::var("TEST_GUILD_ID");
+
+  let intents =
+    serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::GUILD_MEMBERS;
 
   let framework = poise::Framework::builder()
     .options(poise::FrameworkOptions {
@@ -78,18 +81,22 @@ async fn main() -> Result<()> {
       },
       ..Default::default()
     })
-    .token(token)
-    .intents(serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::GUILD_MEMBERS)
     .setup(|ctx, _ready, framework| {
       Box::pin(async move {
         if let Ok(test_guild) = test_guild {
           info!("Registering commands in test guild {}", test_guild);
 
-          let guild_id = serenity::GuildId(test_guild.parse::<u64>()?);
+          let guild_id = serenity::GuildId::new(test_guild.parse::<u64>()?);
           poise::builtins::register_in_guild(ctx, &framework.options().commands, guild_id).await?;
+          
+          info!("Setting default activity text");
+          ctx.set_activity(Some(serenity::ActivityData::custom("Tracking your meditations")));
         } else {
           info!("Registering commands globally");
           poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+
+          info!("Setting default activity text");
+          ctx.set_activity(Some(serenity::ActivityData::custom("Tracking your meditations")));
         }
         Ok(Data {
           db: database::DatabaseHandler::new().await?,
@@ -97,23 +104,43 @@ async fn main() -> Result<()> {
           embeddings: Arc::new(embeddings::OpenAIHandler::new()?),
         })
       })
-    });
+    })
+    .build();
 
-  match framework.run().await {
+  let mut client = serenity::Client::builder(&token, intents)
+    .framework(framework)
+    .await
+    .map_err(|e| anyhow::anyhow!(e))?;
+
+  match client.start().await {
+    //.map_err(|e| anyhow::anyhow!(e))?;
     Ok(_) => {
-      info!("Framework exited successfully");
+      info!("Client started successfully");
       Ok(())
     }
     Err(e) => {
-      error!("Error while running framework: {}", e);
+      error!("Error starting client: {}", e);
       return Err(anyhow::anyhow!(e));
     }
   }
+
+  //Ok(())
+
+  //match framework.run().await {
+  //  Ok(_) => {
+  //    info!("Framework exited successfully");
+  //    Ok(())
+  //  }
+  //  Err(e) => {
+  //    error!("Error while running framework: {}", e);
+  //    return Err(anyhow::anyhow!(e));
+  //  }
+  //}
 }
 
 async fn error_handler(error: poise::FrameworkError<'_, Data, Error>) {
   match error {
-    poise::FrameworkError::Command { ctx, error } => {
+    poise::FrameworkError::Command { ctx, error, .. } => {
       match ctx.say("An error occurred while running the command").await {
         Ok(_) => {}
         Err(e) => {
@@ -136,13 +163,13 @@ async fn error_handler(error: poise::FrameworkError<'_, Data, Error>) {
         Some(channel) => match channel {
           channel::Channel::Guild(_) => {
             let guild_name = match ctx.guild() {
-              Some(guild) => guild.name,
+              Some(guild) => guild.name.clone(),
               None => "unknown".to_string(),
             };
             format!("{} ({})", guild_name, channel.id())
           }
           channel::Channel::Private(_) => "DM".to_string(),
-          channel::Channel::Category(_) => "category".to_string(),
+          // channel::Channel::Category(_) => "category".to_string(),
           _ => "unknown".to_string(),
         },
         None => "unknown".to_string(),
@@ -159,19 +186,25 @@ async fn error_handler(error: poise::FrameworkError<'_, Data, Error>) {
         error!("\tChannel: {}", channel.id());
       }
 
-      error!("\tUser: {}#{}", user.name, user.discriminator);
+      error!("\tUser: {} ({})", user.name, user.id);
     }
-    poise::FrameworkError::ArgumentParse { error, input, ctx } => {
+    poise::FrameworkError::ArgumentParse {
+      error, input, ctx, ..
+    } => {
       let response = if let Some(input) = input {
-        format!(
-          "**Cannot parse `{}` as argument: {}**",
-          input, error
-        )
+        format!("**Cannot parse `{}` as argument: {}**", input, error)
       } else {
         format!("**{}**", error)
       };
 
-      match ctx.send(|f| f.content(response).ephemeral(true)).await {
+      match ctx
+        .send(
+          poise::CreateReply::default()
+            .content(response)
+            .ephemeral(true),
+        )
+        .await
+      {
         Ok(_) => {}
         Err(e) => {
           error!("While handling error, could not send message: {}", e);
@@ -188,7 +221,7 @@ async fn error_handler(error: poise::FrameworkError<'_, Data, Error>) {
 
 async fn event_handler(
   ctx: &serenity::Context,
-  event: &Event<'_>,
+  event: &Event,
   _framework: poise::FrameworkContext<'_, Data, Error>,
   data: &Data,
 ) -> Result<(), Error> {
@@ -204,6 +237,7 @@ async fn event_handler(
     Event::GuildMemberUpdate {
       old_if_available,
       new,
+      ..
     } => {
       events::guild_member_update(ctx, old_if_available, new).await?;
     }

@@ -11,7 +11,7 @@ async-openai = "0.14.2"
 dotenv = "0.15.0"
 futures = "0.3.28"
 log = "0.4.20"
-poise = {version = "0.5.6", features = ["cache"]}
+poise = {version = "0.6.1", features = ["cache"]}
 pretty_env_logger = "0.5.0"
 rand = {version = "0.8.5", features = ["small_rng"]}
 serde = "1.0.188"

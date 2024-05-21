@@ -2,7 +2,7 @@ use crate::config::BloomBotEmbed;
 use crate::database::DatabaseHandler;
 use crate::Context;
 use anyhow::Result;
-use poise::serenity_prelude as serenity;
+use poise::{serenity_prelude as serenity, CreateReply};
 use std::sync::atomic::Ordering;
 
 pub mod add;
@@ -58,14 +58,16 @@ async fn commit_and_say(
   ephemeral: bool,
 ) -> Result<()> {
   let response = match message {
-    MessageType::TextOnly(message) => ctx.send(|f| f.content(message).ephemeral(ephemeral)).await,
+    MessageType::TextOnly(message) => {
+      ctx
+        .send(CreateReply::default().content(message).ephemeral(ephemeral))
+        .await
+    }
     MessageType::EmbedOnly(message) => {
       ctx
-        .send(|f| {
-          f.ephemeral(ephemeral);
-
+        .send({
+          let mut f = CreateReply::default().ephemeral(ephemeral);
           f.embeds = vec![message];
-
           f
         })
         .await
@@ -77,7 +79,7 @@ async fn commit_and_say(
       match DatabaseHandler::commit_transaction(transaction).await {
         Ok(_) => {}
         Err(e) => {
-          let _ = sent_message.edit(ctx, |f| f
+          let _ = sent_message.edit(ctx, CreateReply::default()
             .content(":bangbang: A fatal error occured while trying to save your changes. Nothing has been saved.")
             .ephemeral(true));
           return Err(anyhow::anyhow!("Could not send message: {}", e));
@@ -131,22 +133,31 @@ pub async fn course_not_found(
       .await?
     {
       ctx
-        .send(|f| {
-          f.content(format!(
-            ":x: Course does not exist. Did you mean `{}`?",
-            possible_course.course_name
-          ))
-          .ephemeral(true)
-        })
+        .send(
+          poise::CreateReply::default()
+            .content(format!(
+              ":x: Course does not exist. Did you mean `{}`?",
+              possible_course.course_name
+            ))
+            .ephemeral(true),
+        )
         .await?;
     } else {
       ctx
-        .send(|f| f.content(":x: Course does not exist.").ephemeral(true))
+        .send(
+          poise::CreateReply::default()
+            .content(":x: Course does not exist.")
+            .ephemeral(true),
+        )
         .await?;
     }
   } else {
     ctx
-      .send(|f| f.content(":x: Course does not exist.").ephemeral(true))
+      .send(
+        poise::CreateReply::default()
+          .content(":x: Course does not exist.")
+          .ephemeral(true),
+      )
       .await?;
   }
 
