@@ -3,12 +3,13 @@ use crate::database::DatabaseHandler;
 use crate::pagination::{PageRowRef, Pagination};
 use crate::Context;
 use anyhow::Result;
-use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::{self as serenity, builder::*};
+use poise::CreateReply;
 
 /// Commands for managing courses
-/// 
+///
 /// Commands to add, edit, list, or remove courses.
-/// 
+///
 /// Requires `Administrator` permissions.
 #[poise::command(
   slash_command,
@@ -25,7 +26,7 @@ pub async fn course(_: Context<'_>) -> Result<()> {
 }
 
 /// Add a course and its associated graduate role to the database
-/// 
+///
 /// Adds a course and its associated graduate role to the database.
 #[poise::command(slash_command)]
 pub async fn add(
@@ -118,7 +119,7 @@ pub async fn add(
 }
 
 /// Update the roles for an existing course
-/// 
+///
 /// Updates the roles for an existing course.
 #[poise::command(slash_command)]
 pub async fn edit(
@@ -126,14 +127,19 @@ pub async fn edit(
   #[description = "Name of the course"] course_name: String,
   #[description = "Update the role that participants of the course are assumed to have"]
   participant_role: Option<serenity::Role>,
-  #[description = "Update the role that graduates of the course are given"]
-  graduate_role: Option<serenity::Role>,
+  #[description = "Update the role that graduates of the course are given"] graduate_role: Option<
+    serenity::Role,
+  >,
 ) -> Result<()> {
   ctx.defer_ephemeral().await?;
-  
+
   if participant_role.is_none() && graduate_role.is_none() {
     ctx
-      .send(|f| f.content(":x: No changes were provided.").ephemeral(true))
+      .send(
+        CreateReply::default()
+          .content(":x: No changes were provided.")
+          .ephemeral(true),
+      )
       .await?;
     return Ok(());
   }
@@ -152,9 +158,9 @@ pub async fn edit(
     course_not_found(ctx, &mut transaction, guild_id, course_name).await?;
     return Ok(());
   }
-  
+
   let course = course.unwrap();
-  
+
   let participant_role = match participant_role {
     Some(participant_role) => {
       if !participant_role.guild_id.eq(&guild_id) {
@@ -176,8 +182,8 @@ pub async fn edit(
         return Ok(());
       }
       participant_role.id.to_string()
-    },
-    None => course.participant_role.to_string()
+    }
+    None => course.participant_role.to_string(),
   };
 
   let graduate_role = match graduate_role {
@@ -201,8 +207,8 @@ pub async fn edit(
         return Ok(());
       }
       graduate_role.id.to_string()
-    },
-    None => course.graduate_role.to_string()
+    }
+    None => course.graduate_role.to_string(),
   };
 
   // Verify that the roles are not the same
@@ -213,7 +219,13 @@ pub async fn edit(
     return Ok(());
   }
 
-  DatabaseHandler::update_course(&mut transaction, course_name.as_str(), participant_role, graduate_role).await?;
+  DatabaseHandler::update_course(
+    &mut transaction,
+    course_name.as_str(),
+    participant_role,
+    graduate_role,
+  )
+  .await?;
 
   commit_and_say(
     ctx,
@@ -227,7 +239,7 @@ pub async fn edit(
 }
 
 /// List all courses
-/// 
+///
 /// Lists all courses in the database.
 #[poise::command(slash_command)]
 pub async fn list(
@@ -248,7 +260,9 @@ pub async fn list(
 
   let mut current_page = page.unwrap_or(0);
 
-  if current_page > 0 { current_page = current_page - 1 }
+  if current_page > 0 {
+    current_page = current_page - 1
+  }
 
   let courses = DatabaseHandler::get_all_courses(&mut transaction, &guild_id).await?;
   let courses: Vec<PageRowRef> = courses.iter().map(|course| course as _).collect();
@@ -262,27 +276,21 @@ pub async fn list(
   let first_page = pagination.create_page_embed(current_page);
 
   ctx
-    .send(|f| {
-      f.components(|b| {
-        if pagination.get_page_count() > 1 {
-          b.create_action_row(|b| {
-            b.create_button(|b| b.custom_id(&prev_button_id).label("Previous"))
-              .create_button(|b| b.custom_id(&next_button_id).label("Next"))
-          });
-        }
-
-        b
-      })
-      .ephemeral(true);
-
+    .send({
+      let mut f = CreateReply::default();
+      if pagination.get_page_count() > 1 {
+        f = f.components(vec![CreateActionRow::Buttons(vec![
+          CreateButton::new(&prev_button_id).label("Previous"),
+          CreateButton::new(&next_button_id).label("Next"),
+        ])])
+      }
       f.embeds = vec![first_page];
-
-      f
+      f.ephemeral(true)
     })
     .await?;
 
   // Loop through incoming interactions with the navigation buttons
-  while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+  while let Some(press) = serenity::ComponentInteractionCollector::new(ctx)
     // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
     // button was pressed
     .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
@@ -302,10 +310,12 @@ pub async fn list(
 
     // Update the message with the new page contents
     press
-      .create_interaction_response(ctx, |b| {
-        b.kind(serenity::InteractionResponseType::UpdateMessage)
-          .interaction_response_data(|f| f.set_embed(pagination.create_page_embed(current_page)))
-      })
+      .create_response(
+        ctx,
+        CreateInteractionResponse::UpdateMessage(
+          CreateInteractionResponseMessage::new().embed(pagination.create_page_embed(current_page)),
+        ),
+      )
       .await?;
   }
 
@@ -313,7 +323,7 @@ pub async fn list(
 }
 
 /// Remove a course from the database
-/// 
+///
 /// Removes a course from the database.
 #[poise::command(slash_command)]
 pub async fn remove(

@@ -5,7 +5,8 @@ use crate::pagination::{PageRowRef, Pagination};
 use crate::Context;
 use anyhow::Result;
 use chrono::{Datelike, Timelike};
-use poise::serenity_prelude::{self as serenity, Mentionable};
+use poise::serenity_prelude::{self as serenity, builder::*, Mentionable};
+use poise::{ChoiceParameter, CreateReply};
 
 #[derive(poise::ChoiceParameter)]
 pub enum DataType {
@@ -16,9 +17,9 @@ pub enum DataType {
 }
 
 /// Commands for managing meditation entries
-/// 
+///
 /// Commands to create, list, update, or delete meditation entries for a user, or completely reset a user's data.
-/// 
+///
 /// Requires `Ban Members` permissions.
 #[poise::command(
   slash_command,
@@ -35,7 +36,7 @@ pub async fn manage(_: Context<'_>) -> Result<()> {
 }
 
 /// Create a new meditation entry for a user. Note that all times are in UTC.
-/// 
+///
 /// Creates a new meditation entry for the user. Note that all times are in UTC.
 #[poise::command(slash_command)]
 pub async fn create(
@@ -66,14 +67,16 @@ pub async fn create(
     Some(date) => date,
     None => {
       ctx
-        .send(|f| {
-          f.embed(|e| {
-            e.title("Error")
-              .description(format!("Invalid date provided: {}-{}-{}", year, month, day))
-              .color(serenity::Color::RED)
-          })
-          .ephemeral(true)
-        })
+        .send(
+          CreateReply::default()
+            .embed(
+              CreateEmbed::new()
+                .title("Error")
+                .description(format!("Invalid date provided: {}-{}-{}", year, month, day))
+                .color(serenity::Color::RED),
+            )
+            .ephemeral(true),
+        )
         .await?;
       return Ok(());
     }
@@ -83,18 +86,20 @@ pub async fn create(
     Some(time) => time,
     None => {
       ctx
-        .send(|f| {
-          f.embed(|e| {
-            e.title("Error")
-              .description(format!(
-                "Invalid time provided: {}:{}",
-                hour.unwrap_or(0),
-                minute.unwrap_or(0)
-              ))
-              .color(serenity::Color::RED)
-          })
-          .ephemeral(true)
-        })
+        .send(
+          CreateReply::default()
+            .embed(
+              CreateEmbed::new()
+                .title("Error")
+                .description(format!(
+                  "Invalid time provided: {}:{}",
+                  hour.unwrap_or(0),
+                  minute.unwrap_or(0)
+                ))
+                .color(serenity::Color::RED),
+            )
+            .ephemeral(true),
+        )
         .await?;
       return Ok(());
     }
@@ -142,23 +147,27 @@ pub async fn create(
       datetime.format("%B %d, %Y"),
       minutes
     ))
-    .footer(|f| {
-      f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-        .text(format!("Created by {} ({})", ctx.author().name, ctx.author().id))
-    })
+    .footer(
+      CreateEmbedFooter::new(format!(
+        "Created by {} ({})",
+        ctx.author().name,
+        ctx.author().id
+      ))
+      .icon_url(ctx.author().avatar_url().unwrap_or_default()),
+    )
     .to_owned();
 
-  let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+  let log_channel = serenity::ChannelId::new(CHANNELS.bloomlogs);
 
   log_channel
-    .send_message(ctx, |f| f.set_embed(log_embed))
+    .send_message(ctx, CreateMessage::new().embed(log_embed))
     .await?;
 
   Ok(())
 }
 
 /// List all meditation entries for a user
-/// 
+///
 /// Lists all meditation entries for a user.
 #[poise::command(slash_command)]
 pub async fn list(
@@ -178,7 +187,9 @@ pub async fn list(
 
   let mut current_page = page.unwrap_or(0);
 
-  if current_page > 0 { current_page = current_page - 1 }
+  if current_page > 0 {
+    current_page = current_page - 1
+  }
 
   let entries =
     DatabaseHandler::get_user_meditation_entries(&mut transaction, &guild_id, &user.id).await?;
@@ -193,27 +204,21 @@ pub async fn list(
   let first_page = pagination.create_page_embed(current_page);
 
   ctx
-    .send(|f| {
-      f.components(|b| {
-        if pagination.get_page_count() > 1 {
-          b.create_action_row(|b| {
-            b.create_button(|b| b.custom_id(&prev_button_id).label("Previous"))
-              .create_button(|b| b.custom_id(&next_button_id).label("Next"))
-          });
-        }
-
-        b
-      })
-      .ephemeral(true);
-
+    .send({
+      let mut f = CreateReply::default();
+      if pagination.get_page_count() > 1 {
+        f = f.components(vec![CreateActionRow::Buttons(vec![
+          CreateButton::new(&prev_button_id).label("Previous"),
+          CreateButton::new(&next_button_id).label("Next"),
+        ])])
+      }
       f.embeds = vec![first_page];
-
-      f
+      f.ephemeral(true)
     })
     .await?;
 
   // Loop through incoming interactions with the navigation buttons
-  while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+  while let Some(press) = serenity::ComponentInteractionCollector::new(ctx)
     // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
     // button was pressed
     .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
@@ -233,10 +238,12 @@ pub async fn list(
 
     // Update the message with the new page contents
     press
-      .create_interaction_response(ctx, |b| {
-        b.kind(serenity::InteractionResponseType::UpdateMessage)
-          .interaction_response_data(|f| f.set_embed(pagination.create_page_embed(current_page)))
-      })
+      .create_response(
+        ctx,
+        CreateInteractionResponse::UpdateMessage(
+          CreateInteractionResponseMessage::new().embed(pagination.create_page_embed(current_page)),
+        ),
+      )
       .await?;
   }
 
@@ -244,7 +251,7 @@ pub async fn list(
 }
 
 /// Update a meditation entry for a user. Note that all times are in UTC.
-/// 
+///
 /// Updates a meditation entry for a user. Note that all times are in UTC.
 #[poise::command(slash_command)]
 pub async fn update(
@@ -280,16 +287,24 @@ pub async fn update(
     DatabaseHandler::get_meditation_entry(&mut transaction, &guild_id, &entry_id).await?
   };
 
-  if minutes.is_none() && year.is_none() && month.is_none() && day.is_none() && hour.is_none() && minute.is_none() {
+  if minutes.is_none()
+    && year.is_none()
+    && month.is_none()
+    && day.is_none()
+    && hour.is_none()
+    && minute.is_none()
+  {
     ctx
-      .send(|f| {
-        f.embed(|e| {
-          e.title("Error")
-            .description("You must provide at least one option to update the entry.")
-            .color(serenity::Color::RED)
-        })
-        .ephemeral(true)
-      })
+      .send(
+        CreateReply::default()
+          .embed(
+            CreateEmbed::new()
+              .title("Error")
+              .description("You must provide at least one option to update the entry.")
+              .color(serenity::Color::RED),
+          )
+          .ephemeral(true),
+      )
       .await?;
     return Ok(());
   }
@@ -309,14 +324,16 @@ pub async fn update(
         Some(date) => date,
         None => {
           ctx
-            .send(|f| {
-              f.embed(|e| {
-                e.title("Error")
-                  .description(format!("Invalid date provided: {}-{}-{}", year, month, day))
-                  .color(serenity::Color::RED)
-              })
-              .ephemeral(true)
-            })
+            .send(
+              CreateReply::default()
+                .embed(
+                  CreateEmbed::new()
+                    .title("Error")
+                    .description(format!("Invalid date provided: {}-{}-{}", year, month, day))
+                    .color(serenity::Color::RED),
+                )
+                .ephemeral(true),
+            )
             .await?;
           return Ok(());
         }
@@ -326,18 +343,16 @@ pub async fn update(
         Some(time) => time,
         None => {
           ctx
-            .send(|f| {
-              f.embed(|e| {
-                e.title("Error")
-                  .description(format!(
-                    "Invalid time provided: {}:{}",
-                    hour,
-                    minute
-                  ))
-                  .color(serenity::Color::RED)
-              })
-              .ephemeral(true)
-            })
+            .send(
+              CreateReply::default()
+                .embed(
+                  CreateEmbed::new()
+                    .title("Error")
+                    .description(format!("Invalid time provided: {}:{}", hour, minute))
+                    .color(serenity::Color::RED),
+                )
+                .ephemeral(true),
+            )
             .await?;
           return Ok(());
         }
@@ -349,7 +364,8 @@ pub async fn update(
 
       let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
-      DatabaseHandler::update_meditation_entry(&mut transaction, &entry_id, minutes, datetime).await?;
+      DatabaseHandler::update_meditation_entry(&mut transaction, &entry_id, minutes, datetime)
+        .await?;
 
       let success_embed = BloomBotEmbed::new()
         .title("Meditation Entry Updated")
@@ -382,31 +398,34 @@ pub async fn update(
           datetime.format("%B %d, %Y at %l:%M %P"),
           minutes
         ))
-        .footer(|f| {
-          f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-            .text(format!("Updated by {} ({})", ctx.author().name, ctx.author().id))
-        })
+        .footer(CreateEmbedFooter::new(format!("Updated by {} ({})", ctx.author().name, ctx.author().id))
+          .icon_url(ctx.author().avatar_url().unwrap_or_default())
+        )
         .to_owned();
 
-      let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+      let log_channel = serenity::ChannelId::new(CHANNELS.bloomlogs);
 
       log_channel
-        .send_message(ctx, |f| f.set_embed(log_embed))
+        .send_message(ctx, CreateMessage::new().embed(log_embed))
         .await?;
 
       Ok(())
-    },
+    }
     None => {
       ctx
-        .send(|f| {
-          f.embed(|e| {
-            e.title("Error")
-              .description(format!("No meditation entry found with ID `{}`.", entry_id))
-              .footer(|f| f.text("Use `/manage list` to see a user's entries."))
-              .color(serenity::Color::RED)
-          })
-          .ephemeral(true)
-        })
+        .send(
+          CreateReply::default()
+            .embed(
+              CreateEmbed::new()
+                .title("Error")
+                .description(format!("No meditation entry found with ID `{}`.", entry_id))
+                .footer(CreateEmbedFooter::new(
+                  "Use `/manage list` to see a user's entries.",
+                ))
+                .color(serenity::Color::RED),
+            )
+            .ephemeral(true),
+        )
         .await?;
 
       Ok(())
@@ -415,7 +434,7 @@ pub async fn update(
 }
 
 /// Delete a meditation entry for a user
-/// 
+///
 /// Deletes a meditation entry for the user.
 #[poise::command(slash_command)]
 pub async fn delete(
@@ -432,15 +451,19 @@ pub async fn delete(
       Some(entry) => entry,
       None => {
         ctx
-          .send(|f| {
-            f.embed(|e| {
-              e.title("Error")
-                .description(format!("No meditation entry found with ID `{}`.", entry_id))
-                .footer(|f| f.text("Use `/manage list` to see a user's entries."))
-                .color(serenity::Color::RED)
-            })
-            .ephemeral(true)
-          })
+          .send(
+            CreateReply::default()
+              .embed(
+                CreateEmbed::new()
+                  .title("Error")
+                  .description(format!("No meditation entry found with ID `{}`.", entry_id))
+                  .footer(CreateEmbedFooter::new(
+                    "Use `/manage list` to see a user's entries.",
+                  ))
+                  .color(serenity::Color::RED),
+              )
+              .ephemeral(true),
+          )
           .await?;
         return Ok(());
       }
@@ -458,7 +481,7 @@ pub async fn delete(
       entry.meditation_minutes
     ))
     .to_owned();
-  
+
   commit_and_say(
     ctx,
     transaction,
@@ -476,29 +499,32 @@ pub async fn delete(
       entry.occurred_at.format("%B %d, %Y"),
       entry.meditation_minutes
     ))
-    .footer(|f| {
-      f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-        .text(format!("Deleted by {} ({})", ctx.author().name, ctx.author().id))
-    })
+    .footer(
+      CreateEmbedFooter::new(format!(
+        "Deleted by {} ({})",
+        ctx.author().name,
+        ctx.author().id
+      ))
+      .icon_url(ctx.author().avatar_url().unwrap_or_default()),
+    )
     .to_owned();
 
-  let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+  let log_channel = serenity::ChannelId::new(CHANNELS.bloomlogs);
 
   log_channel
-    .send_message(ctx, |f| f.set_embed(log_embed))
+    .send_message(ctx, CreateMessage::new().embed(log_embed))
     .await?;
 
   Ok(())
 }
 
 /// Reset meditation entries or customization settings
-/// 
+///
 /// Resets all meditation entries or customization settings for a user.
 #[poise::command(slash_command)]
 pub async fn reset(
   ctx: Context<'_>,
-  #[description = "The user to reset the entries for"]
-  user: serenity::User,
+  #[description = "The user to reset the entries for"] user: serenity::User,
   #[description = "The type of data to reset (Defaults to meditation entries)"]
   #[rename = "type"]
   data_type: Option<DataType>,
@@ -511,12 +537,16 @@ pub async fn reset(
   //Default to meditation entries
   let data_type = match data_type {
     Some(data_type) => data_type,
-    None => DataType::MeditationEntries
+    None => DataType::MeditationEntries,
   };
 
   match data_type {
-    DataType::CustomizationSettings => DatabaseHandler::remove_tracking_profile(&mut transaction, &guild_id, &user.id).await?,
-    DataType::MeditationEntries => DatabaseHandler::reset_user_meditation_entries(&mut transaction, &guild_id, &user.id).await?
+    DataType::CustomizationSettings => {
+      DatabaseHandler::remove_tracking_profile(&mut transaction, &guild_id, &user.id).await?
+    }
+    DataType::MeditationEntries => {
+      DatabaseHandler::reset_user_meditation_entries(&mut transaction, &guild_id, &user.id).await?
+    }
   }
 
   let ctx_id = ctx.id();
@@ -525,32 +555,27 @@ pub async fn reset(
   let cancel_id = format!("{}cancel", ctx_id);
 
   ctx
-    .send(|f| {
-      f.content(format!(
-        "Are you sure you want to reset all {} for {}?",
-        data_type.name(),
-        user.mention()
-      ))
-      .ephemeral(true)
-      .components(|c| {
-        c.create_action_row(|a| {
-          a.create_button(|b| {
-            b.custom_id(confirm_id.clone())
-              .label("Yes")
-              .style(serenity::ButtonStyle::Success)
-          })
-          .create_button(|b| {
-            b.custom_id(cancel_id.clone())
-              .label("No")
-              .style(serenity::ButtonStyle::Danger)
-          })
-        })
-      })
-    })
+    .send(
+      CreateReply::default()
+        .content(format!(
+          "Are you sure you want to reset all {} for {}?",
+          data_type.name(),
+          user.mention()
+        ))
+        .ephemeral(true)
+        .components(vec![CreateActionRow::Buttons(vec![
+          CreateButton::new(confirm_id.clone())
+            .label("Yes")
+            .style(serenity::ButtonStyle::Success),
+          CreateButton::new(cancel_id.clone())
+            .label("No")
+            .style(serenity::ButtonStyle::Danger),
+        ])]),
+    )
     .await?;
 
   // Loop through incoming interactions with the navigation buttons
-  while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+  while let Some(press) = serenity::ComponentInteractionCollector::new(ctx)
     // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
     // button was pressed
     .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
@@ -569,13 +594,14 @@ pub async fn reset(
     // Update the message with the new page contents
     if confirmed {
       match press
-        .create_interaction_response(ctx, |b| {
-          b.kind(serenity::InteractionResponseType::UpdateMessage)
-            .interaction_response_data(|f| {
-              f.content("Confirmed.")
-                .set_components(serenity::CreateComponents(Vec::new()))
-            })
-        })
+        .create_response(
+          ctx,
+          CreateInteractionResponse::UpdateMessage(
+            CreateInteractionResponseMessage::new()
+              .content("Confirmed.")
+              .components(Vec::new()),
+          ),
+        )
         .await
       {
         Ok(_) => {
@@ -586,25 +612,26 @@ pub async fn reset(
               "{} Reset",
               match data_type {
                 DataType::CustomizationSettings => "Customization Settings",
-                DataType::MeditationEntries => "Meditation Entries"
+                DataType::MeditationEntries => "Meditation Entries",
               }
             ))
-            .description(format!(
-              "**User**: <@{}>",
-              user.id
-            ))
-            .footer(|f| {
-              f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-                .text(format!("Reset by {} ({})", ctx.author().name, ctx.author().id))
-            })
+            .description(format!("**User**: <@{}>", user.id))
+            .footer(
+              CreateEmbedFooter::new(format!(
+                "Reset by {} ({})",
+                ctx.author().name,
+                ctx.author().id
+              ))
+              .icon_url(ctx.author().avatar_url().unwrap_or_default()),
+            )
             .to_owned();
-        
-          let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
-        
+
+          let log_channel = serenity::ChannelId::new(CHANNELS.bloomlogs);
+
           log_channel
-            .send_message(ctx, |f| f.set_embed(log_embed))
+            .send_message(ctx, CreateMessage::new().embed(log_embed))
             .await?;
-          
+
           return Ok(());
         }
         Err(e) => {
@@ -618,13 +645,14 @@ pub async fn reset(
       }
     } else {
       press
-        .create_interaction_response(ctx, |b| {
-          b.kind(serenity::InteractionResponseType::UpdateMessage)
-            .interaction_response_data(|f| {
-              f.content("Cancelled.")
-                .set_components(serenity::CreateComponents(Vec::new()))
-            })
-        })
+        .create_response(
+          ctx,
+          CreateInteractionResponse::UpdateMessage(
+            CreateInteractionResponseMessage::new()
+              .content("Cancelled.")
+              .components(Vec::new()),
+          ),
+        )
         .await?;
     }
   }
@@ -634,15 +662,13 @@ pub async fn reset(
 }
 
 /// Migrates meditation entries or customization settings
-/// 
+///
 /// Migrates all meditation entries or customization settings from one user account to another.
 #[poise::command(slash_command)]
 pub async fn migrate(
   ctx: Context<'_>,
-  #[description = "The user to migrate data from"]
-  old_user: serenity::User,
-  #[description = "The user to migrate data to"]
-  new_user: serenity::User,
+  #[description = "The user to migrate data from"] old_user: serenity::User,
+  #[description = "The user to migrate data to"] new_user: serenity::User,
   #[description = "The type of data to migrate (Defaults to meditation entries)"]
   #[rename = "type"]
   data_type: Option<DataType>,
@@ -655,12 +681,28 @@ pub async fn migrate(
   //Default to meditation entries
   let data_type = match data_type {
     Some(data_type) => data_type,
-    None => DataType::MeditationEntries
+    None => DataType::MeditationEntries,
   };
 
   match data_type {
-    DataType::CustomizationSettings => DatabaseHandler::migrate_tracking_profile(&mut transaction, &guild_id, &old_user.id, &new_user.id).await?,
-    DataType::MeditationEntries => DatabaseHandler::migrate_meditation_entries(&mut transaction, &guild_id, &old_user.id, &new_user.id).await?
+    DataType::CustomizationSettings => {
+      DatabaseHandler::migrate_tracking_profile(
+        &mut transaction,
+        &guild_id,
+        &old_user.id,
+        &new_user.id,
+      )
+      .await?
+    }
+    DataType::MeditationEntries => {
+      DatabaseHandler::migrate_meditation_entries(
+        &mut transaction,
+        &guild_id,
+        &old_user.id,
+        &new_user.id,
+      )
+      .await?
+    }
   }
 
   let ctx_id = ctx.id();
@@ -669,33 +711,28 @@ pub async fn migrate(
   let cancel_id = format!("{}cancel", ctx_id);
 
   ctx
-    .send(|f| {
-      f.content(format!(
-        "Are you sure you want to migrate all {} from {} to {}?",
-        data_type.name(),
-        old_user.mention(),
-        new_user.mention(),
-      ))
-      .ephemeral(true)
-      .components(|c| {
-        c.create_action_row(|a| {
-          a.create_button(|b| {
-            b.custom_id(confirm_id.clone())
-              .label("Yes")
-              .style(serenity::ButtonStyle::Success)
-          })
-          .create_button(|b| {
-            b.custom_id(cancel_id.clone())
-              .label("No")
-              .style(serenity::ButtonStyle::Danger)
-          })
-        })
-      })
-    })
+    .send(
+      CreateReply::default()
+        .content(format!(
+          "Are you sure you want to migrate all {} from {} to {}?",
+          data_type.name(),
+          old_user.mention(),
+          new_user.mention(),
+        ))
+        .ephemeral(true)
+        .components(vec![CreateActionRow::Buttons(vec![
+          CreateButton::new(confirm_id.clone())
+            .label("Yes")
+            .style(serenity::ButtonStyle::Success),
+          CreateButton::new(cancel_id.clone())
+            .label("No")
+            .style(serenity::ButtonStyle::Danger),
+        ])]),
+    )
     .await?;
 
   // Loop through incoming interactions with the navigation buttons
-  while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+  while let Some(press) = serenity::ComponentInteractionCollector::new(ctx)
     // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
     // button was pressed
     .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
@@ -714,13 +751,14 @@ pub async fn migrate(
     // Update the message with the new page contents
     if confirmed {
       match press
-        .create_interaction_response(ctx, |b| {
-          b.kind(serenity::InteractionResponseType::UpdateMessage)
-            .interaction_response_data(|f| {
-              f.content("Confirmed.")
-                .set_components(serenity::CreateComponents(Vec::new()))
-            })
-        })
+        .create_response(
+          ctx,
+          CreateInteractionResponse::UpdateMessage(
+            CreateInteractionResponseMessage::new()
+              .content("Confirmed.")
+              .components(Vec::new()),
+          ),
+        )
         .await
       {
         Ok(_) => {
@@ -731,26 +769,29 @@ pub async fn migrate(
               "{} Migrated",
               match data_type {
                 DataType::CustomizationSettings => "Customization Settings",
-                DataType::MeditationEntries => "Meditation Entries"
+                DataType::MeditationEntries => "Meditation Entries",
               }
             ))
             .description(format!(
               "**From**: <@{}>\n**To**: <@{}>",
-              old_user.id,
-              new_user.id,
+              old_user.id, new_user.id,
             ))
-            .footer(|f| {
-              f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-                .text(format!("Migrated by {} ({})", ctx.author().name, ctx.author().id))
-            })
+            .footer(
+              CreateEmbedFooter::new(format!(
+                "Migrated by {} ({})",
+                ctx.author().name,
+                ctx.author().id
+              ))
+              .icon_url(ctx.author().avatar_url().unwrap_or_default()),
+            )
             .to_owned();
-        
-          let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
-        
+
+          let log_channel = serenity::ChannelId::new(CHANNELS.bloomlogs);
+
           log_channel
-            .send_message(ctx, |f| f.set_embed(log_embed))
+            .send_message(ctx, CreateMessage::new().embed(log_embed))
             .await?;
-          
+
           return Ok(());
         }
         Err(e) => {
@@ -764,13 +805,14 @@ pub async fn migrate(
       }
     } else {
       press
-        .create_interaction_response(ctx, |b| {
-          b.kind(serenity::InteractionResponseType::UpdateMessage)
-            .interaction_response_data(|f| {
-              f.content("Cancelled.")
-                .set_components(serenity::CreateComponents(Vec::new()))
-            })
-        })
+        .create_response(
+          ctx,
+          CreateInteractionResponse::UpdateMessage(
+            CreateInteractionResponseMessage::new()
+              .content("Cancelled.")
+              .components(Vec::new()),
+          ),
+        )
         .await?;
     }
   }

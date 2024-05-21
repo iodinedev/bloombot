@@ -546,8 +546,8 @@ impl DatabaseHandler {
 
     let tracking_profile = match row {
       Some(row) => Some(TrackingProfile {
-        user_id: serenity::UserId(row.user_id.parse::<u64>().unwrap()),
-        guild_id: serenity::GuildId(row.guild_id.parse::<u64>().unwrap()),
+        user_id: serenity::UserId::new(row.user_id.parse::<u64>().unwrap()),
+        guild_id: serenity::GuildId::new(row.guild_id.parse::<u64>().unwrap()),
         utc_offset: row.utc_offset,
         anonymous_tracking: row.anonymous_tracking,
         streaks_active: row.streaks_active,
@@ -644,8 +644,8 @@ impl DatabaseHandler {
 
     let steamkey_recipient = match row {
       Some(row) => Some(SteamKeyRecipientData {
-        user_id: serenity::UserId(row.user_id.parse::<u64>().unwrap()),
-        guild_id: serenity::GuildId(row.guild_id.parse::<u64>().unwrap()),
+        user_id: serenity::UserId::new(row.user_id.parse::<u64>().unwrap()),
+        guild_id: serenity::GuildId::new(row.guild_id.parse::<u64>().unwrap()),
         challenge_prize: row.challenge_prize,
         donator_perk: row.donator_perk,
         total_keys: row.total_keys,
@@ -672,8 +672,8 @@ impl DatabaseHandler {
     let steamkey_recipients = rows
       .into_iter()
       .map(|row| SteamKeyRecipientData {
-        user_id: serenity::UserId(row.user_id.parse::<u64>().unwrap()),
-        guild_id: serenity::GuildId(row.guild_id.parse::<u64>().unwrap()),
+        user_id: serenity::UserId::new(row.user_id.parse::<u64>().unwrap()),
+        guild_id: serenity::GuildId::new(row.guild_id.parse::<u64>().unwrap()),
         challenge_prize: row.challenge_prize,
         donator_perk: row.donator_perk,
         total_keys: row.total_keys,
@@ -789,7 +789,7 @@ impl DatabaseHandler {
       .into_iter()
       .map(|row| EraseData {
         id: row.record_id,
-        user_id: serenity::UserId(row.user_id.parse::<u64>().unwrap()),
+        user_id: serenity::UserId::new(row.user_id.parse::<u64>().unwrap()),
         message_link: row.message_link.unwrap_or(String::from("None")),
         occurred_at: row.occurred_at.unwrap_or(chrono::DateTime::<Utc>::default()),
       })
@@ -861,7 +861,7 @@ impl DatabaseHandler {
       .into_iter()
       .map(|row| MeditationData {
         id: row.record_id,
-        user_id: serenity::UserId(row.user_id.parse::<u64>().unwrap()),
+        user_id: serenity::UserId::new(row.user_id.parse::<u64>().unwrap()),
         meditation_minutes: row.meditation_minutes,
         occurred_at: row.occurred_at,
       })
@@ -888,7 +888,7 @@ impl DatabaseHandler {
     let meditation_entry = match row {
       Some(row) => Some(MeditationData {
         id: row.record_id,
-        user_id: serenity::UserId(row.user_id.parse::<u64>().unwrap()),
+        user_id: serenity::UserId::new(row.user_id.parse::<u64>().unwrap()),
         meditation_minutes: row.meditation_minutes,
         occurred_at: row.occurred_at,
       }),
@@ -992,7 +992,7 @@ impl DatabaseHandler {
     let user_id_stream = rows_stream.map(|row| {
       let row = row?;
 
-      let user_id = serenity::UserId(row.user_id.parse::<u64>().unwrap());
+      let user_id = serenity::UserId::new(row.user_id.parse::<u64>().unwrap());
 
       Ok(user_id)
     });
@@ -1381,11 +1381,11 @@ impl DatabaseHandler {
       .map(|row| SteamKeyData {
         steam_key: row.steam_key,
         reserved: match row.reserved {
-          Some(reserved) => Some(serenity::UserId(reserved.parse::<u64>().unwrap())),
+          Some(reserved) => Some(serenity::UserId::new(reserved.parse::<u64>().unwrap())),
           None => None,
         },
         used: row.used,
-        guild_id: serenity::GuildId(row.guild_id.parse::<u64>().unwrap()),
+        guild_id: serenity::GuildId::new(row.guild_id.parse::<u64>().unwrap()),
       })
       .collect();
 
@@ -1588,8 +1588,8 @@ impl DatabaseHandler {
       .into_iter()
       .map(|row| CourseData {
         course_name: row.course_name,
-        participant_role: serenity::RoleId(row.participant_role.parse::<u64>().unwrap()),
-        graduate_role: serenity::RoleId(row.graduate_role.parse::<u64>().unwrap()),
+        participant_role: serenity::RoleId::new(row.participant_role.parse::<u64>().unwrap()),
+        graduate_role: serenity::RoleId::new(row.graduate_role.parse::<u64>().unwrap()),
       })
       .collect();
 
@@ -1616,8 +1616,8 @@ impl DatabaseHandler {
     let course_data = match row {
       Some(row) => Some(CourseData {
         course_name: row.course_name,
-        participant_role: serenity::RoleId(row.participant_role.parse::<u64>()?),
-        graduate_role: serenity::RoleId(row.graduate_role.parse::<u64>()?),
+        participant_role: serenity::RoleId::new(row.participant_role.parse::<u64>()?),
+        graduate_role: serenity::RoleId::new(row.graduate_role.parse::<u64>()?),
       }),
       None => None,
     };
@@ -1643,9 +1643,9 @@ impl DatabaseHandler {
     let extended_course_data = match row {
       Some(row) => Some(ExtendedCourseData {
         course_name: row.course_name,
-        participant_role: serenity::RoleId(row.participant_role.parse::<u64>()?),
-        graduate_role: serenity::RoleId(row.graduate_role.parse::<u64>()?),
-        guild_id: serenity::GuildId(row.guild_id.expect("guild_id should not be empty in course database").parse::<u64>().unwrap()),
+        participant_role: serenity::RoleId::new(row.participant_role.parse::<u64>()?),
+        graduate_role: serenity::RoleId::new(row.graduate_role.parse::<u64>()?),
+        guild_id: serenity::GuildId::new(row.guild_id.expect("guild_id should not be empty in course database").parse::<u64>().unwrap()),
       }),
       None => None,
     };
@@ -1677,8 +1677,8 @@ impl DatabaseHandler {
     let course_data = match row {
       Some(row) => Some(CourseData {
         course_name: row.course_name,
-        participant_role: serenity::RoleId(row.participant_role.parse::<u64>()?),
-        graduate_role: serenity::RoleId(row.graduate_role.parse::<u64>()?),
+        participant_role: serenity::RoleId::new(row.participant_role.parse::<u64>()?),
+        graduate_role: serenity::RoleId::new(row.graduate_role.parse::<u64>()?),
       }),
       None => None,
     };
@@ -2319,9 +2319,9 @@ impl DatabaseHandler {
     let star_message = match row {
       Some(row) => Some(StarMessage {
         record_id: row.record_id,
-        starred_message_id: serenity::MessageId(row.starred_message_id.parse::<u64>().unwrap()),
-        board_message_id: serenity::MessageId(row.board_message_id.parse::<u64>().unwrap()),
-        starred_channel_id: serenity::ChannelId(row.starred_channel_id.parse::<u64>().unwrap()),
+        starred_message_id: serenity::MessageId::new(row.starred_message_id.parse::<u64>().unwrap()),
+        board_message_id: serenity::MessageId::new(row.board_message_id.parse::<u64>().unwrap()),
+        starred_channel_id: serenity::ChannelId::new(row.starred_channel_id.parse::<u64>().unwrap()),
       }),
       None => None,
     };

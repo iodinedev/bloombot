@@ -4,7 +4,7 @@ use crate::Context;
 use anyhow::Result;
 
 /// Get a meditation/mindfulness quote
-/// 
+///
 /// Get a random meditation/mindfulness quote.
 #[poise::command(
   slash_command,
@@ -33,9 +33,9 @@ pub async fn quote(ctx: Context<'_>) -> Result<()> {
         .to_owned();
 
       ctx
-        .send(|f| {
+        .send({
+          let mut f = poise::CreateReply::default();
           f.embeds = vec![embed];
-
           f
         })
         .await?;

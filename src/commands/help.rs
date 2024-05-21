@@ -1,7 +1,10 @@
 use crate::config::ROLES;
 use crate::Context;
 use anyhow::Result;
-use poise::serenity_prelude as serenity;
+use poise::{
+  serenity_prelude::{self as serenity, builder::*},
+  CreateReply,
+};
 use std::fmt::Write as _;
 
 pub struct HelpConfiguration<'a> {
@@ -90,7 +93,7 @@ async fn help_single_command<U, E>(
     if command.name.eq_ignore_ascii_case(command_name) {
       return true;
     }
-    if let Some(context_menu_name) = command.context_menu_name {
+    if let Some(context_menu_name) = &command.context_menu_name {
       if context_menu_name.eq_ignore_ascii_case(command_name) {
         return true;
       }
@@ -102,19 +105,27 @@ async fn help_single_command<U, E>(
 
   if command.is_none() {
     ctx
-      .send(|b| b.content(command_not_found).ephemeral(config.ephemeral))
+      .send(
+        CreateReply::default()
+          .content(command_not_found)
+          .ephemeral(config.ephemeral),
+      )
       .await?;
     return Ok(());
   }
 
   let command = command.unwrap();
 
-  if command.category.unwrap_or_default() == config.secret_category
+  if command.category.clone().unwrap_or_default() == config.secret_category
     || (command.context_menu_action.is_some() && !config.show_context_menu_commands)
     || (!elevated_permissions && !command.required_permissions.is_empty())
   {
     ctx
-      .send(|b| b.content(command_not_found).ephemeral(config.ephemeral))
+      .send(
+        CreateReply::default()
+          .content(command_not_found)
+          .ephemeral(config.ephemeral),
+      )
       .await?;
     return Ok(());
   }
@@ -125,12 +136,16 @@ async fn help_single_command<U, E>(
   };
 
   let command_name = match command.context_menu_action.is_some() {
-    true => command.context_menu_name.unwrap_or(&command.name).to_string(),
-    false => command.name.clone()
+    true => command
+      .context_menu_name
+      .clone()
+      .unwrap_or(command.name.clone())
+      .to_string(),
+    false => command.name.clone(),
   };
 
-  let mut help_text = match command.help_text {
-    Some(f) => f(),
+  let mut help_text = match command.help_text.clone() {
+    Some(f) => f,
     None => command
       .description
       .as_deref()
@@ -143,8 +158,8 @@ async fn help_single_command<U, E>(
   if !command.subcommands.is_empty() {
     help_text += "\n\nSubcommands:";
     for subcmd in &command.subcommands {
-      let subcmd_help = match subcmd.help_text {
-        Some(f) => f(),
+      let subcmd_help = match subcmd.help_text.clone() {
+        Some(f) => f,
         None => subcmd
           .description
           .as_deref()
@@ -162,14 +177,16 @@ async fn help_single_command<U, E>(
   });
 
   ctx
-    .send(|f| {
-      f.embed(|f| {
-        f.title(format!("{}{}", prefix, command_name))
-          .description(help_text)
-          .fields(fields)
-      })
-      .ephemeral(config.ephemeral)
-    })
+    .send(
+      CreateReply::default()
+        .embed(
+          CreateEmbed::new()
+            .title(format!("{}{}", prefix, command_name))
+            .description(help_text)
+            .fields(fields),
+        )
+        .ephemeral(config.ephemeral),
+    )
     .await?;
 
   Ok(())
@@ -185,14 +202,14 @@ async fn help_all_commands<U, E>(
     if !elevated_permissions && !cmd.required_permissions.is_empty() {
       continue;
     }
-    if cmd.category.unwrap_or_default() == config.secret_category {
+    if cmd.category.clone().unwrap_or_default() == config.secret_category {
       continue;
     }
     if cmd.context_menu_action.is_some() {
       continue;
     }
     categories
-      .get_or_insert_with(cmd.category, Vec::new)
+      .get_or_insert_with(cmd.category.as_deref(), Vec::new)
       .push(cmd);
   }
 
@@ -231,7 +248,7 @@ async fn help_all_commands<U, E>(
         continue;
       }
       context_categories
-        .get_or_insert_with(cmd.category, Vec::new)
+        .get_or_insert_with(cmd.category.as_deref(), Vec::new)
         .push(cmd);
     }
 
@@ -242,9 +259,12 @@ async fn help_all_commands<U, E>(
         let kind = match command.context_menu_action {
           Some(poise::ContextMenuCommandAction::User(_)) => "user",
           Some(poise::ContextMenuCommandAction::Message(_)) => "message",
-          None => continue,
+          _ => continue,
         };
-        let name = command.context_menu_name.unwrap_or(&command.name);
+        let name = command
+          .context_menu_name
+          .clone()
+          .unwrap_or(command.name.clone());
         let _ = writeln!(
           category_content,
           "{} (on {})\n>> {}",
@@ -259,35 +279,50 @@ async fn help_all_commands<U, E>(
 
     if category_content != "``````" {
       ctx
-        .send(|f| {
-          f.embed(|f| {
-            f.fields(fields)
-              .field("Context Menu Commands", category_content, false)
-              .footer(|f| f.text(format!("{}", config.extra_text_at_bottom)))
-          })
-          .ephemeral(config.ephemeral)
-        })
+        .send(
+          CreateReply::default()
+            .embed(
+              CreateEmbed::new()
+                .fields(fields)
+                .field("Context Menu Commands", category_content, false)
+                .footer(CreateEmbedFooter::new(format!(
+                  "{}",
+                  config.extra_text_at_bottom
+                ))),
+            )
+            .ephemeral(config.ephemeral),
+        )
         .await?;
     } else {
       ctx
-        .send(|f| {
-          f.embed(|f| {
-            f.fields(fields)
-              .footer(|f| f.text(format!("{}", config.extra_text_at_bottom)))
-          })
-          .ephemeral(config.ephemeral)
-        })
+        .send(
+          CreateReply::default()
+            .embed(
+              CreateEmbed::new()
+                .fields(fields)
+                .footer(CreateEmbedFooter::new(format!(
+                  "{}",
+                  config.extra_text_at_bottom
+                ))),
+            )
+            .ephemeral(config.ephemeral),
+        )
         .await?;
     };
   } else {
     ctx
-      .send(|f| {
-        f.embed(|f| {
-          f.fields(fields)
-            .footer(|f| f.text(format!("{}", config.extra_text_at_bottom)))
-        })
-        .ephemeral(config.ephemeral)
-      })
+      .send(
+        CreateReply::default()
+          .embed(
+            CreateEmbed::new()
+              .fields(fields)
+              .footer(CreateEmbedFooter::new(format!(
+                "{}",
+                config.extra_text_at_bottom
+              ))),
+          )
+          .ephemeral(config.ephemeral),
+      )
       .await?;
   };
 

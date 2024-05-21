@@ -1,7 +1,8 @@
-use crate::Context;
 use crate::config::ROLES;
+use crate::Context;
 use anyhow::Result;
 use chrono;
+use poise::CreateReply;
 
 #[derive(poise::ChoiceParameter)]
 pub enum ChallengeChoices {
@@ -12,7 +13,7 @@ pub enum ChallengeChoices {
 }
 
 /// Join or leave a meditation challenge
-/// 
+///
 /// Join or leave the monthly or 365-day meditation challenge.
 #[poise::command(
   slash_command,
@@ -25,27 +26,33 @@ pub async fn challenge(_: Context<'_>) -> Result<()> {
 }
 
 /// Join a meditation challenge
-/// 
+///
 /// Join the monthly or 365-day meditation challenge.
 #[poise::command(slash_command)]
 pub async fn join(
   ctx: Context<'_>,
-  #[description = "Challenge you wish to join (Defaults to monthly)"]
-  challenge: Option<ChallengeChoices>,
+  #[description = "Challenge you wish to join (Defaults to monthly)"] challenge: Option<
+    ChallengeChoices,
+  >,
 ) -> Result<()> {
   let guild_id = ctx.guild_id().unwrap();
-  let mut member = guild_id.member(ctx, ctx.author().id).await?;
+  let member = guild_id.member(ctx, ctx.author().id).await?;
 
   match challenge {
     Some(challenge) => match challenge {
       ChallengeChoices::Monthly => {
-        if ctx.author().has_role(ctx, guild_id, ROLES.meditation_challenger).await? {
+        if ctx
+          .author()
+          .has_role(ctx, guild_id, ROLES.meditation_challenger)
+          .await?
+        {
           ctx
-          .send(|f| f
-            .content("You've already joined the monthly challenge. Awesome!")
-            .ephemeral(true)
-          )
-          .await?;
+            .send(
+              CreateReply::default()
+                .content("You've already joined the monthly challenge. Awesome!")
+                .ephemeral(true),
+            )
+            .await?;
 
           return Ok(());
         } else {
@@ -59,19 +66,26 @@ pub async fn join(
 
           return Ok(());
         }
-      },
+      }
       ChallengeChoices::YearRound => {
-        if ctx.author().has_role(ctx, guild_id, ROLES.meditation_challenger_365).await? {
+        if ctx
+          .author()
+          .has_role(ctx, guild_id, ROLES.meditation_challenger_365)
+          .await?
+        {
           ctx
-          .send(|f| f
-            .content("You've already joined the 365-day challenge. Awesome!")
-            .ephemeral(true)
-          )
-          .await?;
+            .send(
+              CreateReply::default()
+                .content("You've already joined the 365-day challenge. Awesome!")
+                .ephemeral(true),
+            )
+            .await?;
 
           return Ok(());
         } else {
-          member.add_role(ctx, ROLES.meditation_challenger_365).await?;
+          member
+            .add_role(ctx, ROLES.meditation_challenger_365)
+            .await?;
 
           ctx.say(format!(
             "Awesome, <@{}>! You have successfully joined the 365-day challenge <:pepeglow:1174181400249901076>",
@@ -84,13 +98,18 @@ pub async fn join(
     },
     None => {
       // Defaults to monthly
-      if ctx.author().has_role(ctx, guild_id, ROLES.meditation_challenger).await? {
+      if ctx
+        .author()
+        .has_role(ctx, guild_id, ROLES.meditation_challenger)
+        .await?
+      {
         ctx
-        .send(|f| f
-          .content("You've already joined the monthly challenge. Awesome!")
-          .ephemeral(true)
-        )
-        .await?;
+          .send(
+            CreateReply::default()
+              .content("You've already joined the monthly challenge. Awesome!")
+              .ephemeral(true),
+          )
+          .await?;
 
         return Ok(());
       } else {
@@ -109,23 +128,28 @@ pub async fn join(
 }
 
 /// Leave a meditation challenge
-/// 
+///
 /// Leave the monthly or 365-day meditation challenge.
 #[poise::command(slash_command)]
 pub async fn leave(
   ctx: Context<'_>,
-  #[description = "Challenge you wish to leave (Defaults to monthly)"]
-  challenge: Option<ChallengeChoices>,
+  #[description = "Challenge you wish to leave (Defaults to monthly)"] challenge: Option<
+    ChallengeChoices,
+  >,
 ) -> Result<()> {
   let guild_id = ctx.guild_id().unwrap();
-  let mut member = guild_id.member(ctx, ctx.author().id).await?;
+  let member = guild_id.member(ctx, ctx.author().id).await?;
 
   match challenge {
     Some(challenge) => match challenge {
       ChallengeChoices::Monthly => {
-        if !ctx.author().has_role(ctx, guild_id, ROLES.meditation_challenger).await? {
+        if !ctx
+          .author()
+          .has_role(ctx, guild_id, ROLES.meditation_challenger)
+          .await?
+        {
           ctx
-          .send(|f| f
+          .send(CreateReply::default()
             .content("You're not currently participating in the monthly challenge. If you want to join, use `/challenge join`.")
             .ephemeral(true)
           )
@@ -135,18 +159,24 @@ pub async fn leave(
         } else {
           member.remove_role(ctx, ROLES.meditation_challenger).await?;
 
-          ctx.say(format!(
-            "You have successfully opted out of the monthly challenge, <@{}>.",
-            member.user.id,
-          )).await?;
+          ctx
+            .say(format!(
+              "You have successfully opted out of the monthly challenge, <@{}>.",
+              member.user.id,
+            ))
+            .await?;
 
           return Ok(());
         }
-      },
+      }
       ChallengeChoices::YearRound => {
-        if !ctx.author().has_role(ctx, guild_id, ROLES.meditation_challenger_365).await? {
+        if !ctx
+          .author()
+          .has_role(ctx, guild_id, ROLES.meditation_challenger_365)
+          .await?
+        {
           ctx
-          .send(|f| f
+          .send(CreateReply::default()
             .content("You're not currently participating in the 365-day challenge. If you want to join, use `/challenge join`.")
             .ephemeral(true)
           )
@@ -154,12 +184,16 @@ pub async fn leave(
 
           return Ok(());
         } else {
-          member.remove_role(ctx, ROLES.meditation_challenger_365).await?;
+          member
+            .remove_role(ctx, ROLES.meditation_challenger_365)
+            .await?;
 
-          ctx.say(format!(
-            "You have successfully opted out of the 365-day challenge, <@{}>.",
-            member.user.id,
-          )).await?;
+          ctx
+            .say(format!(
+              "You have successfully opted out of the 365-day challenge, <@{}>.",
+              member.user.id,
+            ))
+            .await?;
 
           return Ok(());
         }
@@ -167,9 +201,13 @@ pub async fn leave(
     },
     None => {
       // Defaults to monthly
-      if !ctx.author().has_role(ctx, guild_id, ROLES.meditation_challenger).await? {
+      if !ctx
+        .author()
+        .has_role(ctx, guild_id, ROLES.meditation_challenger)
+        .await?
+      {
         ctx
-        .send(|f| f
+        .send(CreateReply::default()
           .content("You're not currently participating in the monthly challenge. If you want to join, use `/challenge join`.")
           .ephemeral(true)
         )
@@ -179,10 +217,12 @@ pub async fn leave(
       } else {
         member.remove_role(ctx, ROLES.meditation_challenger).await?;
 
-        ctx.say(format!(
-          "You have successfully opted out of the monthly challenge, <@{}>.",
-          member.user.id,
-        )).await?;
+        ctx
+          .say(format!(
+            "You have successfully opted out of the monthly challenge, <@{}>.",
+            member.user.id,
+          ))
+          .await?;
 
         return Ok(());
       }

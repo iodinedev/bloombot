@@ -1,11 +1,12 @@
 use crate::commands::{commit_and_say, MessageType};
-use crate::config::{StreakRoles, TimeSumRoles, BloomBotEmbed, CHANNELS};
+use crate::config::{BloomBotEmbed, StreakRoles, TimeSumRoles, CHANNELS};
 use crate::database::{DatabaseHandler, TrackingProfile};
 use crate::Context;
-use chrono::Duration;
 use anyhow::Result;
+use chrono::Duration;
 use log::error;
-use poise::serenity_prelude::{self as serenity, Mentionable};
+use poise::serenity_prelude::{self as serenity, builder::*, Mentionable};
+use poise::CreateReply;
 
 #[derive(poise::ChoiceParameter)]
 pub enum MinusOffsetChoices {
@@ -104,11 +105,11 @@ pub enum Privacy {
 }
 
 /// Add a meditation entry, with optional UTC offset
-/// 
+///
 /// Adds a specified number of minutes to your meditation time. You can add minutes each time you meditate or add the combined minutes for multiple sessions.
-/// 
+///
 /// You may wish to add large amounts of time on occasion, e.g., after a silent retreat. Time tracking is based on the honor system and members are welcome to track any legitimate time spent practicing.
-/// 
+///
 /// Vanity roles are purely cosmetic, so there is nothing to be gained from cheating. Furthermore, exceedingly large false entries will skew the server stats, which is unfair to other members. Please be considerate.
 #[poise::command(slash_command, category = "Meditation Tracking", guild_only)]
 pub async fn add(
@@ -132,17 +133,20 @@ pub async fn add(
 
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
 
-  let tracking_profile = match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user_id).await? {
-    Some(tracking_profile) => tracking_profile,
-    None => TrackingProfile { ..Default::default() }
-  };
+  let tracking_profile =
+    match DatabaseHandler::get_tracking_profile(&mut transaction, &guild_id, &user_id).await? {
+      Some(tracking_profile) => tracking_profile,
+      None => TrackingProfile {
+        ..Default::default()
+      },
+    };
 
   let privacy = match privacy {
     Some(privacy) => match privacy {
       Privacy::Private => true,
-      Privacy::Public => false
+      Privacy::Public => false,
     },
-    None => tracking_profile.anonymous_tracking
+    None => tracking_profile.anonymous_tracking,
   };
 
   let minus_offset = match minus_offset {
@@ -164,7 +168,7 @@ pub async fn add(
       MinusOffsetChoices::UTCMinus2 => -120,
       MinusOffsetChoices::UTCMinus1 => -60,
     },
-    None => 0
+    None => 0,
   };
 
   let plus_offset = match plus_offset {
@@ -194,21 +198,51 @@ pub async fn add(
       PlusOffsetChoices::UTCPlus13_45 => 825,
       PlusOffsetChoices::UTCPlus14 => 840,
     },
-    None => 0
+    None => 0,
   };
 
   if minus_offset != 0 && plus_offset != 0 {
-    ctx.send(|f| f.content(format!("Cannot specify multiple time zones. Please try again with only one offset.")).ephemeral(true)).await?;
+    ctx
+      .send(
+        CreateReply::default()
+          .content(format!(
+            "Cannot specify multiple time zones. Please try again with only one offset."
+          ))
+          .ephemeral(true),
+      )
+      .await?;
     return Ok(());
   } else if minus_offset != 0 {
     let adjusted_datetime = chrono::Utc::now() + Duration::minutes(minus_offset);
-    DatabaseHandler::create_meditation_entry(&mut transaction, &guild_id, &user_id, minutes, adjusted_datetime).await?;
+    DatabaseHandler::create_meditation_entry(
+      &mut transaction,
+      &guild_id,
+      &user_id,
+      minutes,
+      adjusted_datetime,
+    )
+    .await?;
   } else if plus_offset != 0 {
     let adjusted_datetime = chrono::Utc::now() + Duration::minutes(plus_offset);
-    DatabaseHandler::create_meditation_entry(&mut transaction, &guild_id, &user_id, minutes, adjusted_datetime).await?;
+    DatabaseHandler::create_meditation_entry(
+      &mut transaction,
+      &guild_id,
+      &user_id,
+      minutes,
+      adjusted_datetime,
+    )
+    .await?;
   } else if tracking_profile.utc_offset != 0 {
-    let adjusted_datetime = chrono::Utc::now() + Duration::minutes(i64::from(tracking_profile.utc_offset));
-    DatabaseHandler::create_meditation_entry(&mut transaction, &guild_id, &user_id, minutes, adjusted_datetime).await?;
+    let adjusted_datetime =
+      chrono::Utc::now() + Duration::minutes(i64::from(tracking_profile.utc_offset));
+    DatabaseHandler::create_meditation_entry(
+      &mut transaction,
+      &guild_id,
+      &user_id,
+      minutes,
+      adjusted_datetime,
+    )
+    .await?;
   } else {
     DatabaseHandler::add_minutes(&mut transaction, &guild_id, &user_id, minutes).await?;
   }
@@ -238,9 +272,11 @@ pub async fn add(
           }
         })
         .collect::<String>();
-      
+
       if privacy {
-        format!("Someone just added **{minutes} minutes** to their meditation time! :tada:\n*{quote}*")
+        format!(
+          "Someone just added **{minutes} minutes** to their meditation time! :tada:\n*{quote}*"
+        )
       } else {
         format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:\n*{quote}*")
       }
@@ -261,31 +297,26 @@ pub async fn add(
     let cancel_id = format!("{}cancel", ctx_id);
 
     let check = ctx
-      .send(|f| {
-        f.content(format!(
-          "Are you sure you want to add **{}** minutes to your meditation time?",
-          minutes
-        ))
-        .ephemeral(privacy)
-        .components(|c| {
-          c.create_action_row(|a| {
-            a.create_button(|b| {
-              b.custom_id(confirm_id.clone())
-                .label("Yes")
-                .style(serenity::ButtonStyle::Success)
-            })
-            .create_button(|b| {
-              b.custom_id(cancel_id.clone())
-                .label("No")
-                .style(serenity::ButtonStyle::Danger)
-            })
-          })
-        })
-      })
+      .send(
+        CreateReply::default()
+          .content(format!(
+            "Are you sure you want to add **{}** minutes to your meditation time?",
+            minutes
+          ))
+          .ephemeral(privacy)
+          .components(vec![CreateActionRow::Buttons(vec![
+            CreateButton::new(confirm_id.clone())
+              .label("Yes")
+              .style(serenity::ButtonStyle::Success),
+            CreateButton::new(cancel_id.clone())
+              .label("No")
+              .style(serenity::ButtonStyle::Danger),
+          ])]),
+      )
       .await?;
 
     // Loop through incoming interactions with the navigation buttons
-    while let Some(press) = serenity::CollectComponentInteraction::new(ctx)
+    while let Some(press) = serenity::ComponentInteractionCollector::new(ctx)
       // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
       // button was pressed
       .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
@@ -303,29 +334,28 @@ pub async fn add(
 
       // Update the message to reflect the action
       match press
-        .create_interaction_response(ctx, |b| {
-          b.kind(serenity::InteractionResponseType::UpdateMessage)
-            .interaction_response_data(|f| {
+        .create_response(ctx, CreateInteractionResponse::UpdateMessage(
+          {
               if confirm {
                 match privacy {
                   true => {
-                    f.content(format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:"))
+                    CreateInteractionResponseMessage::new().content(format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:"))
                     .ephemeral(privacy)
-                    .set_components(serenity::CreateComponents(Vec::new()))
+                    .components(Vec::new())
                   },
                   false => {
-                    f.content(&response)
+                    CreateInteractionResponseMessage::new().content(&response)
                     .ephemeral(privacy)
-                    .set_components(serenity::CreateComponents(Vec::new()))
+                    .components(Vec::new())
                   }
                 }
               } else {
-                f.content("Cancelled.")
+                CreateInteractionResponseMessage::new().content("Cancelled.")
                   .ephemeral(privacy)
-                  .set_components(serenity::CreateComponents(Vec::new()))
+                  .components(Vec::new())
               }
             })
-        })
+    )
         .await
       {
         Ok(_) => {
@@ -333,7 +363,7 @@ pub async fn add(
             match DatabaseHandler::commit_transaction(transaction).await {
               Ok(_) => {}
               Err(e) => {
-                check.edit(ctx, |f| f
+                check.edit(ctx, CreateReply::default()
                   .content(":bangbang: A fatal error occured while trying to save your changes. Nothing has been saved.")
                   .ephemeral(privacy)).await?;
                 return Err(anyhow::anyhow!("Could not send message: {}", e));
@@ -343,17 +373,20 @@ pub async fn add(
         }
         Err(e) => {
           check
-            .edit(ctx, |f| {
-              f.content(":x: An error occured. Nothing has been saved.")
+            .edit(ctx, CreateReply::default()
+              .content(":x: An error occured. Nothing has been saved.")
                 .ephemeral(privacy)
-            })
+            )
             .await?;
           return Err(anyhow::anyhow!("Could not send message: {}", e));
         }
       }
 
       if confirm && privacy {
-        ctx.channel_id().send_message(ctx, |f| f.content(response)).await?;
+        ctx
+          .channel_id()
+          .send_message(ctx, CreateMessage::new().content(response))
+          .await?;
       }
 
       if confirm {
@@ -362,19 +395,19 @@ pub async fn add(
           .title("Large Meditation Entry Added")
           .description(format!(
             "**User**: {}\n**Time**: {} minutes",
-          ctx.author(),
+            ctx.author(),
             minutes
           ))
-          .footer(|f| {
-            f.icon_url(ctx.author().avatar_url().unwrap_or_default())
-              .text(format!("Added by {}", ctx.author()))
-          })
+          .footer(
+            CreateEmbedFooter::new(format!("Added by {}", ctx.author()))
+              .icon_url(ctx.author().avatar_url().unwrap_or_default()),
+          )
           .to_owned();
 
-        let log_channel = serenity::ChannelId(CHANNELS.bloomlogs);
+        let log_channel = serenity::ChannelId::new(CHANNELS.bloomlogs);
 
         log_channel
-          .send_message(ctx, |f| f.set_embed(log_embed))
+          .send_message(ctx, CreateMessage::new().embed(log_embed))
           .await?;
       }
 
@@ -388,9 +421,18 @@ pub async fn add(
 
   if privacy {
     let private_response = format!("Added **{minutes} minutes** to your meditation time! Your total meditation time is now {user_sum} minutes :tada:");
-    commit_and_say(ctx, transaction, MessageType::TextOnly(private_response), true).await?;
+    commit_and_say(
+      ctx,
+      transaction,
+      MessageType::TextOnly(private_response),
+      true,
+    )
+    .await?;
 
-    ctx.channel_id().send_message(ctx, |f| f.content(response)).await?;
+    ctx
+      .channel_id()
+      .send_message(ctx, CreateMessage::new().content(response))
+      .await?;
   } else {
     commit_and_say(ctx, transaction, MessageType::TextOnly(response), false).await?;
   }
@@ -401,8 +443,8 @@ pub async fn add(
     ctx.say(format!("Awesome sauce! This server has collectively generated {} hours of realmbreaking meditation!", time_in_hours)).await?;
   }
 
-  let guild = ctx.guild().unwrap();
-  let mut member = guild.member(ctx, user_id).await?;
+  let guild = ctx.guild().unwrap().clone();
+  let member = guild.member(ctx, user_id).await?;
 
   let current_time_roles = TimeSumRoles::get_users_current_roles(&guild, &member);
   let updated_time_role = TimeSumRoles::from_sum(user_sum);
@@ -414,9 +456,9 @@ pub async fn add(
           Ok(_) => {}
           Err(err) => {
             error!("Error removing role: {}", err);
-            ctx.send(|f| f
+            ctx.send(CreateReply::default()
               .content(":x: An error occured while updating your time roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
-              .allowed_mentions(|f| f.empty_parse())
+              .allowed_mentions(serenity::CreateAllowedMentions::new())
               .ephemeral(privacy)).await?;
 
             return Ok(());
@@ -428,24 +470,24 @@ pub async fn add(
         Ok(_) => {}
         Err(err) => {
           error!("Error adding role: {}", err);
-          ctx.send(|f| f
+          ctx.send(CreateReply::default()
             .content(":x: An error occured while updating your time roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
-            .allowed_mentions(|f| f.empty_parse())
+            .allowed_mentions(serenity::CreateAllowedMentions::new())
             .ephemeral(privacy)).await?;
 
           return Ok(());
         }
       }
 
-      ctx.send(|f| f
+      ctx.send(CreateReply::default()
         .content(format!(":tada: Congrats to {}, your hard work is paying off! Your total meditation minutes have given you the <@&{}> role!", member.mention(), updated_time_role.to_role_id()))
-        .allowed_mentions(|f| f.empty_parse())
+        .allowed_mentions(serenity::CreateAllowedMentions::new())
         .ephemeral(privacy)).await?;
     }
   }
 
   if tracking_profile.streaks_active {
-    let current_streak_roles = StreakRoles::get_users_current_roles(&guild, &member);
+    let current_streak_roles = StreakRoles::get_users_current_roles(&guild.clone(), &member);
     let updated_streak_role = StreakRoles::from_streak(user_streak);
 
     if let Some(updated_streak_role) = updated_streak_role {
@@ -456,9 +498,9 @@ pub async fn add(
             Err(err) => {
               error!("Error removing role: {}", err);
 
-              ctx.send(|f| f
+              ctx.send(CreateReply::default()
                 .content(":x: An error occured while updating your streak roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
-                .allowed_mentions(|f| f.empty_parse())
+                .allowed_mentions(serenity::CreateAllowedMentions::new())
                 .ephemeral(privacy)).await?;
 
               return Ok(());
@@ -471,18 +513,18 @@ pub async fn add(
           Err(err) => {
             error!("Error adding role: {}", err);
 
-            ctx.send(|f| f
+            ctx.send(CreateReply::default()
               .content(":x: An error occured while updating your streak roles. Your entry has been saved, but your roles have not been updated. Please contact a moderator.")
-              .allowed_mentions(|f| f.empty_parse())
+              .allowed_mentions(serenity::CreateAllowedMentions::new())
               .ephemeral(privacy)).await?;
 
             return Ok(());
           }
         }
 
-        ctx.send(|f| f
+        ctx.send(CreateReply::default()
           .content(format!(":tada: Congrats to {}, your hard work is paying off! Your current streak is {}, giving you the <@&{}> role!", member.mention(), user_streak, updated_streak_role.to_role_id()))
-          .allowed_mentions(|f| f.empty_parse())
+          .allowed_mentions(serenity::CreateAllowedMentions::new())
           .ephemeral(privacy)).await?;
       }
     }

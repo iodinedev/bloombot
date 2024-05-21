@@ -57,31 +57,37 @@ pub async fn term_not_found(
     let possible_term = possible_terms.first().unwrap();
 
     ctx
-      .send(|f| {
-        f.content(format!(
-          ":x: Term does not exist. Did you mean `{}`?",
-          possible_term.term_name
-        ))
-        .ephemeral(true)
-      })
+      .send(
+        poise::CreateReply::default()
+          .content(format!(
+            ":x: Term does not exist. Did you mean `{}`?",
+            possible_term.term_name
+          ))
+          .ephemeral(true),
+      )
       .await?;
   } else if possible_terms.len() > 1 {
     ctx
-      .send(|f| {
-        f.content(format!(
-          ":x: Term does not exist. Did you mean one of these?\n{}",
-          possible_terms
-            .iter()
-            .map(|term| format!("`{}`", term.term_name))
-            .collect::<Vec<String>>()
-            .join("\n")
-        ))
-        .ephemeral(true)
-      })
+      .send(
+        poise::CreateReply::default()
+          .content(format!(
+            ":x: Term does not exist. Did you mean one of these?\n{}",
+            possible_terms
+              .iter()
+              .map(|term| format!("`{}`", term.term_name))
+              .collect::<Vec<String>>()
+              .join("\n")
+          ))
+          .ephemeral(true),
+      )
       .await?;
   } else {
     ctx
-      .send(|f| f.content(":x: Term does not exist.").ephemeral(true))
+      .send(
+        poise::CreateReply::default()
+          .content(":x: Term does not exist.")
+          .ephemeral(true),
+      )
       .await?;
   }
 
@@ -167,7 +173,11 @@ pub async fn add(
     }
     None => {
       ctx
-        .send(|f| f.content(":x: No data was provided.").ephemeral(true))
+        .send(
+          poise::CreateReply::default()
+            .content(":x: No data was provided.")
+            .ephemeral(true),
+        )
         .await?;
       return Ok(());
     }
@@ -273,7 +283,11 @@ pub async fn edit(
     }
     None => {
       ctx
-        .send(|f| f.content(":x: No data was provided.").ephemeral(true))
+        .send(
+          poise::CreateReply::default()
+            .content(":x: No data was provided.")
+            .ephemeral(true),
+        )
         .await?;
       return Ok(());
     }
@@ -298,7 +312,11 @@ pub async fn remove(
   let mut transaction = data.db.start_transaction_with_retry(5).await?;
   if !DatabaseHandler::term_exists(&mut transaction, &guild_id, term.as_str()).await? {
     ctx
-      .send(|f| f.content(":x: Term does not exist.").ephemeral(true))
+      .send(
+        poise::CreateReply::default()
+          .content(":x: Term does not exist.")
+          .ephemeral(true),
+      )
       .await?;
     return Ok(());
   }
