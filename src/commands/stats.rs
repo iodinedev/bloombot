@@ -5,6 +5,7 @@ use crate::Context;
 use crate::{charts, config};
 use anyhow::Result;
 use poise::serenity_prelude::{self as serenity, builder::*};
+use poise::ChoiceParameter;
 
 #[derive(poise::ChoiceParameter)]
 pub enum StatsType {
@@ -200,11 +201,24 @@ pub async fn user(
 
   embed = embed.image(chart.get_attachment_url());
 
-  //Hide footer if streaks disabled
+  let average = match stats_type {
+    StatsType::MeditationMinutes => stats.timeframe_stats.sum.unwrap_or(0) / 12,
+    StatsType::MeditationCount => stats.timeframe_stats.count.unwrap_or(0) / 12
+  };
+
+  //Hide streak in footer if streaks disabled
   if tracking_profile.streaks_active {
     embed = embed.footer(CreateEmbedFooter::new(format!(
-      "Current streak: {}",
+      "{} average for period: {}  |  Current streak: {}",
+      timeframe.name(),
+      average,
       stats.streak
+    )));
+  } else {
+    embed = embed.footer(CreateEmbedFooter::new(format!(
+      "{} average for period: {}",
+      timeframe.name(),
+      average
     )));
   }
 
