@@ -206,18 +206,25 @@ pub async fn user(
     StatsType::MeditationCount => stats.timeframe_stats.count.unwrap_or(0) / 12
   };
 
+  let stats_type_label = match stats_type {
+    StatsType::MeditationMinutes => "minutes",
+    StatsType::MeditationCount => "sessions"
+  };
+
   //Hide streak in footer if streaks disabled
   if tracking_profile.streaks_active {
     embed = embed.footer(CreateEmbedFooter::new(format!(
-      "{} average for period: {}  |  Current streak: {}",
+      "Average {} {}: {}・Current streak: {}",
       timeframe.name(),
+      stats_type_label,
       average,
       stats.streak
     )));
   } else {
     embed = embed.footer(CreateEmbedFooter::new(format!(
-      "{} average for period: {}",
+      "Average {} {}: {}",
       timeframe.name(),
+      stats_type_label,
       average
     )));
   }
