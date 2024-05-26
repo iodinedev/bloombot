@@ -214,8 +214,8 @@ pub async fn user(
   //Hide streak in footer if streaks disabled
   if tracking_profile.streaks_active {
     embed = embed.footer(CreateEmbedFooter::new(format!(
-      "Average {} {}: {}・Current streak: {}",
-      timeframe.name(),
+      "Avg. {} {}: {}・Current streak: {}",
+      timeframe.name().to_lowercase(),
       stats_type_label,
       average,
       stats.streak
@@ -223,7 +223,7 @@ pub async fn user(
   } else {
     embed = embed.footer(CreateEmbedFooter::new(format!(
       "Average {} {}: {}",
-      timeframe.name(),
+      timeframe.name().to_lowercase(),
       stats_type_label,
       average
     )));
