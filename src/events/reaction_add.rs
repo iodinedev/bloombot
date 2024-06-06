@@ -1,7 +1,9 @@
 use crate::config::{self, CHANNELS, EMOTES, ROLES};
 use crate::database::DatabaseHandler;
 use anyhow::{Context as AnyhowContext, Result};
-use poise::serenity_prelude::{builder::*, ChannelId, Context, Reaction, ReactionType, UserId};
+use poise::serenity_prelude::{
+  builder::*, ChannelId, Context, MessageFlags, Reaction, ReactionType, UserId,
+};
 
 pub async fn reaction_add(
   ctx: &Context,
@@ -176,13 +178,31 @@ async fn create_star_message(
       None => starred_message.author.name.clone(),
     };
 
-    let mut embed = config::BloomBotEmbed::new()
+    let message_type = match starred_message.flags {
+      Some(flags) => {
+        if flags.contains(MessageFlags::IS_VOICE_MESSAGE) {
+          "voice message"
+        } else {
+          "message"
+        }
+      }
+      None => "message",
+    };
+
+    let mut embed = match starred_message.embeds.first() {
+      Some(embed) => config::BloomBotEmbed::from(embed.clone().to_owned()),
+      None => config::BloomBotEmbed::new().description(starred_message.content.clone()),
+    };
+
+    //let mut embed = config::BloomBotEmbed::new()
+    embed = embed
       .author(CreateEmbedAuthor::new(author_nick_or_name).icon_url(starred_message.author.face()))
-      .description(starred_message.content.clone())
+      //.description(starred_message.content.clone())
       .field(
         "Link",
         format!(
-          "**[Click to jump to message.]({})**",
+          "**[Click to jump to {}.]({})**",
+          message_type,
           starred_message.link().clone()
         ),
         false,
@@ -192,6 +212,12 @@ async fn create_star_message(
         star_count
       )))
       .to_owned();
+
+    if let Some(sticker) = &starred_message.sticker_items.first() {
+      if let Some(sticker_url) = sticker.image_url() {
+        embed = embed.image(sticker_url.clone()).to_owned();
+      }
+    }
 
     if let Some(attachment) = &starred_message.attachments.first() {
       embed = embed.image(attachment.url.clone()).to_owned();

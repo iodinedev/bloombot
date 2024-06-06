@@ -1,4 +1,4 @@
-use poise::serenity_prelude::{self as serenity, Guild, Member, RoleId};
+use poise::serenity_prelude::{self as serenity, Guild, Member, RoleId, Embed};
 
 pub const EMBED_COLOR: u32 = 0xFDAC2E;
 pub const TERMS_PER_PAGE: usize = 10;
@@ -12,9 +12,9 @@ impl BloomBotEmbed {
     serenity::CreateEmbed::default().color(EMBED_COLOR)
   }
 
-  // pub fn from(embed: Embed) -> serenity::CreateEmbed {
-  //   serenity::CreateEmbed::from(embed).color(EMBED_COLOR)
-  // }
+  pub fn from(embed: Embed) -> serenity::CreateEmbed {
+    serenity::CreateEmbed::from(embed).color(EMBED_COLOR)
+  }
 }
 
 pub struct Roles {
