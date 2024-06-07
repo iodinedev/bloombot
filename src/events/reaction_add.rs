@@ -220,14 +220,50 @@ async fn create_star_message(
     }
 
     if let Some(attachment) = &starred_message.attachments.first() {
-      embed = embed.image(attachment.url.clone()).to_owned();
+      if let Some(content_type) = &attachment.content_type {
+        if content_type.starts_with("image") {
+          embed = embed.image(attachment.url.clone()).to_owned();
+        }
+      }
     }
 
     let starboard_channel = ChannelId::new(CHANNELS.starchannel);
 
-    let starboard_message = starboard_channel
-      .send_message(ctx, CreateMessage::new().embed(embed))
-      .await?;
+    let starboard_message = match &starred_message.attachments.first() {
+      Some(attachment) => match &attachment.content_type {
+        Some(content_type) => {
+          if content_type.starts_with("image") {
+            starboard_channel
+              .send_message(ctx, CreateMessage::new().embed(embed))
+              .await?
+          } else {
+            starboard_channel
+              .send_message(
+                ctx,
+                CreateMessage::new()
+                  .embed(embed)
+                  .add_file(CreateAttachment::url(ctx, attachment.url.as_str()).await?),
+              )
+              .await?
+          }
+        }
+        None => {
+          starboard_channel
+            .send_message(
+              ctx,
+              CreateMessage::new()
+                .embed(embed)
+                .add_file(CreateAttachment::url(ctx, attachment.url.as_str()).await?),
+            )
+            .await?
+        }
+      },
+      None => {
+        starboard_channel
+          .send_message(ctx, CreateMessage::new().embed(embed))
+          .await?
+      }
+    };
 
     DatabaseHandler::insert_star_message(
       transaction,
