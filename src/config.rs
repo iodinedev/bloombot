@@ -37,42 +37,34 @@ pub const ROLES: Roles = Roles {
 
 pub struct Channels {
   pub welcome: u64,
-  pub meditation: u64,
-  pub commands: u64,
   pub announcement: u64,
   pub logs: u64,
   pub bloomlogs: u64,
   pub starchannel: u64,
   pub reportchannel: u64,
   pub donators: u64,
-  pub backup: u64,
   pub suggestion: u64,
 }
 
 pub const CHANNELS: Channels = Channels {
   welcome: 493402917001494539,
-  meditation: 440556997364940801,
-  commands: 837344434676564078,
   announcement: 244917519477899264,
   logs: 441207765357035541,
   bloomlogs: 1161911290915209297,
   starchannel: 856865368098078720,
   reportchannel: 855894610001395743,
   donators: 551895169532952578,
-  backup: 1069911235224678460,
   suggestion: 553676378621476887,
 };
 
 pub struct Emotes<'a> {
   pub star: &'a str,
   pub report: u64,
-  pub wave: &'a str,
 }
 
 pub const EMOTES: Emotes = Emotes {
   star: "⭐",
   report: 852463521894629376,
-  wave: "👋",
 };
 
 #[derive(Debug, Eq, PartialEq)]

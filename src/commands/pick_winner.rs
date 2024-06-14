@@ -353,9 +353,9 @@ pub async fn pick_winner(
       }
     };
 
-    let member = match ctx.cache().member(&guild_id, winner) {
-      Some(member) => member.clone(),
-      None => {
+    let member = match guild_id.member(ctx, winner).await {
+      Ok(member) => member,
+      Err(_) => {
         continue;
       }
     };
