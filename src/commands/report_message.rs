@@ -22,14 +22,7 @@ pub async fn report_message(
   let report_channel_id = serenity::ChannelId::new(CHANNELS.reportchannel);
   let message_link = message.link().clone();
   let message_user = message.author;
-  let message_channel_name = message
-    .channel_id
-    .to_channel(&ctx)
-    .await
-    .unwrap()
-    .guild()
-    .unwrap()
-    .name;
+  let message_channel_name = message.channel_id.name(ctx).await?;
 
   let message_content = match message.content.is_empty() {
     true => match message.attachments.first() {

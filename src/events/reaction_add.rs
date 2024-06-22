@@ -39,14 +39,7 @@ async fn check_report(ctx: &Context, user: &UserId, reaction: &Reaction) -> Resu
         let message = reaction.message(&ctx).await?;
         let message_link = message.link().clone();
         let message_user = message.author;
-        let message_channel_name = message
-          .channel_id
-          .to_channel(&ctx)
-          .await
-          .unwrap()
-          .guild()
-          .unwrap()
-          .name;
+        let message_channel_name = message.channel_id.name(ctx).await?;
         let reporting_user = reaction.user(&ctx).await?;
 
         let message_content = match message.content.is_empty() {

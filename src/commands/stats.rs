@@ -203,12 +203,12 @@ pub async fn user(
 
   let average = match stats_type {
     StatsType::MeditationMinutes => stats.timeframe_stats.sum.unwrap_or(0) / 12,
-    StatsType::MeditationCount => stats.timeframe_stats.count.unwrap_or(0) / 12
+    StatsType::MeditationCount => stats.timeframe_stats.count.unwrap_or(0) / 12,
   };
 
   let stats_type_label = match stats_type {
     StatsType::MeditationMinutes => "minutes",
-    StatsType::MeditationCount => "sessions"
+    StatsType::MeditationCount => "sessions",
   };
 
   //Hide streak in footer if streaks disabled
@@ -263,6 +263,7 @@ pub async fn server(
   let data = ctx.data();
 
   let guild_id = ctx.guild_id().unwrap();
+  let guild_name = guild_id.name(ctx).unwrap();
 
   let stats_type = stats_type.unwrap_or(StatsType::MeditationMinutes);
   let timeframe = timeframe.unwrap_or(Timeframe::Daily);
@@ -279,12 +280,10 @@ pub async fn server(
   let stats = DatabaseHandler::get_guild_stats(&mut transaction, &guild_id, &timeframe).await?;
 
   let mut embed = BloomBotEmbed::new();
-  embed = embed
-    .title(format!("Stats for {}", ctx.guild().unwrap().name))
-    .author(
-      CreateEmbedAuthor::new(format!("{}'s Stats", ctx.guild().unwrap().name))
-        .icon_url(ctx.guild().unwrap().icon_url().unwrap_or_default()),
-    );
+  embed = embed.title(format!("Stats for {}", guild_name)).author(
+    CreateEmbedAuthor::new(format!("{}'s Stats", guild_name))
+      .icon_url(ctx.guild().unwrap().icon_url().unwrap_or_default()),
+  );
 
   match stats_type {
     StatsType::MeditationMinutes => {

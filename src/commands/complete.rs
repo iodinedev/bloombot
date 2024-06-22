@@ -48,9 +48,7 @@ pub async fn complete(
     return Ok(());
   }
 
-  let guild = ctx.cache().guild(guild_id).unwrap().clone();
-
-  let member = match guild.member(ctx, ctx.author().id).await {
+  let member = match guild_id.member(ctx, ctx.author().id).await {
     Ok(member) => member,
     Err(_) => {
       ctx.say(format!(":x: You don't appear to be a member of the server. If I'm mistaken, please contact server staff for assistance.")).await?;
